@@ -1,0 +1,715 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.mapper.BaseReplyMapper">
+
+	<sql id="sql_filed_reply">reply.id AS reply_temp_id,reply.topic_id,reply.user_id AS reply_temp_user_id,reply.data AS reply_temp_data,reply.create_time AS reply_temp_create_time,reply.delete_flag AS reply_temp_delete_flag</sql>
+	<sql id="sql_filed_topic">topic.id AS topic_temp_id,topic.title,topic.data AS topic_temp_data,topic.user_id AS topic_temp_user_id,topic.create_time AS topic_temp_create_time,topic.update_time AS topic_temp_update_time,topic.delete_flag AS topic_temp_delete_flag,topic.max_count</sql>
+	<sql id="sql_filed_user">user.id AS user_temp_id,user.name,user.password,user.sex,user.create_time AS user_temp_create_time,user.delete_flag AS user_temp_delete_flag,user.update_time AS user_temp_update_time</sql>
+
+	<resultMap id="resultReply" type="com.test.entity.Reply">
+		<id column="id" property="id"/>
+		<result column="topic_id" property="topicId"/>
+		<result column="user_id" property="userId"/>
+		<result column="data" property="data"/>
+		<result column="create_time" property="createTime"/>
+		<result column="delete_flag" property="deleteFlag"/>
+	</resultMap>
+
+	<resultMap id="resultReplyOneToOneTopic" type="com.test.entity.Reply">
+		<id column="reply_temp_id" property="id"/>
+		<result column="topic_id" property="topicId"/>
+		<result column="reply_temp_user_id" property="userId"/>
+		<result column="reply_temp_data" property="data"/>
+		<result column="reply_temp_create_time" property="createTime"/>
+		<result column="reply_temp_delete_flag" property="deleteFlag"/>
+		<association property="topic" javaType="com.test.entity.Topic">
+			<id column="topic_temp_id" property="id"/>
+			<result column="title" property="title"/>
+			<result column="topic_temp_data" property="data"/>
+			<result column="topic_temp_user_id" property="userId"/>
+			<result column="topic_temp_create_time" property="createTime"/>
+			<result column="topic_temp_update_time" property="updateTime"/>
+			<result column="topic_temp_delete_flag" property="deleteFlag"/>
+			<result column="max_count" property="maxCount"/>
+		</association>
+	</resultMap>
+
+	<resultMap id="resultTopic" type="com.test.entity.Topic">
+		<id column="id" property="id"/>
+		<result column="title" property="title"/>
+		<result column="data" property="data"/>
+		<result column="user_id" property="userId"/>
+		<result column="create_time" property="createTime"/>
+		<result column="update_time" property="updateTime"/>
+		<result column="delete_flag" property="deleteFlag"/>
+		<result column="max_count" property="maxCount"/>
+	</resultMap>
+
+	<resultMap id="resultReplyOneToOneUser" type="com.test.entity.Reply">
+		<id column="reply_temp_id" property="id"/>
+		<result column="topic_id" property="topicId"/>
+		<result column="reply_temp_user_id" property="userId"/>
+		<result column="reply_temp_data" property="data"/>
+		<result column="reply_temp_create_time" property="createTime"/>
+		<result column="reply_temp_delete_flag" property="deleteFlag"/>
+		<association property="user" javaType="com.test.entity.User">
+			<id column="user_temp_id" property="id"/>
+			<result column="name" property="name"/>
+			<result column="password" property="password"/>
+			<result column="sex" property="sex"/>
+			<result column="user_temp_create_time" property="createTime"/>
+			<result column="user_temp_delete_flag" property="deleteFlag"/>
+			<result column="user_temp_update_time" property="updateTime"/>
+		</association>
+	</resultMap>
+
+	<resultMap id="resultUser" type="com.test.entity.User">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="password" property="password"/>
+		<result column="sex" property="sex"/>
+		<result column="create_time" property="createTime"/>
+		<result column="delete_flag" property="deleteFlag"/>
+		<result column="update_time" property="updateTime"/>
+	</resultMap>
+
+
+	<insert id="insertReply" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO reply (
+		<trim prefix="" suffixOverrides=",">
+			<if test="id!=null">id,</if>
+			<if test="topicId!=null">topic_id,</if>
+			<if test="userId!=null">user_id,</if>
+			<if test="data!=null">data,</if>
+			<if test="createTime!=null">create_time,</if>
+			<if test="deleteFlag!=null">delete_flag</if>
+		</trim>
+		) VALUES (
+		<trim prefix="" suffixOverrides=",">
+			<if test="id!=null">#{id},</if>
+			<if test="topicId!=null">#{topicId},</if>
+			<if test="userId!=null">#{userId},</if>
+			<if test="data!=null">#{data},</if>
+			<if test="createTime!=null">#{createTime},</if>
+			<if test="deleteFlag!=null">#{deleteFlag}</if>
+		</trim>
+		)
+	</insert>
+
+	<insert id="insertReplyList" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO reply (
+			id,topic_id,user_id,data,create_time,delete_flag
+		) VALUES
+		<foreach collection="list" index="index" item="obj" separator=",">
+			(
+				#{obj.id},
+				#{obj.topicId},
+				#{obj.userId},
+				#{obj.data},
+				#{obj.createTime},
+				#{obj.deleteFlag}
+			)
+		</foreach>
+	</insert>
+
+	<insert id="insertOrUpdateReplyByUnique" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		INSERT INTO reply (
+		<trim prefix="" suffixOverrides=",">
+			<if test="id!=null">id,</if>
+			<if test="topicId!=null">topic_id,</if>
+			<if test="userId!=null">user_id,</if>
+			<if test="data!=null">data,</if>
+			<if test="createTime!=null">create_time,</if>
+			<if test="deleteFlag!=null">delete_flag</if>
+		</trim>
+		) VALUE (
+		<trim prefix="" suffixOverrides=",">
+			<if test="id!=null">#{id},</if>
+			<if test="topicId!=null">#{topicId},</if>
+			<if test="userId!=null">#{userId},</if>
+			<if test="data!=null">#{data},</if>
+			<if test="createTime!=null">#{createTime},</if>
+			<if test="deleteFlag!=null">#{deleteFlag}</if>
+		</trim>
+		) ON DUPLICATE KEY UPDATE 
+		<trim prefix="" suffixOverrides=",">
+			<if test="topicId!=null">topic_id = #{topicId},</if>
+			<if test="userId!=null">user_id = #{userId},</if>
+			<if test="data!=null">data = #{data},</if>
+			<if test="createTime!=null">create_time = #{createTime},</if>
+			<if test="deleteFlag!=null">delete_flag = #{deleteFlag}</if>
+		</trim>
+	</insert>
+
+	<insert id="insertOrUpdateReplyByWhere">
+		<selectKey keyProperty="conditionReply.id" keyColumn="id" resultType="int" order="BEFORE">
+			SELECT IFNULL ((
+				SELECT id FROM reply
+				<where>
+					<if test="conditionReply!=null">
+						<if test="conditionReply.id!=null">AND id = #{conditionReply.id}</if>
+						<if test="conditionReply.topicId!=null">AND topic_id = #{conditionReply.topicId}</if>
+						<if test="conditionReply.userId!=null">AND user_id = #{conditionReply.userId}</if>
+						<if test="conditionReply.data!=null">AND data = #{conditionReply.data}</if>
+						<if test="conditionReply.createTime!=null">AND DATE(create_time) = DATE(#{conditionReply.createTime})</if>
+						<if test="conditionReply.deleteFlag!=null">AND delete_flag = #{conditionReply.deleteFlag}</if>
+					</if>
+				</where>
+			),NULL)
+		</selectKey>
+		<if test="conditionReply.id==null">
+			INSERT INTO reply (
+			<trim prefix="" suffixOverrides=",">
+				<if test="saveReply.id!=null">id,</if>
+				<if test="saveReply.topicId!=null">topic_id,</if>
+				<if test="saveReply.userId!=null">user_id,</if>
+				<if test="saveReply.data!=null">data,</if>
+				<if test="saveReply.createTime!=null">create_time,</if>
+				<if test="saveReply.deleteFlag!=null">delete_flag</if>
+			</trim>
+			) VALUES (
+			<trim prefix="" suffixOverrides=",">
+				<if test="saveReply.id!=null">#{saveReply.id},</if>
+				<if test="saveReply.topicId!=null">#{saveReply.topicId},</if>
+				<if test="saveReply.userId!=null">#{saveReply.userId},</if>
+				<if test="saveReply.data!=null">#{saveReply.data},</if>
+				<if test="saveReply.createTime!=null">#{saveReply.createTime},</if>
+				<if test="saveReply.deleteFlag!=null">#{saveReply.deleteFlag}</if>
+			</trim>
+		)
+		</if>
+		<if test="conditionReply.id!=null">
+			UPDATE reply
+			<set>
+				<if test="saveReply.topicId!=null">topic_id = #{saveReply.topicId},</if>
+				<if test="saveReply.userId!=null">user_id = #{saveReply.userId},</if>
+				<if test="saveReply.data!=null">data = #{saveReply.data},</if>
+				<if test="saveReply.createTime!=null">create_time = #{saveReply.createTime},</if>
+				<if test="saveReply.deleteFlag!=null">delete_flag = #{saveReply.deleteFlag}</if>
+			</set>
+			WHERE id = #{conditionReply.id}
+		</if>
+	</insert>
+
+	<insert id="insertReplyByWhereOnlySave" useGeneratedKeys="true" keyProperty="saveReply.id" keyColumn="id">
+		INSERT INTO reply (
+		<trim prefix="" suffixOverrides=",">
+			<if test="saveReply.id!=null">id,</if>
+			<if test="saveReply.topicId!=null">topic_id,</if>
+			<if test="saveReply.userId!=null">user_id,</if>
+			<if test="saveReply.data!=null">data,</if>
+			<if test="saveReply.createTime!=null">create_time,</if>
+			<if test="saveReply.deleteFlag!=null">delete_flag</if>
+		</trim>
+		) SELECT 
+		<trim prefix="" suffixOverrides=",">
+			<if test="saveReply.id!=null">#{saveReply.id},</if>
+			<if test="saveReply.topicId!=null">#{saveReply.topicId},</if>
+			<if test="saveReply.userId!=null">#{saveReply.userId},</if>
+			<if test="saveReply.data!=null">#{saveReply.data},</if>
+			<if test="saveReply.createTime!=null">#{saveReply.createTime},</if>
+			<if test="saveReply.deleteFlag!=null">#{saveReply.deleteFlag}</if>
+		</trim>
+		FROM DUAL WHERE NOT EXISTS (
+			SELECT id FROM reply
+			<where>
+				<if test="conditionReply!=null">
+					<if test="conditionReply.id!=null">AND id = #{conditionReply.id}</if>
+					<if test="conditionReply.topicId!=null">AND topic_id = #{conditionReply.topicId}</if>
+					<if test="conditionReply.userId!=null">AND user_id = #{conditionReply.userId}</if>
+					<if test="conditionReply.data!=null">AND data = #{conditionReply.data}</if>
+					<if test="conditionReply.createTime!=null">AND DATE(create_time) = DATE(#{conditionReply.createTime})</if>
+					<if test="conditionReply.deleteFlag!=null">AND delete_flag = #{conditionReply.deleteFlag}</if>
+				</if>
+			</where>
+		)
+	</insert>
+
+	<delete id="deleteReplyById">
+		DELETE FROM reply WHERE id = #{id}
+	</delete>
+
+	<delete id="deleteReplyInId">
+		DELETE FROM reply WHERE id IN
+			<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
+	</delete>
+
+	<delete id="deleteReplyByIdAndWhere">
+		DELETE FROM reply
+		<where>
+			id = #{id}
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+		</where>
+	</delete>
+
+	<delete id="deleteReply">
+		DELETE FROM reply
+		<where>
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+		</where>
+	</delete>
+
+	<update id="falseDeleteReplyById">
+		UPDATE reply SET delete_flag = 1 , update_time = NOW() WHERE id = #{id}
+	</update>
+
+	<update id="updateReplyById">
+		UPDATE reply
+		<set>
+			<if test="topicId!=null">topic_id = #{topicId},</if>
+			<if test="userId!=null">user_id = #{userId},</if>
+			<if test="data!=null">data = #{data},</if>
+			<if test="createTime!=null">create_time = #{createTime},</if>
+			<if test="deleteFlag!=null">delete_flag = #{deleteFlag}</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<update id="updateReplyByNotRepeatWhere">
+		UPDATE reply
+		<set>
+			<if test="saveReply.topicId!=null">topic_id = #{saveReply.topicId},</if>
+			<if test="saveReply.userId!=null">user_id = #{saveReply.userId},</if>
+			<if test="saveReply.data!=null">data = #{saveReply.data},</if>
+			<if test="saveReply.createTime!=null">create_time = #{saveReply.createTime},</if>
+			<if test="saveReply.deleteFlag!=null">delete_flag = #{saveReply.deleteFlag}</if>
+		</set>
+		WHERE id = #{saveReply.id}
+		<if test="conditionReply!=null and (conditionReply.id!=null OR conditionReply.topicId!=null OR conditionReply.userId!=null OR conditionReply.data!=null OR conditionReply.createTime!=null OR conditionReply.deleteFlag!=null)">
+			AND NOT EXISTS (
+				SELECT id FROM (SELECT * FROM reply ) AS t 
+				<where>
+					<if test="conditionReply!=null">
+						<if test="conditionReply.id!=null">AND t.id = #{conditionReply.id}</if>
+						<if test="conditionReply.topicId!=null">AND t.topic_id = #{conditionReply.topicId}</if>
+						<if test="conditionReply.userId!=null">AND t.user_id = #{conditionReply.userId}</if>
+						<if test="conditionReply.data!=null">AND t.data = #{conditionReply.data}</if>
+						<if test="conditionReply.createTime!=null">AND DATE(t.create_time) = DATE(#{conditionReply.createTime})</if>
+						<if test="conditionReply.deleteFlag!=null">AND t.delete_flag = #{conditionReply.deleteFlag}</if>
+					</if>
+				</where>
+			)
+		</if>
+	</update>
+
+	<update id="updateReplyByIdAndWhere">
+		UPDATE reply
+		<set>
+			<if test="saveReply.topicId!=null">topic_id = #{saveReply.topicId},</if>
+			<if test="saveReply.userId!=null">user_id = #{saveReply.userId},</if>
+			<if test="saveReply.data!=null">data = #{saveReply.data},</if>
+			<if test="saveReply.createTime!=null">create_time = #{saveReply.createTime},</if>
+			<if test="saveReply.deleteFlag!=null">delete_flag = #{saveReply.deleteFlag}</if>
+		</set>
+		<where>
+			id = #{saveReply.id}
+			<if test="conditionReply!=null">
+				<if test="conditionReply.id!=null">AND id = #{conditionReply.id}</if>
+				<if test="conditionReply.topicId!=null">AND topic_id = #{conditionReply.topicId}</if>
+				<if test="conditionReply.userId!=null">AND user_id = #{conditionReply.userId}</if>
+				<if test="conditionReply.data!=null">AND data = #{conditionReply.data}</if>
+				<if test="conditionReply.createTime!=null">AND DATE(create_time) = DATE(#{conditionReply.createTime})</if>
+				<if test="conditionReply.deleteFlag!=null">AND delete_flag = #{conditionReply.deleteFlag}</if>
+			</if>
+		</where>
+	</update>
+
+	<update id="updateReply">
+		UPDATE reply
+		<set>
+			<if test="saveReply.topicId!=null">topic_id = #{saveReply.topicId},</if>
+			<if test="saveReply.userId!=null">user_id = #{saveReply.userId},</if>
+			<if test="saveReply.data!=null">data = #{saveReply.data},</if>
+			<if test="saveReply.createTime!=null">create_time = #{saveReply.createTime},</if>
+			<if test="saveReply.deleteFlag!=null">delete_flag = #{saveReply.deleteFlag}</if>
+		</set>
+		<where>
+			<if test="saveReply.id!=null">
+				AND id = #{saveReply.id}
+			</if>
+			<if test="conditionReply!=null">
+				<if test="conditionReply.id!=null">AND id = #{conditionReply.id}</if>
+				<if test="conditionReply.topicId!=null">AND topic_id = #{conditionReply.topicId}</if>
+				<if test="conditionReply.userId!=null">AND user_id = #{conditionReply.userId}</if>
+				<if test="conditionReply.data!=null">AND data = #{conditionReply.data}</if>
+				<if test="conditionReply.createTime!=null">AND DATE(create_time) = DATE(#{conditionReply.createTime})</if>
+				<if test="conditionReply.deleteFlag!=null">AND delete_flag = #{conditionReply.deleteFlag}</if>
+			</if>
+		</where>
+	</update>
+
+	<update id="updateReplySetNullById">
+		UPDATE reply
+		<set>
+			<if test="topicId!=null">topic_id = NULL,</if>
+			<if test="userId!=null">user_id = NULL,</if>
+			<if test="data!=null">data = NULL,</if>
+			<if test="createTime!=null">create_time = NULL,</if>
+			<if test="deleteFlag!=null">delete_flag = NULL</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<select id="selectReplyById" resultMap="resultReply">
+		SELECT * FROM reply WHERE id = #{id}
+	</select>
+
+	<select id="selectReplyInId" resultMap="resultReply">
+		SELECT * FROM reply WHERE id IN 
+			<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
+	</select>
+
+	<select id="selectOneReply" resultMap="resultReply">
+		SELECT * FROM reply
+		<where>
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+		</where>
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+	</select>
+
+	<select id="selectReply" resultMap="resultReply">
+		SELECT * FROM Reply
+		<where>
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+		</where>
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+		<if test="page!=null">
+			limit #{page.start} , #{page.count}
+		</if>
+	</select>
+
+	<select id="countReply" resultType="int">
+		SELECT COUNT(*) FROM reply
+		<where>
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+		</where>
+	</select>
+
+	<select id="findReplyOneToOneTopic" resultMap="resultReplyOneToOneTopic">
+		SELECT 
+			<include refid="sql_filed_reply"/>,
+			<include refid="sql_filed_topic"/>
+			FROM reply , topic
+		<where>
+			reply.id = topic.topic_id
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+			<if test="topic!=null">
+				<if test="topic.id!=null">AND id = #{topic.id}</if>
+				<if test="topic.title!=null">AND title = #{topic.title}</if>
+				<if test="topic.data!=null">AND data = #{topic.data}</if>
+				<if test="topic.userId!=null">AND user_id = #{topic.userId}</if>
+				<if test="topic.createTime!=null">AND DATE(create_time) = DATE(#{topic.createTime})</if>
+				<if test="topic.updateTime!=null">AND DATE(update_time) = DATE(#{topic.updateTime})</if>
+				<if test="topic.deleteFlag!=null">AND delete_flag = #{topic.deleteFlag}</if>
+				<if test="topic.maxCount!=null">AND max_count = #{topic.maxCount}</if>
+			</if>
+		</where>
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+		<if test="page!=null">
+			limit #{page.start} , #{page.count}
+		</if>
+	</select>
+
+	<select id="findReplyOneToOneUser" resultMap="resultReplyOneToOneUser">
+		SELECT 
+			<include refid="sql_filed_reply"/>,
+			<include refid="sql_filed_user"/>
+			FROM reply , user
+		<where>
+			reply.id = user.user_id
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+			<if test="user!=null">
+				<if test="user.id!=null">AND id = #{user.id}</if>
+				<if test="user.name!=null">AND name = #{user.name}</if>
+				<if test="user.password!=null">AND password = #{user.password}</if>
+				<if test="user.sex!=null">AND sex = #{user.sex}</if>
+				<if test="user.createTime!=null">AND DATE(create_time) = DATE(#{user.createTime})</if>
+				<if test="user.deleteFlag!=null">AND delete_flag = #{user.deleteFlag}</if>
+				<if test="user.updateTime!=null">AND DATE(update_time) = DATE(#{user.updateTime})</if>
+			</if>
+		</where>
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+		<if test="page!=null">
+			limit #{page.start} , #{page.count}
+		</if>
+	</select>
+
+	<select id="queryReplyOneToOneTopic" resultMap="resultReplyOneToOneTopic">
+		SELECT * FROM (
+			SELECT 
+				<include refid="sql_filed_reply"/>
+			FROM reply
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+					<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+					<if test="reply.data!=null">AND data = #{reply.data}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+				</if>
+			</where>
+			<if test="page!=null">
+				limit #{page.start} , #{page.count}
+			</if>
+		) AS temp_reply LEFT JOIN (
+			SELECT 
+				<include refid="sql_filed_topic"/>
+			FROM topic
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.title!=null">AND title = #{reply.title}</if>
+					<if test="reply.data!=null">AND data = #{reply.data}</if>
+					<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.updateTime!=null">AND DATE(update_time) = DATE(#{reply.updateTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+					<if test="reply.maxCount!=null">AND max_count = #{reply.maxCount}</if>
+				</if>
+			</where>
+			<if test="page1!=null">
+				limit #{page1.start} , #{page1.count}
+			</if>
+		) AS temp_topic
+		ON temp_reply.reply_temp_id = temp_topic.topic_id
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+	</select>
+
+	<select id="queryReplyOneToOneUser" resultMap="resultReplyOneToOneUser">
+		SELECT * FROM (
+			SELECT 
+				<include refid="sql_filed_reply"/>
+			FROM reply
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+					<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+					<if test="reply.data!=null">AND data = #{reply.data}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+				</if>
+			</where>
+			<if test="page!=null">
+				limit #{page.start} , #{page.count}
+			</if>
+		) AS temp_reply LEFT JOIN (
+			SELECT 
+				<include refid="sql_filed_user"/>
+			FROM user
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.name!=null">AND name = #{reply.name}</if>
+					<if test="reply.password!=null">AND password = #{reply.password}</if>
+					<if test="reply.sex!=null">AND sex = #{reply.sex}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+					<if test="reply.updateTime!=null">AND DATE(update_time) = DATE(#{reply.updateTime})</if>
+				</if>
+			</where>
+			<if test="page1!=null">
+				limit #{page1.start} , #{page1.count}
+			</if>
+		) AS temp_user
+		ON temp_reply.reply_temp_id = temp_user.user_id
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+	</select>
+
+	<select id="linkOneToOneTopic" resultMap="resultTopic">
+		SELECT topic.* FROM reply ,topic
+		<where>
+			reply.id = topic.topic_id
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+			<if test="topic!=null">
+				<if test="topic.id!=null">AND id = #{topic.id}</if>
+				<if test="topic.title!=null">AND title = #{topic.title}</if>
+				<if test="topic.data!=null">AND data = #{topic.data}</if>
+				<if test="topic.userId!=null">AND user_id = #{topic.userId}</if>
+				<if test="topic.createTime!=null">AND DATE(create_time) = DATE(#{topic.createTime})</if>
+				<if test="topic.updateTime!=null">AND DATE(update_time) = DATE(#{topic.updateTime})</if>
+				<if test="topic.deleteFlag!=null">AND delete_flag = #{topic.deleteFlag}</if>
+				<if test="topic.maxCount!=null">AND max_count = #{topic.maxCount}</if>
+			</if>
+		</where>
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+		<if test="page!=null">
+			limit #{page.start} , #{page.count}
+		</if>
+	</select>
+
+	<select id="linkOneToOneUser" resultMap="resultUser">
+		SELECT user.* FROM reply ,user
+		<where>
+			reply.id = user.user_id
+			<if test="reply!=null">
+				<if test="reply.id!=null">AND id = #{reply.id}</if>
+				<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+				<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+				<if test="reply.data!=null">AND data = #{reply.data}</if>
+				<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+				<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+			</if>
+			<if test="user!=null">
+				<if test="user.id!=null">AND id = #{user.id}</if>
+				<if test="user.name!=null">AND name = #{user.name}</if>
+				<if test="user.password!=null">AND password = #{user.password}</if>
+				<if test="user.sex!=null">AND sex = #{user.sex}</if>
+				<if test="user.createTime!=null">AND DATE(create_time) = DATE(#{user.createTime})</if>
+				<if test="user.deleteFlag!=null">AND delete_flag = #{user.deleteFlag}</if>
+				<if test="user.updateTime!=null">AND DATE(update_time) = DATE(#{user.updateTime})</if>
+			</if>
+		</where>
+		<if test="splicingSQL!=null">
+			${splicingSQL}
+		</if>
+		<if test="page!=null">
+			limit #{page.start} , #{page.count}
+		</if>
+	</select>
+
+	<select id="countOneToOneReplyOneToManyTopic" resultType="int">
+		SELECT COUNT(DISTINCT temp_reply.id) FROM (
+			SELECT reply.id FROM reply
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+					<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+					<if test="reply.data!=null">AND data = #{reply.data}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+				</if>
+			</where>
+			<if test="page!=null">
+				limit #{page.start} , #{page.count}
+			</if>
+		) AS temp_reply LEFT JOIN (
+			SELECT topic.topic_id FROM topic
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.title!=null">AND title = #{reply.title}</if>
+					<if test="reply.data!=null">AND data = #{reply.data}</if>
+					<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.updateTime!=null">AND DATE(update_time) = DATE(#{reply.updateTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+					<if test="reply.maxCount!=null">AND max_count = #{reply.maxCount}</if>
+				</if>
+			</where>
+			<if test="page1!=null">
+				limit #{page1.start} , #{page1.count}
+			</if>
+		) AS temp_topic
+		ON temp_reply.id = temp_topic.topic_id
+	</select>
+
+	<select id="countOneToOneReplyOneToManyUser" resultType="int">
+		SELECT COUNT(DISTINCT temp_reply.id) FROM (
+			SELECT reply.id FROM reply
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.topicId!=null">AND topic_id = #{reply.topicId}</if>
+					<if test="reply.userId!=null">AND user_id = #{reply.userId}</if>
+					<if test="reply.data!=null">AND data = #{reply.data}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+				</if>
+			</where>
+			<if test="page!=null">
+				limit #{page.start} , #{page.count}
+			</if>
+		) AS temp_reply LEFT JOIN (
+			SELECT user.user_id FROM user
+			<where>
+				<if test="reply!=null">
+					<if test="reply.id!=null">AND id = #{reply.id}</if>
+					<if test="reply.name!=null">AND name = #{reply.name}</if>
+					<if test="reply.password!=null">AND password = #{reply.password}</if>
+					<if test="reply.sex!=null">AND sex = #{reply.sex}</if>
+					<if test="reply.createTime!=null">AND DATE(create_time) = DATE(#{reply.createTime})</if>
+					<if test="reply.deleteFlag!=null">AND delete_flag = #{reply.deleteFlag}</if>
+					<if test="reply.updateTime!=null">AND DATE(update_time) = DATE(#{reply.updateTime})</if>
+				</if>
+			</where>
+			<if test="page1!=null">
+				limit #{page1.start} , #{page1.count}
+			</if>
+		) AS temp_user
+		ON temp_reply.id = temp_user.user_id
+	</select>
+
+</mapper>
