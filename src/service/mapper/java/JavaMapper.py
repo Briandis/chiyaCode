@@ -15,7 +15,7 @@ class CreateFile:
         data += "\n"
         # 文件本体内容
         data += f'@Mapper\n'
-        data += f'public interface {config["mapperInterface"]["className"]} extend {config["baseMapperInterface"]["className"]} {{\n'
+        data += f'public interface {config["mapperInterface"]["className"]} extends {config["baseMapperInterface"]["className"]} {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
