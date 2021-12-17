@@ -98,7 +98,7 @@ class CreateMethodSelect:
         res_type = CreateMethodSelect.getResult(config)
 
         data = f'{tag}<select id="select{className}" {res_type}>\n'
-        data += f'{tag * 2}SELECT * FROM {className}\n'
+        data += f'{tag * 2}SELECT * FROM {tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
         data += f'{tag * 2}</where>\n'

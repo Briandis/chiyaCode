@@ -82,8 +82,8 @@ class Generate:
             FileType.entity,
             FileType.entityBase
         ]
-        if StringUtil.list_not_null(data[JsonKey.config.self][JsonKey.config.createFile.self][JsonKey.config.createFile.value]):
-            create_file = data[JsonKey.config.self][JsonKey.config.createFile.self][JsonKey.config.createFile.value]
+        # if StringUtil.list_not_null(data[JsonKey.config.self][JsonKey.config.createFile.self][JsonKey.config.createFile.value]):
+        #     create_file = data[JsonKey.config.self][JsonKey.config.createFile.self][JsonKey.config.createFile.value]
 
         not_create_file = []
         if StringUtil.list_not_null(data[JsonKey.config.self][JsonKey.config.notCreateFile.self][JsonKey.config.notCreateFile.value]):

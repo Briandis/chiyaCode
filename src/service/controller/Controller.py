@@ -19,8 +19,8 @@ class CreateFile:
         else:
             importSet.add("org.springframework.stereotype.Controller")
             importSet.add("org.springframework.web.bind.annotation.ResponseBody")
-            importSet.add("org.springframework.web.bind.annotation.RequestMapping")
 
+        importSet.add("org.springframework.web.bind.annotation.RequestMapping")
         methodData = CreateMethod.create(config, importSet)
 
         data = f'package {config["controller"]["path"]};\n'
@@ -133,7 +133,7 @@ class CreateMethodDefaultAPI:
         method_str += f'\tpublic Result {name[1]}{className}({keyType} {key}){{\n'
         method_str += f'\t\tboolean b = false;\n'
         method_str += f'\t\tif ({key} != null) {{\n'
-        method_str += f'\t\t\tb = {lowServiceClassName}.{name[1]}{className}({lowClassName});\n'
+        method_str += f'\t\t\tb = {lowServiceClassName}.{name[1]}{className}({key});\n'
         method_str += f'\t\t}}\n'
         method_str += f'\t\treturn Result.judge(b);\n'
         method_str += f'\t}}\n'
@@ -163,14 +163,15 @@ class CreateMethodDefaultAPI:
         method_str += f'\tpublic Result {name[3]}{className}({keyType} {key}){{\n'
         method_str += f'\t\tboolean b = false;\n'
         method_str += f'\t\tif ({key} != null) {{\n'
-        method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{name[3]}{className}({lowClassName}));\n'
+        method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{name[3]}{className}({key}));\n'
         method_str += f'\t\t}}\n'
         method_str += f'\t\treturn Result.judge(b);\n'
         method_str += f'\t}}\n'
         # 多个查询
-        method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result业务对象', f'{lowClassName} {remark}对象', f'page 分页对象')
+        method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result业务对象', f'{lowClassName} {remark}对象',
+                                                   f'page 分页对象')
         if isRestful:
-            method_str += f'\t@GetMapping("/{lowClassName}")\n'
+            method_str += f'\t@GetMapping("/{name[4]}{className}")\n'
         else:
             method_str += f'\t@RequestMapping("/{name[4]}{className}")\n'
 
@@ -247,7 +248,8 @@ class CreateMethodExtraAPI:
             method_str += f'\t}}\n'
 
             # 更新
-            method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result业务对象', f'{lowClassName} {remark}对象')
+            method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result业务对象',
+                                                       f'{lowClassName} {remark}对象')
             if isRestful:
                 method_str += f'\t@PutMapping("/{i}/{lowClassName}")\n'
             else:
@@ -276,9 +278,10 @@ class CreateMethodExtraAPI:
             method_str += f'\t\treturn Result.judge(b);\n'
             method_str += f'\t}}\n'
             # 多个查询
-            method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result业务对象', f'{lowClassName} {remark}对象', f'page 分页对象')
+            method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result业务对象', f'{lowClassName} {remark}对象',
+                                                       f'page 分页对象')
             if isRestful:
-                method_str += f'\t@GetMapping("/{i}/{lowClassName}")\n'
+                method_str += f'\t@GetMapping("/{i}/{name[4]}{className}")\n'
             else:
                 method_str += f'\t@RequestMapping("/{i}/{name[4]}{className}")\n'
 

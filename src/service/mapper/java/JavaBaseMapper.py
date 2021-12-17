@@ -39,6 +39,9 @@ class CreateImportData:
         data += f'import {config["Page"]["package"]};\n'
         data += f'import org.apache.ibatis.annotations.Mapper;\n'
         data += f'import org.apache.ibatis.annotations.Param;\n'
+        if config["path"] != config["serviceInterface"]["path"]:
+            importSet.add(config["package"])
+
         for i in importSet:
             data += f'import {i};\n'
         return data

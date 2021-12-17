@@ -27,7 +27,7 @@ class CreateFile:
         data += CreateImportData.create(config, importSet)
         data += "\n"
         # 文件本体内容
-        data += f'public class {config["serviceInterface"]["className"]} {{\n'
+        data += f'public interface {config["serviceInterface"]["className"]} {{\n'
         # 文件接口内容
         data += methodData
         data += "}"

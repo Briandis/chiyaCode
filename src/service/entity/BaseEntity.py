@@ -109,6 +109,8 @@ class CreateAttribute:
                 importSet.add("java.util.Date")
             if importListFlag:
                 importSet.add("java.util.List")
+            if attr["type"] == "BigDecimal":
+                importSet.add("java.math.BigDecimal")
         attr_str += "\n"
         return attr_str
 
