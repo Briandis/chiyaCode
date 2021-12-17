@@ -93,6 +93,7 @@ class CreateMethodSelect:
         """
         className = config["className"]
         lowClassName = StringUtil.first_char_lower_case(className)
+        tableName = config["tableName"]
 
         tag = "\t"
         res_type = CreateMethodSelect.getResult(config)
