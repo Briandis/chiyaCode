@@ -57,7 +57,7 @@ class CreateImportData:
             importSet.add(config["mapperXml"]["package"])
 
         for i in importSet:
-            data += f'import {i}\n'
+            data += f'import {i};\n'
         return data
 
 

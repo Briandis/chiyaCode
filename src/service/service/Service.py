@@ -49,7 +49,7 @@ class CreateImportData:
         if config["path"] != config["serviceInterface"]["path"]:
             importSet.add(config["package"])
         for i in importSet:
-            data += f'import {i}\n'
+            data += f'import {i};\n'
         return data
 
 
