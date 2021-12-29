@@ -1,3 +1,6 @@
+from src.constant.ProtocolConstant import JsonKey
+
+
 class CreateFile:
     """
     创建整个文件内容，主要是文件流程的组装
@@ -13,6 +16,10 @@ class CreateFile:
         # 生成导包文件
         data += CreateImportData.create(config, importSet)
         data += "\n"
+        # 注释块
+        data += f'/**\n'
+        data += f' * {config[JsonKey.remark]}\n'
+        data += f' */\n'
         # 文件本体内容
         data += f'public class {config["className"]} extends {config["baseEntity"]["className"]}<{config["className"]}> {{\n'
         # 文件接口内容

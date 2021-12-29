@@ -1,3 +1,4 @@
+from src.constant.ProtocolConstant import JsonKey
 from src.util import StringUtil
 
 
@@ -17,6 +18,9 @@ class CreateFile:
         data += CreateImportData.create(config, importSet)
         data += "\n"
         # 文件本体内容
+        data += f'/**\n'
+        data += f' * {config[JsonKey.remark]}\n'
+        data += f' */\n'
         data += f'@SuppressWarnings("unchecked")\n'
         data += f'public abstract class {config["baseEntity"]["className"]}<T> {{\n'
         # 文件接口内容

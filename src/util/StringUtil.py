@@ -178,11 +178,16 @@ def create_annotation(msg=None, res=None, *args):
     """
     data = ""
     data += "\t/**\n"
+    # 内容行
     if msg is not None:
         data += f'\t * {msg}\n'
-    data += f'\t * \n'
+    # 如果返回值和参数都有，换行
+    if (args is not None and len(args) > 0) or res is not None:
+        data += f'\t * \n'
+    # 参数
     for i in args:
         data += f'\t * @param {i}\n'
+    # 返回值
     if res is not None:
         data += f'\t * @return {res}\n'
     data += "\t */\n"

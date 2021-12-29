@@ -41,7 +41,6 @@ class CreateImportData:
         data += f'import org.apache.ibatis.annotations.Param;\n'
         if config["path"] != config["serviceInterface"]["path"]:
             importSet.add(config["package"])
-
         for i in importSet:
             data += f'import {i};\n'
         return data
@@ -226,7 +225,7 @@ class CreateMethodSelectOneToOne:
             objClassName = obj["className"]
             objLowClassName = StringUtil.first_char_lower_case(objClassName)
             objRemark = obj["remark"]
-            importSet.add(f'{obj[JsonKey.package]};\n')
+            importSet.add(f'{obj[JsonKey.package]}')
             # 一对一内联查询
             method_str += create_annotation(f'内联一对一查询{objRemark}',
                                             f"{remark}对象列表",
@@ -295,7 +294,7 @@ class CreateMethodSelectOneToMany:
             objClassName = obj["className"]
             objLowClassName = StringUtil.first_char_lower_case(objClassName)
             objRemark = obj["remark"]
-            importSet.add(f'{obj[JsonKey.package]};\n')
+            importSet.add(f'{obj[JsonKey.package]}')
 
             # 一对多内联查询
             method_str += create_annotation(f'内联一对多查询{objRemark}，双方均可分页',
