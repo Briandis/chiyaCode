@@ -80,7 +80,7 @@ class CreateMethodSelect:
         data += f'{tag * 2}<where>\n'
         data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
         data += f'{tag * 2}</where>\n'
-        data += CreateXmlBlock.splicing_sql(config)
+        data += f'{tag * 2}limit #{{index}},1'
         data += f'{tag}</select>\n\n'
         return data
 

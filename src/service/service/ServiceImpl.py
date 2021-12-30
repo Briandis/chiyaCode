@@ -1,3 +1,4 @@
+from src.constant.ProtocolConstant import JsonKey
 from src.util import StringUtil
 
 
@@ -128,7 +129,10 @@ class CreateMethodDefaultAPI:
         method_str += f'\t\tif (page != null) {{\n'
         method_str += f'\t\t\tpage.setMax({lowMapperClassName}.count{className}({lowClassName}));\n'
         method_str += f'\t\t}}\n'
-        method_str += f'\t\treturn {lowMapperClassName}.select{className}({lowClassName},page);\n'
+        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
+            method_str += f'\t\treturn {lowMapperClassName}.select{className}({lowClassName}, page, null);\n'
+        else:
+            method_str += f'\t\treturn {lowMapperClassName}.select{className}({lowClassName}, page);\n'
         method_str += f'\t}}\n\n'
 
         method_str += "\n"
@@ -199,7 +203,10 @@ class CreateMethodExtraAPI:
             method_str += f'\t\tif (page != null) {{\n'
             method_str += f'\t\t\tpage.setMax({lowMapperClassName}.count{className}({lowClassName}));\n'
             method_str += f'\t\t}}\n'
-            method_str += f'\t\treturn {lowMapperClassName}.select{className}({lowClassName},page);\n'
+            if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
+                method_str += f'\t\treturn {lowMapperClassName}.select{className}({lowClassName}, page, null);\n'
+            else:
+                method_str += f'\t\treturn {lowMapperClassName}.select{className}({lowClassName}, page);\n'
             method_str += f'\t}}\n\n'
 
         method_str += "\n"

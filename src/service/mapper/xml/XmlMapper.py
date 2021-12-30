@@ -61,12 +61,12 @@ class CreateResultMap:
             for obj in config.get("oneToOne"):
                 objClassName = obj["className"]
                 objPackage = obj["package"]
-                if f'{resultMapName}OneToOne{objClassName}' not in obj_table:
+                if f'{resultMapName}{className}OneToOne{objClassName}' not in obj_table:
                     data += f'{tag}<resultMap id="{resultMapName}{className}OneToOne{objClassName}" type="{package}" extends="{baseMapperXmlPackage}.{resultMapName}{className}OneToOne{objClassName}">\n'
                     data += f'{tag}</resultMap>\n'
-                    obj_table.add(f'{resultMapName}OneToOne{objClassName}')
+                    obj_table.add(f'{resultMapName}{className}OneToOne{objClassName}')
 
-                if f'res{objClassName}' not in obj_table:
+                if f'{resultMapName}{objClassName}' not in obj_table:
                     data += f'{tag}<resultMap id="{resultMapName}{objClassName}" type="{objPackage}" extends="{baseMapperXmlPackage}.{resultMapName}{objClassName}">\n'
                     data += f'{tag}</resultMap>\n'
                     obj_table.add(f'{resultMapName}{objClassName}')
@@ -76,12 +76,12 @@ class CreateResultMap:
                 objClassName = obj["className"]
                 objPackage = obj["package"]
 
-                if f'{resultMapName}OneToMany{objClassName}' not in obj_table:
+                if f'{resultMapName}{className}OneToMany{objClassName}' not in obj_table:
                     data += f'{tag}<resultMap id="{resultMapName}{className}OneToMany{objClassName}" type="{package}" extends="{baseMapperXmlPackage}.{resultMapName}{className}OneToMany{objClassName}">\n'
                     data += f'{tag}</resultMap>\n'
-                    obj_table.add(f'{resultMapName}{objClassName}OneToMany{objClassName}')
+                    obj_table.add(f'{resultMapName}{className}OneToMany{objClassName}')
 
-                if f'res{objClassName}' not in obj_table:
+                if f'{resultMapName}{objClassName}' not in obj_table:
                     data += f'{tag}<resultMap id="{resultMapName}{objClassName}" type="{objPackage}" extends="{baseMapperXmlPackage}.{resultMapName}{objClassName}">\n'
                     data += f'{tag}</resultMap>\n'
                     obj_table.add(f'{resultMapName}{objClassName}')
@@ -90,11 +90,11 @@ class CreateResultMap:
             for obj in config.get("manyToMany"):
                 objClassName = obj["many"]["className"]
                 objPackage = obj["many"]["package"]
-                if f'{resultMapName}ManyToMany{objClassName}' not in obj_table:
+                if f'{resultMapName}{className}ManyToMany{objClassName}' not in obj_table:
                     data += f'{tag}<resultMap id="{resultMapName}{className}ManyToMany{objClassName}" type="{package}" extends="{baseMapperXmlPackage}.{resultMapName}{className}ManyToMany{objClassName}">\n'
                     data += f'{tag}</resultMap>\n'
                     obj_table.add(f'{resultMapName}{className}ManyToMany{objClassName}')
-                if f'res{objClassName}' not in obj_table:
+                if f'{resultMapName}{objClassName}' not in obj_table:
                     data += f'{tag}<resultMap id="{resultMapName}{objClassName}" type="{objPackage}" extends="{baseMapperXmlPackage}.{resultMapName}{objClassName}">\n'
                     data += f'{tag}</resultMap>\n'
                     obj_table.add(f'{resultMapName}{objClassName}')

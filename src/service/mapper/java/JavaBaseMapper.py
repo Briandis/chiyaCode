@@ -68,13 +68,15 @@ class CreateMethodInsert:
         method_str += create_annotation(f'添加或更新{remark}，根据唯一性索引', "受影响行数", f'list {remark}列表')
         method_str += f'\tInteger insertOrUpdate{className}ByUnique({className} {lowClassName});\n\n'
         # 保存或更新条件式
-        method_str += create_annotation(f'添加或更新{remark}，根据查询条件', "受影响行数", f'save{className} 添加的{remark}对象', f'condition{className} {remark}条件对象')
+        method_str += create_annotation(f'添加或更新{remark}，根据查询条件', "受影响行数", f'save{className} 添加的{remark}对象',
+                                        f'condition{className} {remark}条件对象')
         method_str += f'\tInteger insertOrUpdate{className}ByWhere(' \
                       f'@Param("save{className}") {className} save{className}, ' \
                       f'@Param("condition{className}") {className} condition{className}' \
                       f');\n\n'
         # 仅条件插入
-        method_str += create_annotation(f'条件添加{remark}', "受影响行数", f'save{className} 添加的{remark}对象', f'condition{className} {remark}条件对象')
+        method_str += create_annotation(f'条件添加{remark}', "受影响行数", f'save{className} 添加的{remark}对象',
+                                        f'condition{className} {remark}条件对象')
         method_str += f'\tInteger insert{className}ByWhereOnlySave(' \
                       f'@Param("save{className}") {className} save{className}, ' \
                       f'@Param("condition{className}") {className} condition{className}' \
@@ -107,7 +109,8 @@ class CreateMethodDelete:
         method_str += f'\tInteger delete{className}In{upperKey}(List<{keyType}> list);\n\n'
 
         # 主键条件删
-        method_str += create_annotation(f'根据{key}和其他条件真删{remark}', "受影响行数", f'{key} {remark}的{key}', f'{lowClassName} {remark}条件对象')
+        method_str += create_annotation(f'根据{key}和其他条件真删{remark}', "受影响行数", f'{key} {remark}的{key}',
+                                        f'{lowClassName} {remark}条件对象')
         method_str += f'\tInteger delete{className}By{upperKey}AndWhere(' \
                       f'@Param("{key}") {keyType} {key}, ' \
                       f'@Param("{lowClassName}") {className} {lowClassName}' \
@@ -143,26 +146,30 @@ class CreateMethodUpdate:
         method_str += create_annotation(f'根据{key}修改{remark}', "受影响行数", f'{lowClassName} 要更新的{remark}对象')
         method_str += f'\tInteger update{className}By{upperKey}({className} {lowClassName});\n\n'
         # 不重复条件改
-        method_str += create_annotation(f'根据{key}和不满足的条件更新{remark}，查询条件不满足时更新对象', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} 不存在的{remark}对象')
+        method_str += create_annotation(f'根据{key}和不满足的条件更新{remark}，查询条件不满足时更新对象', "受影响行数",
+                                        f'save{className} 更新的{remark}对象', f'condition{className} 不存在的{remark}对象')
         method_str += f'\tInteger update{className}ByNotRepeatWhere(' \
                       f'@Param("save{className}") {className} save{className}, ' \
                       f'@Param("condition{className}") {className} condition{className}' \
                       f');\n\n'
         # 条件更新ID
-        method_str += create_annotation(f'根据{key}和其他的条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} {remark}条件对象')
+        method_str += create_annotation(f'根据{key}和其他的条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象',
+                                        f'condition{className} {remark}条件对象')
         method_str += f'\tInteger update{className}By{upperKey}AndWhere(' \
                       f'@Param("save{className}") {className} save{className}, ' \
                       f'@Param("condition{className}") {className} condition{className}' \
                       f');\n\n'
 
         # 条件改
-        method_str += create_annotation(f'根据条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} 条件{remark}对象')
+        method_str += create_annotation(f'根据条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象',
+                                        f'condition{className} 条件{remark}对象')
         method_str += f'\tInteger update{className}(' \
                       f'@Param("save{className}") {className} save{className}, ' \
                       f'@Param("condition{className}") {className} condition{className}' \
                       f');\n\n'
         # 设置空字段
-        method_str += create_annotation(f'记录{key}设置其他字段为null', "受影响行数", f'{lowClassName} 设置成null的{remark}对象，对象中字段不为Null则是要设置成null的字段')
+        method_str += create_annotation(f'记录{key}设置其他字段为null', "受影响行数",
+                                        f'{lowClassName} 设置成null的{remark}对象，对象中字段不为Null则是要设置成null的字段')
         method_str += f'\tInteger update{className}SetNullBy{upperKey}({className} {lowClassName});\n\n'
         return method_str
 
@@ -196,11 +203,22 @@ class CreateMethodSelect:
                       f'@Param("index")Integer index' \
                       f');\n\n'
         # 普通查
-        method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象', f'page 分页对象')
-        method_str += f'\tList<{className}> select{className}(' \
-                      f'@Param("{lowClassName}"){className} {lowClassName}, ' \
-                      f'@Param("page") Page page' \
-                      f');\n\n'
+        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
+            splicingSQL = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
+            method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象',
+                                            f'page 分页对象', f'{splicingSQL} 拼接的sql语句')
+            method_str += f'\tList<{className}> select{className}(' \
+                          f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                          f'@Param("page") Page page, ' \
+                          f'@Param("{splicingSQL}") String {splicingSQL}' \
+                          f');\n\n'
+        else:
+            method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象',
+                                            f'page 分页对象')
+            method_str += f'\tList<{className}> select{className}(' \
+                          f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                          f'@Param("page") Page page' \
+                          f');\n\n'
         # 普通计数
         method_str += create_annotation(f'统计{remark}记录数', f"查询到的记录数", f'{lowClassName} {remark}对象')
         method_str += f'\tInteger count{className}(@Param("{lowClassName}"){className} {lowClassName});\n\n'
