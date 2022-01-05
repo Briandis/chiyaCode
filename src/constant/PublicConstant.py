@@ -73,3 +73,5 @@ class Constant:
     JAVA_DATA_TYPE = "javaDataType"
     # 是主键
     IS_PRIMARY_KEY = "isPrimaryKey"
+    # 关系装配范围
+    MULTI_SCOPE = "multiScope"

@@ -87,7 +87,9 @@ class CreateConfig:
                             key = i_table[JsonKey.key.self][JsonKey.key.filed]
                             # id是默认id的情况
                             if key == "id":
-                                key = util.if_return(config.get(Constant.UNDERSCORE_REPLACE), f'{i_table[JsonKey.tableName]}_{key}', f'{i_table[JsonKey.tableName]}{key}')
+                                key = util.if_return(config.get(Constant.UNDERSCORE_REPLACE),
+                                                     f'{i_table[JsonKey.tableName]}_{key}',
+                                                     f'{i_table[JsonKey.tableName]}{key}')
                             continue_flag = CreateConfig.check_key_in_attr(j_table[JsonKey.attr.self], key)
                             if continue_flag:
                                 continue
@@ -95,7 +97,9 @@ class CreateConfig:
                             key = j_table[JsonKey.key.self][JsonKey.key.filed]
                             # id是默认id的情况
                             if key == "id":
-                                key = util.if_return(config.get(Constant.UNDERSCORE_REPLACE), f'{j_table[JsonKey.tableName]}_{key}', f'{i_table[JsonKey.tableName]}{key}')
+                                key = util.if_return(config.get(Constant.UNDERSCORE_REPLACE),
+                                                     f'{j_table[JsonKey.tableName]}_{key}',
+                                                     f'{i_table[JsonKey.tableName]}{key}')
                             # 如果j主键在i表中的字段出现，则键无法构成多对多关系
                             continue_flag = CreateConfig.check_key_in_attr(i_table[JsonKey.attr.self], key)
                             if continue_flag:
@@ -114,6 +118,13 @@ class CreateConfig:
 
     @staticmethod
     def create(tables: dict, config: dict):
+        # 那些表采用多表装配，不装配直接移除
+        if config.get(Constant.MULTI_SCOPE):
+            multi_scope = config.get(Constant.MULTI_SCOPE)
+            for table in list(tables.keys()):
+                if table not in multi_scope:
+                    del tables[table]
+
         unknown_to_unknown = {}
         one_to_many = {}
         one_to_one = {}
@@ -165,6 +176,7 @@ class CreateConfig:
         保存模型
         :param tables: 全部的配置
         :param create_list 生成列表
+        :param not_create 不生成的
         """
         path = os.path.join(os.getcwd(), "config")
         if not os.path.exists(path):
