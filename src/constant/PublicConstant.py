@@ -75,3 +75,9 @@ class Constant:
     IS_PRIMARY_KEY = "isPrimaryKey"
     # 关系装配范围
     MULTI_SCOPE = "multiScope"
+    # 额外的API
+    EXTRA_API = "extraAPI"
+    # 额外的API名字列表
+    EXTRA_API_NAME = "extraAPIName"
+    # 默认的API
+    DEFAULT_API = "defaultAPI"

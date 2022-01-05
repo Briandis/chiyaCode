@@ -264,7 +264,9 @@ class ConditionalAssembly:
     @staticmethod
     def assembly(tables: dict, config: dict):
         for table in tables:
+            # 初始化配置
             ConditionalAssembly.table_init(tables[table], config)
+            # 模糊搜索
             if config.get("fuzzySearch"):
                 if config.get("fuzzySearchList") and config["fuzzySearchList"].get(table):
                     tables[table][JsonKey.config.self][JsonKey.config.fuzzySearch.self][JsonKey.config.fuzzySearch.data] = config["fuzzySearchList"].get(table)
@@ -272,5 +274,17 @@ class ConditionalAssembly:
                 tables[table][JsonKey.config.self][JsonKey.config.fuzzySearch.self][JsonKey.config.fuzzySearch.enable] = False
             if len(tables[table][JsonKey.config.self][JsonKey.config.fuzzySearch.self][JsonKey.config.fuzzySearch.data]) == 0:
                 tables[table][JsonKey.config.self][JsonKey.config.fuzzySearch.self][JsonKey.config.fuzzySearch.enable] = False
+            # 生成模式
             ConditionalAssembly.set_project_model(config.get(Constant.CREATE_MODEL), table, tables[table])
+            # 设置包
             ConditionalAssembly.set_model_package(tables[table])
+            # 装配配置
+            # 额外接口
+            if Constant.EXTRA_API in config:
+                tables[table][JsonKey.config.self][JsonKey.config.extraAPI.self][JsonKey.config.extraAPI.enable] = config.get(Constant.EXTRA_API)
+            # 额外的名称
+            if Constant.EXTRA_API_NAME in config:
+                tables[table][JsonKey.config.self][JsonKey.config.extraAPI.self][JsonKey.config.extraAPI.value] = config.get(Constant.EXTRA_API_NAME)
+            # 默认接口
+            if Constant.DEFAULT_API in config:
+                tables[table][JsonKey.config.self][JsonKey.config.defaultAPI.self][JsonKey.config.defaultAPI.enable] = config.get(Constant.DEFAULT_API)
