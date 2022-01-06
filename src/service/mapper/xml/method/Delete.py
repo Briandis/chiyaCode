@@ -65,7 +65,7 @@ class CreateMethodDelete:
         data += f'{tag * 2}DELETE FROM {tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += f'{tag * 3}{keyFiled} = #{{{key}}}\n'
-        data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
+        data += CreateXmlBlock.where_mod_2(config, 3, lowClassName)
         data += f'{tag * 2}</where>\n'
         data += f'{tag}</delete>\n\n'
         return data
@@ -85,7 +85,7 @@ class CreateMethodDelete:
         data = f'{tag}<delete id="delete{className}">\n'
         data += f'{tag * 2}DELETE FROM {tableName}\n'
         data += f'{tag * 2}<where>\n'
-        data += f'{CreateXmlBlock.where_mod_1(config, 3, lowClassName)}'
+        data += f'{CreateXmlBlock.where_mod_2(config, 3, lowClassName)}'
         data += f'{tag * 2}</where>\n'
         data += f'{tag}</delete>\n\n'
         return data

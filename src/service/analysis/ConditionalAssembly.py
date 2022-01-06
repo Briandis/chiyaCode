@@ -288,3 +288,9 @@ class ConditionalAssembly:
             # 默认接口
             if Constant.DEFAULT_API in config:
                 tables[table][JsonKey.config.self][JsonKey.config.defaultAPI.self][JsonKey.config.defaultAPI.enable] = config.get(Constant.DEFAULT_API)
+            # 生成的文件
+            if Constant.CREATE_FILE in config:
+                tables[table][JsonKey.config.self][JsonKey.config.createFile.self][JsonKey.config.createFile.value] = config.get(Constant.CREATE_FILE)
+            # 不生成的文件
+            if Constant.NOT_CREATE_FILE in config:
+                tables[table][JsonKey.config.self][JsonKey.config.notCreateFile.self][JsonKey.config.notCreateFile.value] = config.get(Constant.NOT_CREATE_FILE)

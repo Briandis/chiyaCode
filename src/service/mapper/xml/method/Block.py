@@ -201,6 +201,45 @@ class CreateXmlBlock:
         return data
 
     @staticmethod
+    def where_mod_2(config: dict, indent: int, prefix=None, fuzzy_search=True, table_as_name=None):
+        """
+        忽略DATE的类型，适用于insert,update,delete
+        <if test="prefix.attr!=null">AND filed = #{prefix.attr}</if>
+        :param config: 配置文件
+        :param indent: 缩进
+        :param prefix: 前缀
+        :param fuzzy_search: 模糊搜索
+        :param table_as_name: 表别名
+        """
+        className = config["className"]
+        key = config["key"]["attr"]
+        keyFiled = config["key"]["filed"]
+        tableName = config["tableName"]
+
+        tap = "\t" * indent
+        i, max_len, data = 0, len(config["attr"]), ""
+        if prefix:
+            start = f'{tap}<if test="{prefix}!=null">\n'
+            prefix = f'{prefix}.'
+            end = f"{tap}</if>\n"
+            tap += '\t'
+        else:
+            prefix = start = end = ""
+
+        table_as_name = util.if_return(table_as_name, f'{table_as_name}.', "")
+        data += start
+
+        data += f'{tap}<if test="{prefix}{key}!=null">AND {table_as_name}{keyFiled} = #{{{prefix}{key}}}</if>\n'
+        for attr in config["attr"]:
+                data += f'{tap}<if test="{prefix}{attr["attr"]}!=null">AND {table_as_name}{attr["filed"]} = #{{{prefix}{attr["attr"]}}}</if>\n'
+        data += f'{end}'
+        if fuzzy_search:
+            data += CreateXmlBlock.fuzzy_search(config, indent, table_as_name)
+        return data
+
+
+
+    @staticmethod
     def compulsory_fuzzy_search(lists: list, keyword, indent: int, table_name="", ):
         """
         强制生成模糊搜索块

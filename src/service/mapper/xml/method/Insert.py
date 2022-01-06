@@ -136,7 +136,7 @@ class CreateMethodInsert:
         data += f'{tag * 3}SELECT IFNULL ((\n'
         data += f'{tag * 4}SELECT {keyFiled} FROM {tableName}\n'
         data += f'{tag * 4}<where>\n'
-        data += CreateXmlBlock.where_mod_1(config, 5, f'condition{className}', False)
+        data += CreateXmlBlock.where_mod_2(config, 5, f'condition{className}', False)
         data += f'{tag * 4}</where>\n'
         data += f'{tag * 3}),NULL)\n'
         data += f'{tag * 2}</selectKey>\n'
@@ -193,7 +193,7 @@ class CreateMethodInsert:
         data += f'{tag * 2}FROM DUAL WHERE NOT EXISTS (\n'
         data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
         data += f'{tag * 3}<where>\n'
-        data += CreateXmlBlock.where_mod_1(config, 4, f'condition{className}', False)
+        data += CreateXmlBlock.where_mod_2(config, 4, f'condition{className}', False)
         data += f'{tag * 3}</where>\n'
         data += f'{tag * 2})\n'
         data += f'{tag}</insert>\n\n'

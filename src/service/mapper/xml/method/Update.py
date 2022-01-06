@@ -58,7 +58,7 @@ class CreateMethodUpdate:
         data += f'{tag * 3}AND NOT EXISTS (\n'
         data += f'{tag * 4}SELECT {keyFiled} FROM (SELECT * FROM {tableName} ) AS t \n'
         data += f'{tag * 4}<where>\n'
-        data += CreateXmlBlock.where_mod_1(config, 5, f'condition{className}', False, "t")
+        data += CreateXmlBlock.where_mod_2(config, 5, f'condition{className}', False, "t")
         data += f'{tag * 4}</where>\n'
         data += f'{tag * 3})\n'
         data += f'{tag * 2}</if>\n'
@@ -86,7 +86,7 @@ class CreateMethodUpdate:
         data += f'{tag * 2}</set>\n'
         data += f'{tag * 2}<where>\n'
         data += f'{tag * 3}{keyFiled} = #{{save{className}.{key}}}\n'
-        data += CreateXmlBlock.where_mod_1(config, 3, f'condition{className}', False)
+        data += CreateXmlBlock.where_mod_2(config, 3, f'condition{className}', False)
         data += f'{tag * 2}</where>\n'
         data += f'{tag}</update>\n\n'
         return data
@@ -113,7 +113,7 @@ class CreateMethodUpdate:
         data += f'{tag * 3}<if test="save{className}.{key}!=null">\n'
         data += f'{tag * 4}AND {keyFiled} = #{{save{className}.{key}}}\n'
         data += f'{tag * 3}</if>\n'
-        data += CreateXmlBlock.where_mod_1(config, 3, f'condition{className}', False)
+        data += CreateXmlBlock.where_mod_2(config, 3, f'condition{className}', False)
         data += f'{tag * 2}</where>\n'
         data += f'{tag}</update>\n\n'
         return data
