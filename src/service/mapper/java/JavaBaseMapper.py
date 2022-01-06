@@ -75,9 +75,16 @@ class CreateMethodInsert:
                       f'@Param("condition{className}") {className} condition{className}' \
                       f');\n\n'
         # 仅条件插入
-        method_str += create_annotation(f'条件添加{remark}', "受影响行数", f'save{className} 添加的{remark}对象',
+        method_str += create_annotation(f'条件添加{remark}，查询条件存在的情况下', "受影响行数", f'save{className} 添加的{remark}对象',
                                         f'condition{className} {remark}条件对象')
-        method_str += f'\tInteger insert{className}ByWhereOnlySave(' \
+        method_str += f'\tInteger insert{className}ByExistWhere(' \
+                      f'@Param("save{className}") {className} save{className}, ' \
+                      f'@Param("condition{className}") {className} condition{className}' \
+                      f');\n\n'
+        # 仅条件插入
+        method_str += create_annotation(f'条件添加{remark}，查询条件不存在的情况下', "受影响行数", f'save{className} 添加的{remark}对象',
+                                        f'condition{className} {remark}条件对象')
+        method_str += f'\tInteger insert{className}ByNotExistWhere(' \
                       f'@Param("save{className}") {className} save{className}, ' \
                       f'@Param("condition{className}") {className} condition{className}' \
                       f');\n\n'

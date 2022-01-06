@@ -162,11 +162,11 @@ class CreateMethodInsert:
         data += f'{tag}</insert>\n\n'
         return data
 
-    # 添加或更新,根据查询
+    # 查询到数据，则添加
     @staticmethod
-    def __create_insert_by_where(config):
+    def __create_insert_by_exist(config):
         """
-        添加或更新,根据查询
+        根据查询条件存在下添加
         :param config: 配置文件
         """
         className = config["className"]
@@ -181,7 +181,44 @@ class CreateMethodInsert:
         attrs = {"attr": attrs}
 
         tag = "\t"
-        data = f'{tag}<insert id="insert{className}ByWhereOnlySave" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
+        data = f'{tag}<insert id="insert{className}ByExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
+        data += f'{tag * 2}INSERT INTO {tableName} (\n'
+        data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
+        data += CreateXmlBlock.if_mod_1(attrs, 3, f'save{className}')
+        data += f'{tag * 2}</trim>\n'
+        data += f'{tag * 2}) SELECT \n'
+        data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
+        data += CreateXmlBlock.if_mod_2(attrs, 3, f'save{className}')
+        data += f"{tag * 2}</trim>\n"
+        data += f'{tag * 2}FROM DUAL WHERE EXISTS (\n'
+        data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+        data += f'{tag * 3}<where>\n'
+        data += CreateXmlBlock.where_mod_2(config, 4, f'condition{className}', False)
+        data += f'{tag * 3}</where>\n'
+        data += f'{tag * 2})\n'
+        data += f'{tag}</insert>\n\n'
+        return data
+
+    # 查询条件不存在下，则添加
+    @staticmethod
+    def __create_insert_by_not_exist(config):
+        """
+        根据查询条件存在下添加
+        :param config: 配置文件
+        """
+        className = config["className"]
+        key = config["key"]["attr"]
+        keyFiled = config["key"]["filed"]
+        tableName = config["tableName"]
+
+        attrs = []
+        attrs.append(config["key"])
+        for attr in config["attr"]:
+            attrs.append(attr)
+        attrs = {"attr": attrs}
+
+        tag = "\t"
+        data = f'{tag}<insert id="insert{className}ByNotExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
         data += f'{tag * 2}INSERT INTO {tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3, f'save{className}')
@@ -206,5 +243,6 @@ class CreateMethodInsert:
         data += CreateMethodInsert.__create_insert_list(config)
         data += CreateMethodInsert.__create_insert_or_update_unique(config)
         data += CreateMethodInsert.__create_insert_or_update_where(config)
-        data += CreateMethodInsert.__create_insert_by_where(config)
+        data += CreateMethodInsert.__create_insert_by_exist(config)
+        data += CreateMethodInsert.__create_insert_by_not_exist(config)
         return data
