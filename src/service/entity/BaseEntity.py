@@ -19,7 +19,7 @@ class CreateFile:
         data += "\n"
         # 文件本体内容
         data += f'/**\n'
-        data += f' * {config[JsonKey.remark]}\n'
+        data += f' * 抽象的{config[JsonKey.remark]}\n'
         data += f' */\n'
         data += f'@SuppressWarnings("unchecked")\n'
         data += f'public abstract class {config["baseEntity"]["className"]}<T> {{\n'
@@ -162,12 +162,12 @@ class CreateMethodChain:
 
             attr_str += StringUtil.create_annotation(f'链式添加{attr["remark"]}', "对象本身", f'{attrName} {attr["remark"]}对象')
             attr_str += f'\tpublic T chain{upperAttr}({attr["type"]} {attrName}) {{\n'
-            attr_str += f'\t\tthis.{attrName} = {attrName};\n'
+            # attr_str += f'\t\tthis.{attrName} = {attrName};\n'
+            attr_str += f'\t\tset{upperAttr}({attrName});\n'
             attr_str += f'\t\treturn (T) this;\n'
             attr_str += f'\t}}\n'
             attr_str += '\n'
 
-        attr_str += "\n"
         return attr_str
 
 
