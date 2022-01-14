@@ -109,7 +109,7 @@ class CreateMethodDefaultAPI:
         lowServiceClassName = StringUtil.first_char_lower_case(serviceClassName)
 
         # 增
-        method_str += StringUtil.create_annotation(f'添加{remark}', f'Result业务对象', f'{lowClassName} {remark}对象')
+        method_str += StringUtil.create_annotation(f'添加{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象')
 
         if isRestful:
             method_str += f'\t@PostMapping("/{lowClassName}")\n'
@@ -123,7 +123,7 @@ class CreateMethodDefaultAPI:
         method_str += f'\t}}\n'
 
         # 删除方法主键
-        method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result业务对象', f'{key} {remark}的{key}')
+        method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
 
         if isRestful:
             method_str += f'\t@DeleteMapping("/{lowClassName}")\n'
@@ -139,7 +139,7 @@ class CreateMethodDefaultAPI:
         method_str += f'\t}}\n'
 
         # 更新
-        method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result业务对象', f'{lowClassName} {remark}对象')
+        method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result 业务对象', f'{lowClassName} {remark}对象')
         if isRestful:
             method_str += f'\t@PutMapping("/{lowClassName}")\n'
         else:
@@ -154,7 +154,7 @@ class CreateMethodDefaultAPI:
         method_str += f'\t}}\n'
 
         # 单个查询
-        method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result业务对象', f'{key} {remark}的{key}')
+        method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
         if isRestful:
             method_str += f'\t@GetMapping("/{lowClassName}")\n'
         else:
@@ -168,7 +168,7 @@ class CreateMethodDefaultAPI:
         method_str += f'\t\treturn Result.judge(b);\n'
         method_str += f'\t}}\n'
         # 多个查询
-        method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result业务对象', f'{lowClassName} {remark}对象',
+        method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象',
                                                    f'page 分页对象')
         if isRestful:
             method_str += f'\t@GetMapping("/{name[4]}{className}")\n'
@@ -218,7 +218,7 @@ class CreateMethodExtraAPI:
 
         for i in extraName:
             # 增
-            method_str += StringUtil.create_annotation(f'添加{remark}', f'Result业务对象', f'{lowClassName} {remark}对象')
+            method_str += StringUtil.create_annotation(f'添加{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象')
 
             if isRestful:
                 method_str += f'\t@PostMapping("/{i}/{lowClassName}")\n'
@@ -232,7 +232,7 @@ class CreateMethodExtraAPI:
             method_str += f'\t}}\n'
 
             # 删除方法主键
-            method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result业务对象', f'{key} {remark}的{key}')
+            method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
 
             if isRestful:
                 method_str += f'\t@DeleteMapping("/{i}/{lowClassName}")\n'
@@ -248,7 +248,7 @@ class CreateMethodExtraAPI:
             method_str += f'\t}}\n'
 
             # 更新
-            method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result业务对象',
+            method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result 业务对象',
                                                        f'{lowClassName} {remark}对象')
             if isRestful:
                 method_str += f'\t@PutMapping("/{i}/{lowClassName}")\n'
@@ -264,7 +264,7 @@ class CreateMethodExtraAPI:
             method_str += f'\t}}\n'
 
             # 单个查询
-            method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result业务对象', f'{key} {remark}的{key}')
+            method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
             if isRestful:
                 method_str += f'\t@GetMapping("/{i}/{lowClassName}")\n'
             else:
@@ -278,7 +278,7 @@ class CreateMethodExtraAPI:
             method_str += f'\t\treturn Result.judge(b);\n'
             method_str += f'\t}}\n'
             # 多个查询
-            method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result业务对象', f'{lowClassName} {remark}对象',
+            method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象',
                                                        f'page 分页对象')
             if isRestful:
                 method_str += f'\t@GetMapping("/{i}/{name[4]}{className}")\n'
