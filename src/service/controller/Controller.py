@@ -281,9 +281,9 @@ class CreateMethodExtraAPI:
             method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象',
                                                        f'page 分页对象')
             if isRestful:
-                method_str += f'\t@GetMapping("/{i}/{name[4]}{className}")\n'
+                method_str += f'\t@GetMapping("/{i}/{StringUtil.first_char_lower_case(name[4])}{className}")\n'
             else:
-                method_str += f'\t@RequestMapping("/{i}/{name[4]}{className}")\n'
+                method_str += f'\t@RequestMapping("/{i}/{StringUtil.first_char_lower_case(name[4])}{className}")\n'
 
             method_str += f'\tpublic Result {i}{name[4]}{className}({className} {lowClassName}, Page page){{\n'
             method_str += f'\t\tList<{className}> list = {lowServiceClassName}.{i}{name[4]}{className}({lowClassName}, page);\n'
