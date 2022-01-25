@@ -116,7 +116,7 @@ class CreateMethodDefaultAPI:
         else:
             method_str += f'\t@RequestMapping("/{name[0]}{className}")\n'
 
-        method_str += f'\tpublic Result {name[0]}{className}({className} {lowClassName}){{\n'
+        method_str += f'\tpublic Result {name[0]}{className}({className} {lowClassName}) {{\n'
         method_str += f'\t\tboolean b = false;\n'
         method_str += f'\t\tb = {lowServiceClassName}.{name[0]}{className}({lowClassName});\n'
         method_str += f'\t\treturn Result.judge(b);\n'
@@ -145,7 +145,7 @@ class CreateMethodDefaultAPI:
         else:
             method_str += f'\t@RequestMapping("/{name[2]}{className}")\n'
 
-        method_str += f'\tpublic Result {name[2]}{className}({className} {lowClassName}){{\n'
+        method_str += f'\tpublic Result {name[2]}{className}({className} {lowClassName}) {{\n'
         method_str += f'\t\tboolean b = false;\n'
         method_str += f'\t\tif ({lowClassName}.get{upperKey}() != null) {{\n'
         method_str += f'\t\t\tb = {lowServiceClassName}.{name[2]}{className}({lowClassName});\n'
@@ -160,7 +160,7 @@ class CreateMethodDefaultAPI:
         else:
             method_str += f'\t@RequestMapping("/{name[3]}{className}")\n'
 
-        method_str += f'\tpublic Result {name[3]}{className}({keyType} {key}){{\n'
+        method_str += f'\tpublic Result {name[3]}{className}({keyType} {key}) {{\n'
         method_str += f'\t\tboolean b = false;\n'
         method_str += f'\t\tif ({key} != null) {{\n'
         method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{name[3]}{className}({key}));\n'
@@ -175,7 +175,7 @@ class CreateMethodDefaultAPI:
         else:
             method_str += f'\t@RequestMapping("/{name[4]}{className}")\n'
 
-        method_str += f'\tpublic Result {name[4]}{className}({className} {lowClassName}, Page page){{\n'
+        method_str += f'\tpublic Result {name[4]}{className}({className} {lowClassName}, Page page) {{\n'
         method_str += f'\t\tList<{className}> list = {lowServiceClassName}.{name[4]}{className}({lowClassName}, page);\n'
         method_str += f'\t\treturn Result.success(list, page);\n'
         method_str += f'\t}}\n'
@@ -225,7 +225,7 @@ class CreateMethodExtraAPI:
             else:
                 method_str += f'\t@RequestMapping("/{i}/{name[0]}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[0]}{className}({className} {lowClassName}){{\n'
+            method_str += f'\tpublic Result {i}{name[0]}{className}({className} {lowClassName}) {{\n'
             method_str += f'\t\tboolean b = false;\n'
             method_str += f'\t\tb = {lowServiceClassName}.{i}{name[0]}{className}({lowClassName});\n'
             method_str += f'\t\treturn Result.judge(b);\n'
@@ -239,7 +239,7 @@ class CreateMethodExtraAPI:
             else:
                 method_str += f'\t@RequestMapping("/{i}/{name[1]}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[1]}{className}({keyType} {key}){{\n'
+            method_str += f'\tpublic Result {i}{name[1]}{className}({keyType} {key}) {{\n'
             method_str += f'\t\tboolean b = false;\n'
             method_str += f'\t\tif ({key} != null) {{\n'
             method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[1]}{className}({key});\n'
@@ -255,7 +255,7 @@ class CreateMethodExtraAPI:
             else:
                 method_str += f'\t@RequestMapping("/{i}/{name[2]}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[2]}{className}({className} {lowClassName}){{\n'
+            method_str += f'\tpublic Result {i}{name[2]}{className}({className} {lowClassName}) {{\n'
             method_str += f'\t\tboolean b = false;\n'
             method_str += f'\t\tif ({lowClassName}.get{upperKey}() != null) {{\n'
             method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[2]}{className}({lowClassName});\n'
@@ -270,7 +270,7 @@ class CreateMethodExtraAPI:
             else:
                 method_str += f'\t@RequestMapping("/{i}/{name[3]}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[3]}{className}({keyType} {key}){{\n'
+            method_str += f'\tpublic Result {i}{name[3]}{className}({keyType} {key}) {{\n'
             method_str += f'\t\tboolean b = false;\n'
             method_str += f'\t\tif ({key} != null) {{\n'
             method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{i}{name[3]}{className}({key}));\n'
@@ -285,7 +285,7 @@ class CreateMethodExtraAPI:
             else:
                 method_str += f'\t@RequestMapping("/{i}/{StringUtil.first_char_lower_case(name[4])}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[4]}{className}({className} {lowClassName}, Page page){{\n'
+            method_str += f'\tpublic Result {i}{name[4]}{className}({className} {lowClassName}, Page page) {{\n'
             method_str += f'\t\tList<{className}> list = {lowServiceClassName}.{i}{name[4]}{className}({lowClassName}, page);\n'
             method_str += f'\t\treturn Result.success(list, page);\n'
             method_str += f'\t}}\n'
