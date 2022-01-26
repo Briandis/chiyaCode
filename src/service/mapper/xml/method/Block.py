@@ -139,7 +139,7 @@ class CreateXmlBlock:
         """
         tag = "\t" * indent
         data = ""
-        if config["config"]["splicingSQL"]["enable"]:
+        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
             splicingSQL = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
             data += f'{tag}<if test="{splicingSQL}!=null">\n'
             data += f'{tag}\t${{{splicingSQL}}}\n'
@@ -231,13 +231,11 @@ class CreateXmlBlock:
 
         data += f'{tap}<if test="{prefix}{key}!=null">AND {table_as_name}{keyFiled} = #{{{prefix}{key}}}</if>\n'
         for attr in config["attr"]:
-                data += f'{tap}<if test="{prefix}{attr["attr"]}!=null">AND {table_as_name}{attr["filed"]} = #{{{prefix}{attr["attr"]}}}</if>\n'
+            data += f'{tap}<if test="{prefix}{attr["attr"]}!=null">AND {table_as_name}{attr["filed"]} = #{{{prefix}{attr["attr"]}}}</if>\n'
         data += f'{end}'
         if fuzzy_search:
             data += CreateXmlBlock.fuzzy_search(config, indent, table_as_name)
         return data
-
-
 
     @staticmethod
     def compulsory_fuzzy_search(lists: list, keyword, indent: int, table_name="", ):

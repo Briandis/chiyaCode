@@ -156,11 +156,11 @@ class XmlPretreatment:
                     if ct[JsonKey.tableName] == table:
                         obj["config"] = ct[JsonKey.config.self]
                 bean_info["oneToMany"].append(obj)
-            if table in many_to_many_list:
-                obj["foreignKey"] = many_to_many_dict[table]["foreignKey"]
-                for ct in config.get(JsonKey.manyToMany):
-                    if ct["many"][JsonKey.tableName] == table:
-                        obj["config"] = ct["many"][JsonKey.config.self]
-                bean_info["manyToMany"].append({"many": obj})
-
+            # if table in many_to_many_list:
+            #     obj["foreignKey"] = many_to_many_dict[table]["foreignKey"]
+            #     for ct in config.get(JsonKey.manyToMany):
+            #         if ct["many"][JsonKey.tableName] == table:
+            #             obj["config"] = ct["many"][JsonKey.config.self]
+            #     bean_info["manyToMany"].append({"many": obj})
+        bean_info["manyToMany"] = copy.deepcopy(config.get("manyToMany"))
         return bean_info, resTable, table_my

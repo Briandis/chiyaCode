@@ -246,6 +246,13 @@ class CreateMethodSelectOneToOne:
         method_str = ""
         if config.get(JsonKey.oneToOne) is None or len(config.get(JsonKey.oneToOne)) == 0:
             return ""
+        splicingSQL = None
+        sqlP = ""
+        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
+            sqlValue = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
+            splicingSQL = f'{sqlValue} 拼接的SQL'
+            sqlP = f', @Param("{sqlValue}") String {sqlValue}'
+
         for obj in config["oneToOne"]:
             objClassName = obj["className"]
             objLowClassName = StringUtil.first_char_lower_case(objClassName)
@@ -257,11 +264,13 @@ class CreateMethodSelectOneToOne:
                                             f'{lowClassName} {remark}对象',
                                             f'{objLowClassName} {objRemark}对象',
                                             f'page 分页对象',
+                                            splicingSQL,
                                             )
             method_str += f'\tList<{className}> find{className}OneToOne{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
                           f'@Param("page") Page page' \
+                          f'{sqlP}' \
                           f');\n\n'
             # 一对一内联计数
             method_str += create_annotation(f'内联一对一统计{objRemark}',
@@ -279,11 +288,13 @@ class CreateMethodSelectOneToOne:
                                             f'{lowClassName} {remark}对象',
                                             f'{objLowClassName} {objRemark}对象',
                                             f'page 分页对象',
+                                            splicingSQL,
                                             )
             method_str += f'\tList<{objClassName}> linkOneToOne{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
                           f'@Param("page") Page page' \
+                          f'{sqlP}' \
                           f');\n\n'
             # 一对一外联
             method_str += create_annotation(f'一对一查询{objRemark}，只返回{objRemark}',
@@ -291,11 +302,13 @@ class CreateMethodSelectOneToOne:
                                             f'{lowClassName} {remark}对象',
                                             f'{objLowClassName} {objRemark}对象',
                                             f'page 分页对象',
+                                            splicingSQL,
                                             )
             method_str += f'\tList<{className}> query{className}OneToOne{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
                           f'@Param("page") Page page' \
+                          f'{sqlP}' \
                           f');\n\n'
 
         return method_str
@@ -315,6 +328,13 @@ class CreateMethodSelectOneToMany:
         method_str = ""
         if config.get(JsonKey.oneToMany) is None or len(config.get(JsonKey.oneToMany)) == 0:
             return ""
+        splicingSQL = None
+        sqlP = ""
+        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
+            sqlValue = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
+            splicingSQL = f'{sqlValue} 拼接的SQL'
+            sqlP = f', @Param("{sqlValue}") String {sqlValue}'
+
         for obj in config["oneToMany"]:
             objClassName = obj["className"]
             objLowClassName = StringUtil.first_char_lower_case(objClassName)
@@ -328,12 +348,14 @@ class CreateMethodSelectOneToMany:
                                             f'{objLowClassName} {objRemark}对象',
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
+                                            splicingSQL,
                                             )
             method_str += f'\tList<{className}> find{className}OneToMany{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
                           f'@Param("onePage") Page onePage, ' \
                           f'@Param("manyPage") Page manyPage' \
+                          f'{sqlP}' \
                           f');\n\n'
             # 一对多内联统计
             method_str += create_annotation(f'内联一对多统计{objRemark}，双方均可分页',
@@ -356,12 +378,14 @@ class CreateMethodSelectOneToMany:
                                             f'{objLowClassName} {objRemark}对象',
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
+                                            splicingSQL,
                                             )
             method_str += f'\tList<{objClassName}> linkOneToMany{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
                           f'@Param("onePage") Page onePage, ' \
                           f'@Param("manyPage") Page manyPage' \
+                          f'{sqlP}' \
                           f');\n\n'
             # 一对多外联
             method_str += create_annotation(f'外联一对多查询{objRemark}，双方均可分页',
@@ -370,12 +394,14 @@ class CreateMethodSelectOneToMany:
                                             f'{objLowClassName} {objRemark}对象',
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
+                                            splicingSQL,
                                             )
             method_str += f'\tList<{className}> query{className}OneToMany{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
                           f'@Param("onePage") Page onePage, ' \
                           f'@Param("manyPage") Page manyPage' \
+                          f'{sqlP}' \
                           f');\n\n'
 
         return method_str
@@ -393,7 +419,7 @@ class CreateMethodSelectManyToMany:
         className = config["className"]
         remark = config["remark"]
         method_str = ""
-        if config.get(JsonKey.manyToMany) is None or len(config.get(JsonKey.manyToMany)):
+        if config.get(JsonKey.manyToMany) is None or len(config.get(JsonKey.manyToMany)) == 0:
             return ""
         for obj in config["manyToMany"]:
             toClassName = obj["to"]["className"]
@@ -409,7 +435,7 @@ class CreateMethodSelectManyToMany:
                                             f'page 分页对象',
                                             )
             method_str += f'\tList<{className}> find{className}ManyToManyLink{toClassName}On{manyClassName}(' \
-                          f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("page") Page page' \
                           f');\n\n'
             # 多对多外联
@@ -419,7 +445,7 @@ class CreateMethodSelectManyToMany:
                                             f'page 分页对象',
                                             )
             method_str += f'\tList<{className}> query{className}ManyToManyLink{toClassName}On{manyClassName}(' \
-                          f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("page") Page page' \
                           f');\n\n'
         return method_str

@@ -70,8 +70,10 @@ class CreateMethodSelectXToX:
                 table_alias = util.if_return(objTableName == tableName, f' AS {objTableName}1', "")
                 data += f'{tag * 2}SELECT {select_filed}FROM {tableName} , {objTableName}{table_alias}\n'
                 data += f'{tag * 2}<where>\n'
-
-                data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
+                if one_to_x == JsonKey.oneToOne:
+                    data += f'{tag * 3}{tableName}.{objForeignKey} = {objTableName}.{objKeyFiled}\n'
+                if one_to_x == JsonKey.oneToMany:
+                    data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
 
                 data += CreateXmlBlock.where_mod_1(config, 3, lowClassName, False)
                 data += CreateXmlBlock.where_mod_1(obj, 3, lowObjClassName, False)
@@ -159,7 +161,12 @@ class CreateMethodSelectXToX:
                 data += f'{tag * 2}) AS temp_{tableName} LEFT JOIN (\n'
                 data += right
                 data += f'{tag * 2}) AS temp_{objTableName}{suffix}\n'
-                data += f'{tag * 2}ON temp_{tableName}.{keyFiled} = temp_{objTableName}{suffix}.{objForeignKey}{suffix}\n'
+
+                if one_to_x == JsonKey.oneToOne:
+                    data += f'{tag * 2}ON temp_{tableName}.{objForeignKey} = temp_{objTableName}{suffix}.{objKeyFiled}{suffix}\n'
+                if one_to_x == JsonKey.oneToMany:
+                    data += f'{tag * 2}ON temp_{tableName}.{keyFiled} = temp_{objTableName}{suffix}.{objForeignKey}{suffix}\n'
+
                 data += CreateXmlBlock.splicing_sql(config)
                 data += f'{tag}</select>\n'
                 method_str += data + '\n'
@@ -203,7 +210,12 @@ class CreateMethodSelectXToX:
                 table_alias = util.if_return(objTableName == tableName, f' AS {objTableName}1', "")
                 data += f'{tag * 2}SELECT {select_filed} FROM {tableName} ,{objTableName}{table_alias}\n'
                 data += f'{tag * 2}<where>\n'
-                data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
+
+                if one_to_x == JsonKey.oneToOne:
+                    data += f'{tag * 3}{tableName}.{objForeignKey} = {objTableName}.{objKeyFiled}\n'
+                if one_to_x == JsonKey.oneToMany:
+                    data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
+
                 data += CreateXmlBlock.where_mod_1(config, 3, lowClassName, False)
                 data += CreateXmlBlock.where_mod_1(obj, 3, lowObjClassName, False)
 
@@ -288,6 +300,79 @@ class CreateMethodSelectXToX:
         return method_str
 
     @staticmethod
+    def __create_many_to_many(config: dict, select_type: str, inline=True):
+
+        className = config["className"]
+        lowClassName = StringUtil.first_char_lower_case(className)
+        key = config["key"]["attr"]
+        upperKey = StringUtil.first_char_upper_case(key)
+        keyFiled = config["key"]["filed"]
+        if "fieldAlias" in config["key"]:
+            keyFiled = config["key"]["fieldAlias"]
+
+        tableName = config["tableName"]
+        resultMapName = config["config"]["xmlConfig"]["resultMapName"]
+
+        tag = "\t"
+        method_str = ""
+        if config.get(JsonKey.manyToMany):
+            obj_table = set()
+            for obj in config[JsonKey.manyToMany]:
+                objKey = obj["many"][JsonKey.key.self][JsonKey.key.attr]
+                objUpperKey = StringUtil.first_char_upper_case(objKey)
+                objKeyFiled = obj["many"][JsonKey.key.self][JsonKey.key.filed]
+                objClassName = obj["many"][JsonKey.className]
+                lowObjClassName = StringUtil.first_char_lower_case(objClassName)
+                objTableName = obj["many"][JsonKey.tableName]
+                objForeignKey = obj["many"][JsonKey.foreignKey]
+                for at in obj["many"][JsonKey.attr.self]:
+                    if at[JsonKey.attr.filed] == objKeyFiled:
+                        if "fieldAlias" in at:
+                            objForeignKey = at["fieldAlias"]
+
+                manny_table = ""
+                if f'{obj["to"]["className"]}On{obj["many"]["className"]}' in obj_table:
+                    manny_table = f'Join{StringUtil.underscore_to_big_hump(obj["to"]["foreign_key"])}'
+                obj_table.add(f'{obj["to"]["className"]}On{objClassName}')
+
+                suffix = util.if_return(objTableName == tableName, "1", "")
+
+                if True:
+                    select_filed_main = f'\n{tag * 4}<include refid="sql_filed_{tableName}"/>\n{tag * 3}'
+                    select_filed_join = f'\n{tag * 4}<include refid="sql_filed_{objTableName}{suffix}"/>\n{tag * 3}'
+                else:
+                    select_filed_main = "* "
+                    select_filed_join = "* "
+
+                data = f'{tag}<select id="{select_type}{className}ManyToManyLink{obj["to"]["className"]}On{objClassName}{manny_table}" resultMap="{resultMapName}{className}ManyToMany{objClassName}">\n'
+                subquery = f'{tag * 3}select {select_filed_main}from {config["tableName"]}\n'
+                subquery += f'{tag * 3}<where>\n'
+                subquery += CreateXmlBlock.where_mod_1(config, 4)
+                subquery += f'{tag * 3}</where>\n'
+                subquery += f'{tag * 3}<if test="page!=null">\n'
+                subquery += f'{tag * 4}limit #{{page.start}},#{{page.count}}\n'
+                subquery += f'{tag * 3}</if>\n'
+
+                temp_sql = ""
+                temp_sql2 = ""
+                if config.get("table_my") and obj["many"]["tableName"] == config["tableName"]:
+                    temp_sql = f' AS {obj["many"]["tableName"]}1'
+                    temp_sql2 = "1"
+
+                if inline:
+                    data += f'{tag * 2}select {select_filed_join}from (\n{subquery}{tag * 2}) AS temp_{tableName},{obj["to"]["tableName"]},{objTableName}{temp_sql}\n'
+                    data += f'{tag * 2}where temp_{tableName}.{keyFiled} = {obj["to"]["tableName"]}.{obj["to"][JsonKey.foreignKey]}\n'
+                    data += f'{tag * 2}AND {obj["to"]["tableName"]}.{objForeignKey} = {objTableName}{temp_sql2}.{objKeyFiled}\n'
+                else:
+                    data += f'{tag * 2}select {select_filed_join}from (\n{subquery}{tag * 2}) AS temp_{tableName} LEFT JOIN {obj["to"]["tableName"]}\n'
+                    data += f'{tag * 2}ON temp_{tableName}.{keyFiled} = {obj["to"]["tableName"]}.{obj["to"][JsonKey.foreignKey]}\n'
+                    data += f'{tag * 2}LEFT JOIN {objTableName}{temp_sql} On {obj["to"]["tableName"]}.{objForeignKey} = {objTableName}{temp_sql2}.{objKeyFiled}\n'
+                data += CreateXmlBlock.splicing_sql(config)
+                data += f'{tag}</select>\n'
+                method_str += data + '\n'
+        return method_str
+
+    @staticmethod
     def create(config):
         data = ""
         data += CreateMethodSelectXToX.__create_select_inline(config, JsonKey.oneToOne)
@@ -298,4 +383,6 @@ class CreateMethodSelectXToX:
         data += CreateMethodSelectXToX.__create_link_one(config, JsonKey.oneToMany)
         data += CreateMethodSelectXToX.__create_count(config, JsonKey.oneToOne)
         data += CreateMethodSelectXToX.__create_count(config, JsonKey.oneToMany)
+        data += CreateMethodSelectXToX.__create_many_to_many(config, "find")
+        data += CreateMethodSelectXToX.__create_many_to_many(config, "query", False)
         return data

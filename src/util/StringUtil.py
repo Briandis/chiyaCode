@@ -186,7 +186,8 @@ def create_annotation(msg=None, res=None, *args):
         data += f'\t * \n'
     # 参数
     for i in args:
-        data += f'\t * @param {i}\n'
+        if i is not None and len(i) > 0:
+            data += f'\t * @param {i}\n'
     # 返回值
     if res is not None:
         data += f'\t * @return {res}\n'

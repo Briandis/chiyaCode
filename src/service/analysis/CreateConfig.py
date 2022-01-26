@@ -36,7 +36,10 @@ class CreateConfig:
 
                 # 从原始副本中获取表,不然会无限
                 obj = copy.deepcopy(old_tables[otherTable])
-                obj[JsonKey.foreignKey] = otherColumn
+                if type == JsonKey.oneToOne:
+                    obj[JsonKey.foreignKey] = myColumn
+                if type == JsonKey.oneToMany:
+                    obj[JsonKey.foreignKey] = otherColumn
                 table[type].append(obj)
 
     @staticmethod
