@@ -1,5 +1,6 @@
 from src.constant.ProtocolConstant import JsonKey
 from src.service.mapper.xml.method.Block import CreateXmlBlock
+from src.service.mapper.xml.method.Select import CreateMethodSelect
 from src.util import StringUtil, util
 
 
@@ -373,6 +374,43 @@ class CreateMethodSelectXToX:
         return method_str
 
     @staticmethod
+    def __create_select_in_foreign_key(config: dict):
+        """
+         根据外键获取多个对象
+         :param config: 配置文件
+         """
+        className = config["className"]
+        key = config["key"]["attr"]
+        upperKey = StringUtil.first_char_upper_case(key)
+        keyFiled = config["key"]["filed"]
+        tableName = config["tableName"]
+        lowClassName = StringUtil.first_char_lower_case(className)
+        data = ""
+        tag = "\t"
+        if config.get(JsonKey.oneToOne):
+            obj_fk = set()
+            for obj in config.get(JsonKey.oneToOne):
+                if obj[JsonKey.foreignKey] not in obj_fk:
+                    attr = None
+                    for i in config[JsonKey.attr.self]:
+                        if i[JsonKey.attr.filed] == obj[JsonKey.foreignKey]:
+                            attr = i
+                            break
+                    if attr is None:
+                        continue
+                    res_type = CreateMethodSelect.getResult(config)
+                    data += f'{tag}<select id="select{className}In{StringUtil.first_char_upper_case(attr[JsonKey.attr.attr])}AndWhere" {res_type}>\n'
+                    data += f'{tag * 2}SELECT * FROM {tableName}\n'
+                    data += f'{tag * 2}<where>\n'
+                    data += f'{tag * 3}{obj[JsonKey.foreignKey]} IN\n'
+                    data += f'{tag * 3}<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{{item}}</foreach>\n'
+                    data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
+                    data += f'{tag * 2}</where>\n'
+                    data += f'{tag}</select>\n\n'
+                    obj_fk.add(obj[JsonKey.foreignKey])
+        return data
+
+    @staticmethod
     def create(config):
         data = ""
         data += CreateMethodSelectXToX.__create_select_inline(config, JsonKey.oneToOne)
@@ -385,4 +423,5 @@ class CreateMethodSelectXToX:
         data += CreateMethodSelectXToX.__create_count(config, JsonKey.oneToMany)
         data += CreateMethodSelectXToX.__create_many_to_many(config, "find")
         data += CreateMethodSelectXToX.__create_many_to_many(config, "query", False)
+        data += CreateMethodSelectXToX.__create_select_in_foreign_key(config)
         return data

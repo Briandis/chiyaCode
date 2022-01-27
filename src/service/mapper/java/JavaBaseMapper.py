@@ -203,10 +203,15 @@ class CreateMethodSelect:
         # 多主键查
         method_str += create_annotation(f'根据{key}列表查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表')
         method_str += f'\tList<{className}> select{className}In{upperKey}(List<{keyType}> list);\n\n'
+        # 多主键查，且携带条件
+        method_str += create_annotation(f'根据{key}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表', f'{lowClassName} {remark}对象')
+        method_str += f'\tList<{className}> select{className}In{upperKey}AndWhere(' \
+                      f'@Param("list") List<{keyType}> list, ' \
+                      f'@Param("{lowClassName}") {className} {lowClassName});\n\n'
         # 多字段单查
         method_str += create_annotation(f'只查询一个{remark}', f"{remark}对象", f'{lowClassName} {remark}对象', f'index 获取的下标值')
         method_str += f'\t{className} selectOne{className}(' \
-                      f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                      f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                       f'@Param("index")Integer index' \
                       f');\n\n'
         # 普通查
@@ -215,7 +220,7 @@ class CreateMethodSelect:
             method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象',
                                             f'page 分页对象', f'{splicingSQL} 拼接的sql语句')
             method_str += f'\tList<{className}> select{className}(' \
-                          f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("page") Page page, ' \
                           f'@Param("{splicingSQL}") String {splicingSQL}' \
                           f');\n\n'
@@ -223,12 +228,12 @@ class CreateMethodSelect:
             method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象',
                                             f'page 分页对象')
             method_str += f'\tList<{className}> select{className}(' \
-                          f'@Param("{lowClassName}"){className} {lowClassName}, ' \
+                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("page") Page page' \
                           f');\n\n'
         # 普通计数
         method_str += create_annotation(f'统计{remark}记录数', f"查询到的记录数", f'{lowClassName} {remark}对象')
-        method_str += f'\tInteger count{className}(@Param("{lowClassName}"){className} {lowClassName});\n\n'
+        method_str += f'\tInteger count{className}(@Param("{lowClassName}") {className} {lowClassName});\n\n'
         return method_str
 
 
@@ -451,6 +456,34 @@ class CreateMethodSelectManyToMany:
         return method_str
 
 
+# 创建外键查询
+class CreateMethodSelectForeignKey:
+
+    @staticmethod
+    def create(config):
+        lowClassName = StringUtil.first_char_lower_case(config["className"])
+        className = config["className"]
+        remark = config["remark"]
+        method_str = ""
+        if config.get(JsonKey.oneToOne) is None or len(config.get(JsonKey.oneToOne)) == 0:
+            return ""
+
+        for obj in config["oneToOne"]:
+            # 多外键键查，且携带条件
+            attr = None
+            for i in config[JsonKey.attr.self]:
+                if i[JsonKey.attr.filed] == obj[JsonKey.foreignKey]:
+                    attr = i
+                    break
+            if attr is None:
+                continue
+            method_str += create_annotation(f'根据{attr[JsonKey.attr.remark]}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{attr[JsonKey.attr.remark]}列表', f'{lowClassName} {remark}对象')
+            method_str += f'\tList<{className}> select{className}In{StringUtil.first_char_upper_case(attr[JsonKey.attr.attr])}AndWhere(' \
+                          f'@Param("list") List<{attr[JsonKey.attr.type]}> list, ' \
+                          f'@Param("{lowClassName}") {className} {lowClassName});\n\n'
+        return method_str
+
+
 # 创建方法
 class CreateMethod:
     """
@@ -474,4 +507,6 @@ class CreateMethod:
         data += CreateMethodSelectOneToMany.create(config, importSet)
         # 多对多
         data += CreateMethodSelectManyToMany.create(config)
+        # 外键查
+        data += CreateMethodSelectForeignKey.create(config)
         return data

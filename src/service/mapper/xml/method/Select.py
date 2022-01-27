@@ -61,6 +61,33 @@ class CreateMethodSelect:
         data += f'{tag}</select>\n\n'
         return data
 
+        # 根据id获取多个对象
+
+    @staticmethod
+    def __create_select_in_key_and_where(config):
+        """
+        根据id获取多个对象
+        :param config: 配置文件
+        """
+        className = config["className"]
+        key = config["key"]["attr"]
+        upperKey = StringUtil.first_char_upper_case(key)
+        keyFiled = config["key"]["filed"]
+        tableName = config["tableName"]
+        lowClassName = StringUtil.first_char_lower_case(className)
+
+        tag = "\t"
+        res_type = CreateMethodSelect.getResult(config)
+        data = f'{tag}<select id="select{className}In{upperKey}AndWhere" {res_type}>\n'
+        data += f'{tag * 2}SELECT * FROM {tableName}\n'
+        data += f'{tag * 2}<where>\n'
+        data += f'{tag * 3}{keyFiled} IN\n'
+        data += f'{tag * 3}<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{{item}}</foreach>\n'
+        data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
+        data += f'{tag * 2}</where>\n'
+        data += f'{tag}</select>\n\n'
+        return data
+
     # 查询一个
     @staticmethod
     def __create_select_one(config):
@@ -135,6 +162,7 @@ class CreateMethodSelect:
         data = ""
         data += CreateMethodSelect.__create_select_by_key(config)
         data += CreateMethodSelect.__create_select_in_key(config)
+        data += CreateMethodSelect.__create_select_in_key_and_where(config)
         data += CreateMethodSelect.__create_select_one(config)
         data += CreateMethodSelect.__create_select(config)
         data += CreateMethodSelect.__create_count_select(config)

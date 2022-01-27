@@ -52,7 +52,7 @@ class CreateMethodUpdate:
 
         temp_str = f'condition{className}.{key}!=null'
         for attr in config["attr"]:
-            temp_str += f' OR condition{className}.{attr["attr"]}!=null'
+            temp_str += f' or condition{className}.{attr["attr"]}!=null'
 
         data += f'{tag * 2}<if test="condition{className}!=null and ({temp_str})">\n'
         data += f'{tag * 3}AND NOT EXISTS (\n'
