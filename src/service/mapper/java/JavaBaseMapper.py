@@ -289,7 +289,7 @@ class CreateMethodSelectOneToOne:
                           f');\n\n'
             # 一对一获取对方
             method_str += create_annotation(f'内联一对一查询{objRemark}，只返回{objRemark}',
-                                            f"查询到的记录数",
+                                            f"{objRemark}对象列表",
                                             f'{lowClassName} {remark}对象',
                                             f'{objLowClassName} {objRemark}对象',
                                             f'page 分页对象',
@@ -302,18 +302,35 @@ class CreateMethodSelectOneToOne:
                           f'{sqlP}' \
                           f');\n\n'
             # 一对一外联
-            method_str += create_annotation(f'一对一查询{objRemark}，只返回{objRemark}',
-                                            f"查询到的记录数",
+            method_str += create_annotation(f'外联一对一查询{objRemark}，只返回{objRemark}',
+                                            f"{remark}对象列表",
                                             f'{lowClassName} {remark}对象',
                                             f'{objLowClassName} {objRemark}对象',
-                                            f'page 分页对象',
+                                            f'page {remark}的分页对象',
+                                            f'page1 {objRemark}的分页对象',
                                             splicingSQL,
                                             )
             method_str += f'\tList<{className}> query{className}OneToOne{objClassName}(' \
                           f'@Param("{lowClassName}") {className} {lowClassName}, ' \
                           f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("page") Page page' \
+                          f'@Param("page") Page page, ' \
+                          f'@Param("page1") Page page1' \
                           f'{sqlP}' \
+                          f');\n\n'
+
+            # 一对一外联计数
+            method_str += create_annotation(f'外联一对一统计{objRemark}',
+                                            f"查询到的记录数",
+                                            f'{lowClassName} {remark}对象',
+                                            f'{objLowClassName} {objRemark}对象',
+                                            f'page {remark}的分页对象',
+                                            f'page1 {objRemark}的分页对象',
+                                            )
+            method_str += f'\tInteger countQuery{className}OneToOne{objClassName}(' \
+                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
+                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
+                          f'@Param("page") Page page, ' \
+                          f'@Param("page1") Page page1' \
                           f');\n\n'
 
         return method_str
