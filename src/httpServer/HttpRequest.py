@@ -72,11 +72,11 @@ class HttpRequest:
         # 获取URI中的参数
         temp_string = lines[1].split("?")
         # 解析URI中的参数
-        if len(temp_string) > 0:
+        if len(temp_string) > 1:
             self.__param_parsing(temp_string[1])
-        self.__method = lines[0]
-        self.__uri = temp_string[0]
-        self.__version = lines[2]
+        self.method = lines[0]
+        self.uri = temp_string[0]
+        self.version = lines[2]
 
     def __head_decode(self, list_string: list):
         """
