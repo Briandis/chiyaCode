@@ -170,10 +170,7 @@ class StructureAnalysis:
     def parsing_field(self) -> dict:
         javabean = {}
         for table in self.tables:
-            bean = {}
-            bean[JsonKey.tableName] = table["TABLE_NAME"]
-            bean[JsonKey.remark] = table["TABLE_COMMENT"]
-            bean[JsonKey.className] = table["TABLE_NAME"]
+            bean = {JsonKey.tableName: table["TABLE_NAME"], JsonKey.remark: table["TABLE_COMMENT"], JsonKey.className: table["TABLE_NAME"]}
             # 统一移除表前缀
             if self.config.tablePrefix and StringUtil.is_not_null(self.config.tablePrefixString):
                 bean[JsonKey.className] = StringUtil.remove_prefix(bean[JsonKey.className], self.config.tablePrefixString)
@@ -184,10 +181,7 @@ class StructureAnalysis:
 
             attr = []
             for column in table["COLUMN"]:
-                attribute = {}
-                attribute[JsonKey.attr.filed] = column["COLUMN_NAME"]
-                attribute[JsonKey.attr.attr] = column["COLUMN_NAME"]
-                attribute[JsonKey.attr.remark] = column["COLUMN_COMMENT"]
+                attribute = {JsonKey.attr.filed: column["COLUMN_NAME"], JsonKey.attr.attr: column["COLUMN_NAME"], JsonKey.attr.remark: column["COLUMN_COMMENT"]}
                 # 移除字段前缀
                 if self.config.columnPrefix:
                     el = self.config.columnPrefixString
@@ -206,3 +200,52 @@ class StructureAnalysis:
             bean[JsonKey.attr.self] = attr
             javabean[bean[JsonKey.tableName]] = bean
         return javabean
+
+
+def parsing_field(tables, config: dict) -> dict:
+    """
+    根据配置解析字段，生成基础的javaBean
+    :param tables:
+    :param config:
+    :return:
+    """
+    javabean = {}
+    for table in tables:
+        bean = {
+            JsonKey.tableName: table["TABLE_NAME"],
+            JsonKey.remark: table["TABLE_COMMENT"],
+            JsonKey.className: table["TABLE_NAME"]
+        }
+        # 统一移除表前缀
+        if config["tablePrefix"] and StringUtil.is_not_null(config["tablePrefixString"]):
+            bean[JsonKey.className] = StringUtil.remove_prefix(bean[JsonKey.className], config["tablePrefixString"])
+        # 类名转大驼峰
+        if config["classNameIsBigHump"]:
+            bean[JsonKey.className] = StringUtil.underscore_to_big_hump(bean[JsonKey.className])
+        # 解析字段
+
+        attr = []
+        for column in table["COLUMN"]:
+            attribute = {
+                JsonKey.attr.filed: column["COLUMN_NAME"],
+                JsonKey.attr.attr: column["COLUMN_NAME"],
+                JsonKey.attr.remark: column["COLUMN_COMMENT"]
+            }
+            # 移除字段前缀
+            if config["columnPrefix"]:
+                el = config["columnPrefixString"]
+                if StringUtil.is_null(el):
+                    el = table["TABLE_NAME"] + "_"
+                attribute[JsonKey.attr.attr] = StringUtil.remove_prefix(attribute[JsonKey.attr.attr], el)
+            if config["hump"]:
+                attribute[JsonKey.attr.attr] = StringUtil.underscore_to_small_hump(attribute[JsonKey.attr.attr])
+
+            attribute[JsonKey.attr.type] = mysql_to_java_object(column["DATA_TYPE"])
+            if column["COLUMN_KEY"] == "PRI":
+                bean[JsonKey.key.self] = attribute
+                continue
+            attr.append(attribute)
+            # attr[attribute[JsonKey.attr.filed]] = attribute
+        bean[JsonKey.attr.self] = attr
+        javabean[bean[JsonKey.tableName]] = bean
+    return javabean

@@ -1,0 +1,12 @@
+{
+    "hump": true,                           驼峰命名
+    "tablePrefix" : true                    统一移除表前缀
+    "tablePrefixString" : ""                要统一移除的前缀名称
+    "classNameIsBigHump" : true             将类名转成大驼峰
+    "columnPrefix" = true                   移除字段前缀
+    "columnPrefixString" = ""               要移除的字段前缀名称，空则是以表字段名称为主
+    "multiTable" = true                     自动映射多表关系
+    "oneToOne" = {}                         一对一关系的表
+    "oneToMany" = {}                        一对多的关系表
+    "manyToMany" = {}                       多对多关系的表
+}

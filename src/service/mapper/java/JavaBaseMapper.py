@@ -1,6 +1,6 @@
 from src.constant.ProtocolConstant import JsonKey
 from src.util import StringUtil
-from src.util.StringUtil import create_annotation
+from src.util.StringUtil import create_annotation, create_java_function, create_java_interface
 
 
 class CreateFile:
@@ -25,6 +25,182 @@ class CreateFile:
         data += methodData
         data += "}"
         return data
+
+
+class Page:
+    """
+    分页信息
+    """
+
+    @staticmethod
+    def param(index=""):
+        """
+        方法参数
+        :param index:下标
+        :return: None|方法参数字符串
+        """
+        return f'@Param("page{index}") Page page{index}'
+
+    @staticmethod
+    def annotation(index="", msg=""):
+        """
+        注解
+        :param index:下标
+        :param msg:消息
+        :return: None|方法参数字符串
+        """
+        return f'page{index} {msg}分页对象'
+
+
+class ThisObject:
+    """
+    指代本类的信息
+    """
+
+    @staticmethod
+    def param(config, param=True):
+        """
+        方法参数
+        :param config: 配置
+        :param param: 需要@param
+        :return: None|方法参数字符串
+        """
+        lowClassName = StringUtil.first_char_lower_case(config["className"])
+        className = config["className"]
+        if param:
+            return f'@Param("{lowClassName}") {className} {lowClassName}'
+        return f'{className} {lowClassName}'
+
+    @staticmethod
+    def annotation(config):
+        """
+        注解
+        :param config:
+        :return: None|方法参数字符串
+        """
+        lowClassName = StringUtil.first_char_lower_case(config["className"])
+        return f'{lowClassName} {config["remark"]}对象'
+
+
+class SaveObject:
+    """
+    指代本类的信息
+    """
+
+    @staticmethod
+    def param(config, param=True):
+        """
+        方法参数
+        :param config: 配置
+        :param param: 需要@param
+        :return: None|方法参数字符串
+        """
+        className = config["className"]
+        if param:
+            return f'@Param("save{className}") {className} save{className}'
+        return f'{className} save{className}'
+
+    @staticmethod
+    def annotation(config):
+        """
+        注解
+        :param config:
+        :return: None|方法参数字符串
+        """
+        return f'save{config["className"]} 添加的{config["remark"]}对象'
+
+
+class ConditionObject:
+    """
+    指代本类的信息
+    """
+
+    @staticmethod
+    def param(config, param=True):
+        """
+        方法参数
+        :param config: 配置
+        :param param: 需要@param
+        :return: None|方法参数字符串
+        """
+        className = config["className"]
+        if param:
+            return f'@Param("condition{className}") {className} condition{className}'
+        return f'{className} condition{className}'
+
+    @staticmethod
+    def annotation(config):
+        """
+        注解
+        :param config:
+        :return: None|方法参数字符串
+        """
+        return f'condition{config["className"]} {config["remark"]}条件对象'
+
+
+class FuzzySearch:
+    """
+    模糊搜索处理类
+    """
+
+    @staticmethod
+    def param(config, index=""):
+        """
+        获取模糊搜索的方法参数
+        :param config: 配置
+        :param index: 下标索引
+        :return: None|方法参数字符串
+        """
+        if config["config"]["fuzzySearch"]["enable"]:
+            keyWord = config["config"]["fuzzySearch"]["value"]
+            if len(config["config"]["fuzzySearch"]["data"]) != 0:
+                return f'@Param("{keyWord}{index}") String {keyWord}{index}'
+        return None
+
+    @staticmethod
+    def annotation(config, index="", msg=""):
+        """
+        获取模糊搜索的注解
+        :param config:配置
+        :param index: 下标索引
+        :param msg: 描述
+        :return: None|方法参数字符串
+        """
+        if config["config"]["fuzzySearch"]["enable"]:
+            keyWord = config["config"]["fuzzySearch"]["value"]
+            if len(config["config"]["fuzzySearch"]["data"]) != 0:
+                return f'{keyWord}{index} {msg}模糊搜索内容'
+        return None
+
+
+class SplicingSQL:
+    """
+    sql语句注入项
+    """
+
+    @staticmethod
+    def param(config):
+        """
+        SQL语句拼接项参数
+        :param config:配置
+        :return: None|方法参数
+        """
+        if config["config"]["splicingSQL"]["enable"]:
+            value = config["config"]["splicingSQL"]["value"]
+            return f'@Param("{value}") String {value}'
+        return None
+
+    @staticmethod
+    def annotation(config):
+        """
+        SQL语句拼接项注解
+        :param config:配置
+        :return: None|注解参数
+        """
+        if config["config"]["splicingSQL"]["enable"]:
+            value = config["config"]["splicingSQL"]["value"]
+            return f'{value} 拼接的sql语句'
+        return None
 
 
 # 创建导包
@@ -59,35 +235,23 @@ class CreateMethodInsert:
         remark = config["remark"]
         method_str = ""
         # 添加
-        method_str += create_annotation(f'添加{remark}', "受影响行数", f'{lowClassName} {remark}')
-        method_str += f'\tInteger insert{className}({className} {lowClassName});\n\n'
+        method_str += create_annotation(f'添加{remark}', "受影响行数", ThisObject.annotation(config))
+        method_str += create_java_interface("Integer", f'insert{className}', ThisObject.param(config, False))
         # 添加多个
         method_str += create_annotation(f'添加多个{remark}', "受影响行数", f'list {remark}列表')
-        method_str += f'\tInteger insert{className}List(@Param("list") List<{className}> list);\n\n'
+        method_str += create_java_interface("Integer", f'insert{className}List', f'@Param("list") List<{className}> list')
         # 保存或更新，唯一索引方式
-        method_str += create_annotation(f'添加或更新{remark}，根据唯一性索引', "受影响行数", f'list {remark}列表')
-        method_str += f'\tInteger insertOrUpdate{className}ByUnique({className} {lowClassName});\n\n'
+        method_str += create_annotation(f'添加或更新{remark}，根据唯一性索引', "受影响行数", ThisObject.param(config, False))
+        method_str += create_java_interface("Integer", f'insertOrUpdate{className}ByUnique', ThisObject.param(config, False))
         # 保存或更新条件式
-        method_str += create_annotation(f'添加或更新{remark}，根据查询条件', "受影响行数", f'save{className} 添加的{remark}对象',
-                                        f'condition{className} {remark}条件对象')
-        method_str += f'\tInteger insertOrUpdate{className}ByWhere(' \
-                      f'@Param("save{className}") {className} save{className}, ' \
-                      f'@Param("condition{className}") {className} condition{className}' \
-                      f');\n\n'
+        method_str += create_annotation(f'添加或更新{remark}，根据查询条件', "受影响行数", SaveObject.annotation(config), ConditionObject.annotation(config))
+        method_str += create_java_interface("Integer", f'insertOrUpdate{className}ByWhere', SaveObject.param(config), ConditionObject.param(config))
         # 仅条件插入
-        method_str += create_annotation(f'条件添加{remark}，查询条件存在的情况下', "受影响行数", f'save{className} 添加的{remark}对象',
-                                        f'condition{className} {remark}条件对象')
-        method_str += f'\tInteger insert{className}ByExistWhere(' \
-                      f'@Param("save{className}") {className} save{className}, ' \
-                      f'@Param("condition{className}") {className} condition{className}' \
-                      f');\n\n'
+        method_str += create_annotation(f'条件添加{remark}，查询条件存在的情况下', "受影响行数", SaveObject.annotation(config), ConditionObject.annotation(config))
+        method_str += create_java_interface("Integer", f'insert{className}ByExistWhere', SaveObject.param(config), ConditionObject.param(config))
         # 仅条件插入
-        method_str += create_annotation(f'条件添加{remark}，查询条件不存在的情况下', "受影响行数", f'save{className} 添加的{remark}对象',
-                                        f'condition{className} {remark}条件对象')
-        method_str += f'\tInteger insert{className}ByNotExistWhere(' \
-                      f'@Param("save{className}") {className} save{className}, ' \
-                      f'@Param("condition{className}") {className} condition{className}' \
-                      f');\n\n'
+        method_str += create_annotation(f'条件添加{remark}，查询条件不存在的情况下', "受影响行数", SaveObject.annotation(config), ConditionObject.annotation(config))
+        method_str += create_java_interface("Integer", f'insert{className}ByNotExistWhere', SaveObject.param(config), ConditionObject.param(config))
         return method_str
 
 
@@ -109,27 +273,23 @@ class CreateMethodDelete:
         method_str = ""
         # 主键删除
         method_str += create_annotation(f'根据{key}真删{remark}', "受影响行数", f'{key} {remark}的{key}')
-        method_str += f'\tInteger delete{className}By{upperKey}({keyType} {key});\n\n'
+        method_str += create_java_interface("Integer", f'delete{className}By{upperKey}', f'{keyType} {key}')
 
         # 多个主键删除
         method_str += create_annotation(f'根据{key}列表真删{remark}', "受影响行数", f'list {remark}的{key}列表')
-        method_str += f'\tInteger delete{className}In{upperKey}(List<{keyType}> list);\n\n'
+        method_str += create_java_interface("Integer", f'delete{className}In{upperKey}', f'List<{keyType}> list')
 
         # 主键条件删
-        method_str += create_annotation(f'根据{key}和其他条件真删{remark}', "受影响行数", f'{key} {remark}的{key}',
-                                        f'{lowClassName} {remark}条件对象')
-        method_str += f'\tInteger delete{className}By{upperKey}AndWhere(' \
-                      f'@Param("{key}") {keyType} {key}, ' \
-                      f'@Param("{lowClassName}") {className} {lowClassName}' \
-                      f');\n\n'
+        method_str += create_annotation(f'根据{key}和其他条件真删{remark}', "受影响行数", f'{key} {remark}的{key}', f'{lowClassName} {remark}条件对象', FuzzySearch.annotation(config))
+        method_str += create_java_interface("Integer", f'delete{className}By{upperKey}AndWhere', f'@Param("{key}") {keyType} {key}', ThisObject.param(config), FuzzySearch.param(config))
         # 条件删除
-        method_str += create_annotation(f'根据条件真删{remark}', "受影响行数", f'{lowClassName} {remark}条件对象')
-        method_str += f'\tInteger delete{className}({className} {lowClassName});\n\n'
+        method_str += create_annotation(f'根据条件真删{remark}', "受影响行数", f'{lowClassName} {remark}条件对象', FuzzySearch.annotation(config))
+        method_str += create_java_interface("Integer", f'delete{className}', ThisObject.param(config), FuzzySearch.param(config))
 
         # 主键假删
         if config["config"]["falseDelete"]["enable"]:
             method_str += create_annotation(f'根据{key}假删{remark}', "受影响行数", f'{key} {remark}的{key}')
-            method_str += f'\tInteger falseDelete{className}By{upperKey}({keyType} {key});\n\n'
+            method_str += create_java_interface("Integer", f'falseDelete{className}By{upperKey}', f'{keyType} {key}')
 
         return method_str
 
@@ -151,33 +311,23 @@ class CreateMethodUpdate:
         method_str = ""
         # 根据主键更新
         method_str += create_annotation(f'根据{key}修改{remark}', "受影响行数", f'{lowClassName} 要更新的{remark}对象')
-        method_str += f'\tInteger update{className}By{upperKey}({className} {lowClassName});\n\n'
+        method_str += create_java_interface("Integer", f'update{className}By{upperKey}', ThisObject.param(config, False))
         # 不重复条件改
         method_str += create_annotation(f'根据{key}和不满足的条件更新{remark}，查询条件不满足时更新对象', "受影响行数",
                                         f'save{className} 更新的{remark}对象', f'condition{className} 不存在的{remark}对象')
-        method_str += f'\tInteger update{className}ByNotRepeatWhere(' \
-                      f'@Param("save{className}") {className} save{className}, ' \
-                      f'@Param("condition{className}") {className} condition{className}' \
-                      f');\n\n'
+        method_str += create_java_interface("Integer", f'update{className}ByNotRepeatWhere', SaveObject.param(config), ConditionObject.param(config))
+
         # 条件更新ID
-        method_str += create_annotation(f'根据{key}和其他的条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象',
-                                        f'condition{className} {remark}条件对象')
-        method_str += f'\tInteger update{className}By{upperKey}AndWhere(' \
-                      f'@Param("save{className}") {className} save{className}, ' \
-                      f'@Param("condition{className}") {className} condition{className}' \
-                      f');\n\n'
+        method_str += create_annotation(f'根据{key}和其他的条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} {remark}条件对象')
+        method_str += create_java_interface("Integer", f'update{className}By{upperKey}AndWhere', SaveObject.param(config), ConditionObject.param(config))
 
         # 条件改
-        method_str += create_annotation(f'根据条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象',
-                                        f'condition{className} 条件{remark}对象')
-        method_str += f'\tInteger update{className}(' \
-                      f'@Param("save{className}") {className} save{className}, ' \
-                      f'@Param("condition{className}") {className} condition{className}' \
-                      f');\n\n'
+        method_str += create_annotation(f'根据条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} 条件{remark}对象')
+        method_str += create_java_interface("Integer", f'update{className}', SaveObject.param(config), ConditionObject.param(config))
+
         # 设置空字段
-        method_str += create_annotation(f'记录{key}设置其他字段为null', "受影响行数",
-                                        f'{lowClassName} 设置成null的{remark}对象，对象中字段不为Null则是要设置成null的字段')
-        method_str += f'\tInteger update{className}SetNullBy{upperKey}({className} {lowClassName});\n\n'
+        method_str += create_annotation(f'记录{key}设置其他字段为null', "受影响行数", f'{lowClassName} 设置成null的{remark}对象，对象中字段不为Null则是要设置成null的字段')
+        method_str += create_java_interface("Integer", f'update{className}SetNullBy{upperKey}', ThisObject.param(config, False))
         return method_str
 
 
@@ -199,41 +349,40 @@ class CreateMethodSelect:
 
         # 主键查
         method_str += create_annotation(f'根据{key}查询{remark}', f"{remark}对象", f'{key} {remark}的{key}')
-        method_str += f'\t{className} select{className}By{upperKey}({keyType} {key});\n\n'
+        method_str += create_java_interface(className, f'select{className}By{upperKey}', f'{keyType} {key}')
         # 多主键查
         method_str += create_annotation(f'根据{key}列表查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表')
-        method_str += f'\tList<{className}> select{className}In{upperKey}(List<{keyType}> list);\n\n'
+        method_str += create_java_interface(f'List<{className}>', f'select{className}In{upperKey}', f'List<{keyType}> list')
         # 多主键查，且携带条件
-        method_str += create_annotation(f'根据{key}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表', f'{lowClassName} {remark}对象')
-        method_str += f'\tList<{className}> select{className}In{upperKey}AndWhere(' \
-                      f'@Param("list") List<{keyType}> list, ' \
-                      f'@Param("{lowClassName}") {className} {lowClassName});\n\n'
+        method_str += create_annotation(f'根据{key}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表', ThisObject.annotation(config), FuzzySearch.annotation(config))
+        method_str += create_java_interface(
+            f'List<{className}>', f'select{className}In{upperKey}AndWhere',
+            f'@Param("list") List<{keyType}> list',
+            ThisObject.param(config),
+            FuzzySearch.param(config)
+        )
+
         # 多字段单查
-        method_str += create_annotation(f'只查询一个{remark}', f"{remark}对象", f'{lowClassName} {remark}对象', f'index 获取的下标值')
-        method_str += f'\t{className} selectOne{className}(' \
-                      f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                      f'@Param("index")Integer index' \
-                      f');\n\n'
+        method_str += create_annotation(f'只查询一个{remark}', f"{remark}对象", ThisObject.annotation(config), f'index 获取的下标值', FuzzySearch.annotation(config))
+        method_str += create_java_interface(
+            className, f'selectOne{className}',
+            ThisObject.param(config),
+            f'@Param("index")Integer index',
+            FuzzySearch.param(config)
+        )
+
         # 普通查
-        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
-            splicingSQL = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
-            method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象',
-                                            f'page 分页对象', f'{splicingSQL} 拼接的sql语句')
-            method_str += f'\tList<{className}> select{className}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("page") Page page, ' \
-                          f'@Param("{splicingSQL}") String {splicingSQL}' \
-                          f');\n\n'
-        else:
-            method_str += create_annotation(f'查询多个{remark}', f"{remark}对象列表", f'{lowClassName} {remark}对象',
-                                            f'page 分页对象')
-            method_str += f'\tList<{className}> select{className}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("page") Page page' \
-                          f');\n\n'
+        method_str += create_annotation(
+            f'查询多个{remark}', f"{remark}对象列表",
+            ThisObject.annotation(config), Page.annotation(), FuzzySearch.annotation(config), SplicingSQL.annotation(config))
+        method_str += create_java_interface(
+            f'List<{className}>', f'select{className}',
+            ThisObject.param(config), Page.param(), FuzzySearch.param(config), SplicingSQL.param(config),
+        )
+
         # 普通计数
-        method_str += create_annotation(f'统计{remark}记录数', f"查询到的记录数", f'{lowClassName} {remark}对象')
-        method_str += f'\tInteger count{className}(@Param("{lowClassName}") {className} {lowClassName});\n\n'
+        method_str += create_annotation(f'统计{remark}记录数', f"查询到的记录数", ThisObject.param(config), FuzzySearch.param(config))
+        method_str += create_java_interface("Integer", f'count{className}', ThisObject.param(config), FuzzySearch.param(config))
         return method_str
 
 
@@ -251,12 +400,6 @@ class CreateMethodSelectOneToOne:
         method_str = ""
         if config.get(JsonKey.oneToOne) is None or len(config.get(JsonKey.oneToOne)) == 0:
             return ""
-        splicingSQL = None
-        sqlP = ""
-        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
-            sqlValue = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
-            splicingSQL = f'{sqlValue} 拼接的SQL'
-            sqlP = f', @Param("{sqlValue}") String {sqlValue}'
 
         for obj in config["oneToOne"]:
             objClassName = obj["className"]
@@ -266,72 +409,97 @@ class CreateMethodSelectOneToOne:
             # 一对一内联查询
             method_str += create_annotation(f'内联一对一查询{objRemark}',
                                             f"{remark}对象列表",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
-                                            f'page 分页对象',
-                                            splicingSQL,
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
+                                            Page.annotation(),
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            SplicingSQL.annotation(config)
                                             )
-            method_str += f'\tList<{className}> find{className}OneToOne{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("page") Page page' \
-                          f'{sqlP}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"List<{className}>", f'find{className}OneToOne{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                Page.param(),
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+                SplicingSQL.param(config)
+            )
             # 一对一内联计数
-            method_str += create_annotation(f'内联一对一统计{objRemark}',
-                                            f"查询到的记录数",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
+            method_str += create_annotation(f'内联一对一统计{objRemark}', f"查询到的记录数",
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
                                             )
-            method_str += f'\tInteger countFind{className}OneToOne{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"Integer", f'countFind{className}OneToOne{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+            )
             # 一对一获取对方
             method_str += create_annotation(f'内联一对一查询{objRemark}，只返回{objRemark}',
                                             f"{objRemark}对象列表",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
-                                            f'page 分页对象',
-                                            splicingSQL,
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
+                                            Page.annotation(),
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            SplicingSQL.annotation(config)
                                             )
-            method_str += f'\tList<{objClassName}> linkOneToOne{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("page") Page page' \
-                          f'{sqlP}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"List<{objClassName}>", f'linkOneToOne{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                Page.param(),
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+                SplicingSQL.param(config)
+            )
+
             # 一对一外联
             method_str += create_annotation(f'外联一对一查询{objRemark}，只返回{objRemark}',
                                             f"{remark}对象列表",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
-                                            f'page {remark}的分页对象',
-                                            f'page1 {objRemark}的分页对象',
-                                            splicingSQL,
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
+                                            Page.annotation("", remark),
+                                            Page.annotation("1", objRemark),
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            SplicingSQL.annotation(config)
                                             )
-            method_str += f'\tList<{className}> query{className}OneToOne{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("page") Page page, ' \
-                          f'@Param("page1") Page page1' \
-                          f'{sqlP}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"List<{className}>", f'query{className}OneToOne{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                Page.param(),
+                Page.param("1"),
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+                SplicingSQL.param(config)
+            )
 
             # 一对一外联计数
             method_str += create_annotation(f'外联一对一统计{objRemark}',
                                             f"查询到的记录数",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
-                                            f'page {remark}的分页对象',
-                                            f'page1 {objRemark}的分页对象',
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
+                                            Page.annotation("", remark),
+                                            Page.annotation("1", objRemark),
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
                                             )
-            method_str += f'\tInteger countQuery{className}OneToOne{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("page") Page page, ' \
-                          f'@Param("page1") Page page1' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"Integer", f'countQuery{className}OneToOne{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                Page.param(),
+                Page.param("1"),
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+            )
 
         return method_str
 
@@ -350,12 +518,6 @@ class CreateMethodSelectOneToMany:
         method_str = ""
         if config.get(JsonKey.oneToMany) is None or len(config.get(JsonKey.oneToMany)) == 0:
             return ""
-        splicingSQL = None
-        sqlP = ""
-        if config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.enable]:
-            sqlValue = config[JsonKey.config.self][JsonKey.config.splicingSQL.self][JsonKey.config.splicingSQL.value]
-            splicingSQL = f'{sqlValue} 拼接的SQL'
-            sqlP = f', @Param("{sqlValue}") String {sqlValue}'
 
         for obj in config["oneToMany"]:
             objClassName = obj["className"]
@@ -366,65 +528,105 @@ class CreateMethodSelectOneToMany:
             # 一对多内联查询
             method_str += create_annotation(f'内联一对多查询{objRemark}，双方均可分页',
                                             f"{remark}对象列表",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
-                                            splicingSQL,
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            SplicingSQL.annotation(config)
                                             )
-            method_str += f'\tList<{className}> find{className}OneToMany{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("onePage") Page onePage, ' \
-                          f'@Param("manyPage") Page manyPage' \
-                          f'{sqlP}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"List<{className}>", f'find{className}OneToMany{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                f'@Param("onePage") Page onePage',
+                f'@Param("manyPage") Page manyPage',
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+                SplicingSQL.param(config)
+            )
+
             # 一对多内联统计
             method_str += create_annotation(f'内联一对多统计{objRemark}，双方均可分页',
                                             f"查询到的记录数",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
                                             )
-            method_str += f'\tInteger countFind{className}OneToMany{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("onePage") Page onePage, ' \
-                          f'@Param("manyPage") Page manyPage' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"Integer", f'countFind{className}OneToMany{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                f'@Param("onePage") Page onePage',
+                f'@Param("manyPage") Page manyPage',
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+            )
             # 一对多反获取对方
             method_str += create_annotation(f'内联一对多查询{objRemark}，只返回{objRemark}',
-                                            f"{remark}对象列表",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
+                                            f"{objRemark}对象列表",
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
-                                            splicingSQL,
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            SplicingSQL.annotation(config)
                                             )
-            method_str += f'\tList<{objClassName}> linkOneToMany{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("onePage") Page onePage, ' \
-                          f'@Param("manyPage") Page manyPage' \
-                          f'{sqlP}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"List<{objClassName}>", f'linkOneToMany{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                f'@Param("onePage") Page onePage',
+                f'@Param("manyPage") Page manyPage',
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+                SplicingSQL.param(config)
+            )
             # 一对多外联
             method_str += create_annotation(f'外联一对多查询{objRemark}，双方均可分页',
                                             f"{remark}对象列表",
-                                            f'{lowClassName} {remark}对象',
-                                            f'{objLowClassName} {objRemark}对象',
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
                                             f'onePage {remark}分页对象',
                                             f'manyPage {objRemark}分页对象',
-                                            splicingSQL,
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            SplicingSQL.annotation(config)
                                             )
-            method_str += f'\tList<{className}> query{className}OneToMany{objClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("{objLowClassName}") {objClassName} {objLowClassName}, ' \
-                          f'@Param("onePage") Page onePage, ' \
-                          f'@Param("manyPage") Page manyPage' \
-                          f'{sqlP}' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f"List<{className}>", f'query{className}OneToMany{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                f'@Param("onePage") Page onePage',
+                f'@Param("manyPage") Page manyPage',
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+                SplicingSQL.param(config)
+            )
+            # 一对多外联统计
+            method_str += create_annotation(f'外联一对多查询{objRemark}统计，双方均可分页',
+                                            f"查询到的记录数",
+                                            ThisObject.annotation(config),
+                                            ThisObject.annotation(obj),
+                                            f'onePage {remark}分页对象',
+                                            f'manyPage {objRemark}分页对象',
+                                            FuzzySearch.annotation(config),
+                                            FuzzySearch.annotation(obj, "1", objRemark),
+                                            )
+            method_str += create_java_interface(
+                f"Integer", f'countQuery{className}OneToMany{objClassName}',
+                ThisObject.param(config),
+                ThisObject.param(obj),
+                f'@Param("onePage") Page onePage',
+                f'@Param("manyPage") Page manyPage',
+                FuzzySearch.param(config),
+                FuzzySearch.param(obj, "1"),
+            )
 
         return method_str
 
@@ -453,23 +655,33 @@ class CreateMethodSelectManyToMany:
             # 多对多内联
             method_str += create_annotation(f'内联多对多查询{remark},根据{toRemark}联查{manyRemark}',
                                             f"{className}对象列表",
-                                            f'{lowClassName} {className}对象',
-                                            f'page 分页对象',
+                                            ThisObject.annotation(config),
+                                            Page.annotation(),
+                                            FuzzySearch.annotation(config),
+                                            SplicingSQL.annotation(config),
                                             )
-            method_str += f'\tList<{className}> find{className}ManyToManyLink{toClassName}On{manyClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("page") Page page' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f'List<{className}>', f'find{className}ManyToManyLink{toClassName}On{manyClassName}',
+                ThisObject.param(config),
+                Page.param(),
+                FuzzySearch.param(config),
+                SplicingSQL.param(config),
+            )
             # 多对多外联
             method_str += create_annotation(f'内联多对多查询{remark},根据{toRemark}联查{manyRemark}',
                                             f"{className}对象列表",
-                                            f'{lowClassName} {className}对象',
-                                            f'page 分页对象',
+                                            ThisObject.annotation(config),
+                                            Page.annotation(),
+                                            FuzzySearch.annotation(config),
+                                            SplicingSQL.annotation(config),
                                             )
-            method_str += f'\tList<{className}> query{className}ManyToManyLink{toClassName}On{manyClassName}(' \
-                          f'@Param("{lowClassName}") {className} {lowClassName}, ' \
-                          f'@Param("page") Page page' \
-                          f');\n\n'
+            method_str += create_java_interface(
+                f'List<{className}>', f'query{className}ManyToManyLink{toClassName}On{manyClassName}',
+                ThisObject.param(config),
+                Page.param(),
+                FuzzySearch.param(config),
+                SplicingSQL.param(config),
+            )
         return method_str
 
 
@@ -494,10 +706,16 @@ class CreateMethodSelectForeignKey:
                     break
             if attr is None:
                 continue
-            method_str += create_annotation(f'根据{attr[JsonKey.attr.remark]}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{attr[JsonKey.attr.remark]}列表', f'{lowClassName} {remark}对象')
-            method_str += f'\tList<{className}> select{className}In{StringUtil.first_char_upper_case(attr[JsonKey.attr.attr])}AndWhere(' \
-                          f'@Param("list") List<{attr[JsonKey.attr.type]}> list, ' \
-                          f'@Param("{lowClassName}") {className} {lowClassName});\n\n'
+            method_str += create_annotation(
+                f'根据{attr[JsonKey.attr.remark]}列表和其他条件查询{remark}',
+                f"{remark}对象列表",
+                f'list {remark}的{attr[JsonKey.attr.remark]}列表',
+                ThisObject.annotation(config))
+            method_str += create_java_interface(
+                f'List<{className}>', f'select{className}In{StringUtil.first_char_upper_case(attr[JsonKey.attr.attr])}AndWhere',
+                f'@Param("list") List<{attr[JsonKey.attr.type]}> list',
+                ThisObject.param(config)
+            )
         return method_str
 
 

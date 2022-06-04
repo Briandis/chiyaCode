@@ -1,0 +1,190 @@
+{
+  "tableName": "game",                              表名称
+  "remark": "游戏",                                  表备注，此处会作为代码中实体的注释
+  "className": "Game",                              类名，会自动进行大驼峰
+  "key": {                                       指代本表中的唯一标识字段
+    "filed": "game_id",                             在数据库中的字段名称
+    "attr": "id",                                   在java中的属性名称
+    "remark": "主键",                                在java中，该属性上的文档注释
+    "type": "Integer"                               在java中，该字段的数据类型
+  },
+  "attr": [                                      指代非主键的其他数据,用数组存储
+    {                                               结构和key中相同
+      "filed": "game_create_time",                  在数据库中的字段名称
+      "attr": "createTime",                         在java中的属性名称
+      "remark": "创建时间",                           在java中，该属性上的文档注释
+      "type": "Date"                                在java中，该字段的数据类型
+    },
+
+  ],
+  "utilPath": "chiya.galgame.teahouse.module.util",                             工具库默认路径，现在已经废弃
+  "path": "chiya.galgame.teahouse.module.game.entity",                          该实体类所在的路径
+  "package": "chiya.galgame.teahouse.module.game.entity.Game",                  该实体类所在的完整路径，并且包括自身
+  "baseEntity": {                                                            实体类配置
+    "path": "chiya.galgame.teahouse.module.game.entity",                        所在路径             用于构造路径文件夹
+    "className": "BaseGame",                                                    实体类类名           构架文件名
+    "package": "chiya.galgame.teahouse.module.game.entity.BaseGame"             实体类完整路径
+  },
+  "serviceInterface": {                                                      业务层接口配置
+    "path": "chiya.galgame.teahouse.module.game.service",                       业务层接口所在路径
+    "className": "GameService",                                                 业务层接口类名
+    "package": "chiya.galgame.teahouse.module.game.service.GameService"         业务层接口所在完整的路径
+  },
+  "serviceImplements": {                                                        业务层实现类配置
+    "path": "chiya.galgame.teahouse.module.game.service.impl",                      业务层实现类所在路径
+    "className": "GameServiceImpl",                                                 业务层实现类类名
+    "package": "chiya.galgame.teahouse.module.game.service.impl.GameServiceImpl"    业务层实现类所在完整路径
+  },
+  "baseMapperInterface": {                                                      自动生成的mapper接口配置
+    "path": "chiya.galgame.teahouse.module.game.mapper",                            自动生成的mapper接口所在路径
+    "className": "BaseGameMapper",                                                  自动生成的mapper接口类名
+    "package": "chiya.galgame.teahouse.module.game.mapper.BaseGameMapper"           自动生成的mapper接口完整路径
+  },
+  "mapperInterface": {                                                          用户的mapper接口配置
+    "path": "chiya.galgame.teahouse.module.game.mapper",                            用户的mapper接口所在路径
+    "className": "GameMapper",                                                      用户的mapper接口类名
+    "package": "chiya.galgame.teahouse.module.game.mapper.GameMapper"               用户的mapper接口完整路径
+  },
+  "baseMapperXml": {                                                            自动生成的xml配置          特殊
+    "path": "chiya.galgame.teahouse.module.game.mapper",                            自动生成的xml所在路径
+    "className": "BaseGameMapper",                                                  自动生成的xml类名
+    "package": "chiya.galgame.teahouse.module.game.mapper.BaseGameMapper"           自动生成的xml完整路径
+  },
+  "mapperXml": {                                                                 用户生成的xml配置         特殊
+    "path": "chiya.galgame.teahouse.module.game.mapper",                            用户生成的xml配置
+    "className": "GameMapper",                                                      用户生成的xml所在路径
+    "package": "chiya.galgame.teahouse.module.game.mapper.GameMapper"               用户生成的xml完整路径
+  },
+  "controller": {                                                                控制层配置
+    "path": "chiya.galgame.teahouse.module.game.controller",                        控制层所在路径
+    "className": "GameController",                                                  控制层类名
+    "package": "chiya.galgame.teahouse.module.game.controller.GameController"       控制层所在完整路径
+  },
+  "Page": {                                                                      分页配置       现默认基于chiyaUtil中的分页路径
+    "path": "chiya.core.base.page",                                                 分页对象所在路径
+    "className": "Page",                                                            分页对象名称
+    "package": "chiya.core.base.page.Page"                                          分页对象所在完整路径
+  },
+  "config": {                       高级配置
+    "fuzzySearch": {                  模糊搜索配置
+      "name": "fuzzySearch",
+      "enable": true,                   是否启用，默认是，如果无模糊搜索字段则不会生成摸搜索代码
+      "value": "keyWord",               作为mapper和xml中，用户传入的模糊搜索的变量名
+      "default": "keyWord",             默认配置装配的模糊搜索变量名
+      "data": [                         要搜索的字段
+        "game_name"                         字段，需要在attr中出现
+      ]
+    },
+    "resultMap": {                     resultMap替换resultType
+      "name": "resultMap",
+      "enable": true                     是否启用，默认是
+    },
+    "restful": {                       restful风格API
+      "name": "restful",
+      "enable": true                     是否启用，默认是
+    },
+    "splicingSQL": {                   sql语句预留
+      "name": "splicingSQL",
+      "enable": true,                    是否启用，默认是
+      "value": "splicingSQL",            在mapper和xml中使用的变量名称
+      "default": "splicingSQL"           默认的变量名称
+    },
+    "extraAPI": {                      额外的API
+      "name": "extraAPI",
+      "enable": true,                    是否启用，默认是
+      "value": "admin",                  将增加的api名称前置
+      "default": "admin"                 增加默认api名称前缀的值
+    },
+    "defaultAPI": {                    默认的api
+      "name": "defaultAPI",
+      "enable": true                      是否生成，默认是，如果不生成，又没有额外api，则会生成空文件
+    },
+    "falseDelete": {                   逻辑删除
+      "name": "falseDelete",
+      "enable": true,                     是否启用，默认是
+      "deleteKey": "delete_flag",         用作逻辑删除的字段名称
+      "default": "delete_flag",           默认自动扫描的逻辑删除字段名称
+      "deleteValue": 1,                   默认删除标记的常量
+      "isUpdate": true,                   是否要更新修改时间，默认是
+      "updateKey": "update_time"          默认更新时间的字段
+    },
+    "toJsonString": {                  是否在实体中生成toString方法
+      "name": "toJsonString",
+      "enable": true,                     是否启用，默认是
+      "isFastJson": true                  是否启用fastJson替换默认toString方法，默认是
+    },
+    "chain": {                         实体生成链式操作方法
+      "name": "chain",                    默认采用的前缀
+      "enable": true                      是否启用，默认是
+    },
+    "entityClone": {                   本配置是基于某个实体进行的克隆
+      "name": "entityClone",
+      "enable": false                     是否启用，默认否      如果启用将会把本配置当作衍生类
+    },
+    "methodName": {                                 默认生成的接口前缀
+      "name": "methodName",
+      "enable": true,                                   是否启用，默认是
+      "value": "add,delete,update,getOne,list",         值，可以是列表，或者逗号分割，分别对应添加，删除，修改，获取一个，获取多个
+      "default": "add,delete,update,getOne,list"        默认的配置名称
+    },
+    "createFile": {                       该配置要生成的文件
+      "name": "createFile",
+      "enable": true,                       是否启用，默认是
+      "value": [                            生成的文件，只有其中存在，才生成
+        "Controller",                           控制层
+        "Service",                              业务层接口
+        "ServiceImpl",                          业务层实现
+        "JavaMapper",                           java的mapper
+        "JavaBaseMapper",                       java自动生成的mapper
+        "XmlMapper",                            xml
+        "XmlBaseMapper",                        自动生成的xml
+        "Entity",                               用户的可以修改的实体
+        "EntityBase"                            自动生成的实体
+      ],
+      "default": [                              默认的信息
+        "EntityBase",
+        "Entity",
+        "Service",
+        "ServiceImpl",
+        "JavaBaseMapper",
+        "JavaMapper",
+        "XmlBaseMapper",
+        "XmlMapper",
+        "Controller"
+      ]
+    },
+    "notCreateFile": {                      不生成的文件
+      "name": "notCreateFile",
+      "enable": true,                       是否启用，默认是
+      "value": [],                          如果出现在其中，则不生成
+      "default": []
+    },
+    "xmlConfig": {                          xml中字段别名配置
+      "fieldAlias": "chiya",                    自动默认使用的别名前置
+      "resultMapName": "result"                 默认使用的resultmap的前缀名称
+    }
+  },
+  "entityClone": {                      如果是实体克隆，则赋值的配置
+    "key": {},                          克隆的唯一标识，不可修改
+    "attr": []                          继承的字段和额外新增的字段
+  },
+  "oneToOne": [                        一对一配置，里面大体配置相同
+    {
+      省略相同配置
+      "foreignKey": "game_media_game_id"        需要关联的字段
+    }
+  ],
+  "oneToMany": [                        一对多配置，里面大体配置相同
+    {
+      省略相同配置
+      "foreignKey": "game_media_game_id"        在该关系中，多的一方中，持有自身唯一标识的字段
+    }
+  ],
+  "manyToMany": [                        多对多配置，里面大体配置相同
+    to:{}                                中间关联的表
+    many:{                               多的乙方
+      省略相同配置
+      "foreignKey": "game_media_game_id"
+    }
+  ]
+}
