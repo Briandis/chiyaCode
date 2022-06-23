@@ -93,8 +93,10 @@ class HttpRequest:
         :param body: 原始请求体二进制数据
         """
         # 对多文件拆解成块信息拆解
-
         q = "\r\n--" + self.get_head(HttpRequestHead.CONTENT_TYPE).split("=")[1] + "\r\n"
+        # 移除最后的结束标识符
+        end = f'\r\n--{self.get_head(HttpRequestHead.CONTENT_TYPE).split("=")[1]}--\r\n'
+        body = body[:len(body) - len(end)]
         body_list = body.split(q.encode())
         for i in body_list:
             multiparts = i.split("\r\n\r\n".encode(), 1)

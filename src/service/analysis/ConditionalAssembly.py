@@ -278,3 +278,15 @@ class ConditionalAssembly:
             # 不生成的文件
             if Constant.NOT_CREATE_FILE in config:
                 tables[table]["config"]["notCreateFile"]["value"] = config.get(Constant.NOT_CREATE_FILE)
+            # 假删配置
+            deleteKey = False
+            updateKey = False
+            for attr in tables[table]["attr"]:
+                if tables[table]["config"]["falseDelete"]["deleteKey"] in attr["filed"]:
+                    deleteKey = True
+                    tables[table]["config"]["falseDelete"]["deleteKey"] = attr["filed"]
+                if tables[table]["config"]["falseDelete"]["updateKey"] in attr["filed"]:
+                    updateKey = True
+                    tables[table]["config"]["falseDelete"]["updateKey"] = attr["filed"]
+            tables[table]["config"]["falseDelete"]["enable"] = deleteKey
+            tables[table]["config"]["falseDelete"]["isUpdate"] = updateKey

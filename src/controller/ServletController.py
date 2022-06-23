@@ -29,19 +29,18 @@ class LinkMySqlServlet(Servlet):
 
             httpResponse.write_body(json.dumps({"code": 200, "data": tables}))
         except:
-            # traceback.print_exc()
             httpResponse.write_body('{"code":"-1"}')
 
-#
-# class CreateConfigServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         data = httpRequest.get_param("data")
-#         try:
-#             with open("config.json", "w", encoding="utf-8") as file:
-#                 file.write(data)
-#             httpResponse.write_body(json.dumps({"code": 200}))
-#         except:
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "配置文件错误"}))
+
+class CreateConfigServlet(Servlet):
+    def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
+        data = httpRequest.get_param("data")
+        try:
+            with open("config.json", "w", encoding="utf-8") as file:
+                file.write(data)
+            httpResponse.write_body(json.dumps({"code": 200}))
+        except:
+            httpResponse.write_body(json.dumps({"code": -1, "msg": "配置文件错误"}))
 #
 #
 # class CreateOneServlet(Servlet):

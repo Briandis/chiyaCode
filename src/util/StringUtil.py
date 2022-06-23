@@ -243,6 +243,27 @@ def string_join(joiner, *args):
     return string
 
 
+def string_join_neglect_null(joiner, *args):
+    """
+    对字符串进行凭借，忽略多个目标中空值
+    :param joiner: 拼接符
+    :param args: 多个参数
+    :return: 字符串返回值
+    """
+    if args is None:
+        return None
+    first = False
+    string = ""
+    for item in args:
+
+        if is_not_null(item):
+            if first:
+                string += f'{joiner}'
+            string += f'{item}'
+            first = True
+    return string
+
+
 def create_java_function(scope, return_value, name, *args):
     """
     生成java方法字符串
@@ -257,7 +278,7 @@ def create_java_function(scope, return_value, name, *args):
         function += f'{scope} {return_value} {name}('
     else:
         function += f'{return_value} {name}('
-    function += string_join(", ", *args)
+    function += string_join_neglect_null(", ", *args)
     function += ")"
     return function
 

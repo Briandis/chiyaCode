@@ -105,6 +105,5 @@ class Server:
             else:
                 self.all_session[session_id].update(response.session)
             response.set_cookie("SESSION_ID", session_id)
-
         client.send(response.encode())
         client.close()
