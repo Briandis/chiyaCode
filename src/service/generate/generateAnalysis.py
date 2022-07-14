@@ -8,34 +8,7 @@ from src.service.mapper.xml import XmlMapper, XmlBaseMapper
 from src.service.mapper.java import JavaMapper, JavaBaseMapper
 from src.service.service import Service, ServiceImpl
 from src.util import StringUtil
-
-
-def is_not_dir_create(path, dir):
-    path = os.path.join(path, dir)
-    if not os.path.exists(path):
-        os.mkdir(path)
-    return path
-
-
-def create_dir(packet_name: str) -> str:
-    lists = packet_name.split(".")
-    path = os.getcwd()
-
-    path = is_not_dir_create(path, "data")
-    path = is_not_dir_create(path, "src")
-    for i in lists:
-        path = os.path.join(path, i)
-        if not os.path.exists(path):
-            os.mkdir(path)
-    return path
-
-
-def save_file(path, file_name, suffix, data):
-    path = create_dir(path)
-    if "." not in suffix:
-        suffix = "." + suffix
-    with open(os.path.join(path, file_name + suffix), "w", encoding="utf-8") as file:
-        file.write(data)
+from src.util.OSUtil import save_file
 
 
 class FileType:
