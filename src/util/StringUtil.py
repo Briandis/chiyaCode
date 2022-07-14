@@ -222,3 +222,73 @@ def list_not_null(lists):
     :return: 是、不是
     """
     return lists is not None and len(lists) > 0
+
+
+def string_join(joiner, *args):
+    """
+    对字符串进行凭借
+    :param joiner: 拼接符
+    :param args: 多个参数
+    :return: 字符串返回值
+    """
+    if args is None:
+        return None
+    i = 0
+    string = ""
+    for item in args:
+        i += 1
+        string += f'{item}'
+        if len(args) != i:
+            string += f'{joiner}'
+    return string
+
+
+def string_join_neglect_null(joiner, *args):
+    """
+    对字符串进行凭借，忽略多个目标中空值
+    :param joiner: 拼接符
+    :param args: 多个参数
+    :return: 字符串返回值
+    """
+    if args is None:
+        return None
+    first = False
+    string = ""
+    for item in args:
+
+        if is_not_null(item):
+            if first:
+                string += f'{joiner}'
+            string += f'{item}'
+            first = True
+    return string
+
+
+def create_java_function(scope, return_value, name, *args):
+    """
+    生成java方法字符串
+    :param scope: 作用域
+    :param return_value: 返回值
+    :param name: 方法名称
+    :param args: 参数，需要字符串，不用考虑前后逗号
+    :return: 方法字符串
+    """
+    function = ""
+    if is_not_null(scope):
+        function += f'{scope} {return_value} {name}('
+    else:
+        function += f'{return_value} {name}('
+    function += string_join_neglect_null(", ", *args)
+    function += ")"
+    return function
+
+
+def create_java_interface(return_value, name, *args):
+    """
+    创建java的接口
+    :param return_value: 返回类型
+    :param name: 接口名称
+    :param args: 参数，需要字符串，不用考虑逗号
+    :return: 方法字符串
+    """
+    return f'\t{create_java_function(None, return_value, name, *args)};\n\n'

@@ -45,7 +45,7 @@ class Server:
         print("服务器已启动")
         while self.flag:
             client, address = self.socket.accept()
-            self.threadPool.submit(self.run, (client, address,))
+            self.threadPool.submit(self.run, client, address)
 
     def run(self, client: socket.socket, address):
         # 一次性拿4M
@@ -75,6 +75,7 @@ class Server:
         # 创建响应体
         response = HttpResponse(self.path)
         uri = request.uri
+        print(f"访问了地址：{uri}")
         # 优先检查业务中是否绑定了路径
         if uri in self.servlet:
             try:
@@ -104,6 +105,5 @@ class Server:
             else:
                 self.all_session[session_id].update(response.session)
             response.set_cookie("SESSION_ID", session_id)
-
         client.send(response.encode())
         client.close()

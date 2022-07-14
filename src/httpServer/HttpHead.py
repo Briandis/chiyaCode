@@ -18,7 +18,7 @@ class HttpRequestHead:
     # 请求体的长度
     CONTENT_LENGTH = "Content-Length"
     # 请求体的MIME类型
-    CONTENT_TYPE = "Content-type"
+    CONTENT_TYPE = "Content-Type"
     # 发送该消息的日期和时间
     DATE = "Date"
     # 表示客户端服务器做出特定的行为

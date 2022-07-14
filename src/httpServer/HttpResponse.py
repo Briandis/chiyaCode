@@ -29,6 +29,13 @@ class HttpResponse:
         """
         return f"{self.version} {self.code} {self.msg} \r\n"
 
+    @staticmethod
+    def __create_access_control_allow_origin():
+        """
+        支持跨域访问
+        """
+        return f'Access-Control-Allow-Methods:*\r\nAccess-Control-Allow-Origin:*\r\nAccess-Control-Allow-Headers:*\r\n'
+
     def __create_response_head(self) -> str:
         """
         生成响应头
@@ -78,7 +85,7 @@ class HttpResponse:
         生成二进制流
         :return: bytes
         """
-        head = self.__create_response_line() + self.__create_response_head() + self.__create_cookie()
+        head = self.__create_response_line() + HttpResponse.__create_access_control_allow_origin() + self.__create_response_head() + self.__create_cookie()
         head = head.encode()
         if not isinstance(self.body, bytes):
             body = ("\r\n" + self.body).encode()
