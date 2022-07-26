@@ -710,11 +710,14 @@ class CreateMethodSelectForeignKey:
                 f'根据{attr[JsonKey.attr.remark]}列表和其他条件查询{remark}',
                 f"{remark}对象列表",
                 f'list {remark}的{attr[JsonKey.attr.remark]}列表',
-                ThisObject.annotation(config))
+                ThisObject.annotation(config),
+                FuzzySearch.param(config)
+            )
             method_str += create_java_interface(
                 f'List<{className}>', f'select{className}In{StringUtil.first_char_upper_case(attr[JsonKey.attr.attr])}AndWhere',
                 f'@Param("list") List<{attr[JsonKey.attr.type]}> list',
-                ThisObject.param(config)
+                ThisObject.param(config),
+                FuzzySearch.param(config)
             )
         return method_str
 

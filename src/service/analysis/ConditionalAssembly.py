@@ -74,7 +74,7 @@ class ConditionalAssembly:
             l = [suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix]
         elif StringUtil.eq_not_case(model, "XMLModel"):
             # 表多级模块化，XML独立
-            suffix = table_name.replace("_", "").lower()
+            suffix = table_name.replace("_", ".").lower()
             l = [suffix, suffix, suffix, suffix, suffix, suffix, "xml", "xml", suffix]
         elif StringUtil.eq_not_case(model, "superXMLModel"):
             # 表多级模块化，XML独立
