@@ -76,7 +76,7 @@ public class Security implements HandlerInterceptor {
 		}
 		// 计数统计
 		interfaceCount.increment(isRelease);
-		log.debug("-->" + user + "\t用户\t" + msg + "\t" + interfaceCount.getCountMsg() + "\t业务放行：" + isRelease);
+		log.info("-->" + user + "\t用户\t" + msg + "\t" + interfaceCount.getCountMsg() + "\t业务放行：" + isRelease);
 		logParameter(request);
 		if (!isRelease) { response.setStatus(403); }
 		return isRelease;
@@ -88,7 +88,7 @@ public class Security implements HandlerInterceptor {
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
 		int time = (int) (System.currentTimeMillis() - ThreadSession.getRunStartTime());
-		log.debug("业务结束，清空线程临时数据,运行花费时间：" + (time));
+		log.info("业务结束，清空线程临时数据,运行花费时间：" + (time));
 		INTERFACE_PERFORMANCE.put(ThreadSession.getMethod() + ThreadSession.getURL(), time);
 		// 清除该线程所使用的数据
 		ThreadSession.clear();
@@ -110,7 +110,7 @@ public class Security implements HandlerInterceptor {
 			if (StringUtil.eqString("image/jpeg", contentType)) { info = "上传了图片"; }
 			if (contentType.indexOf("multipart/form-data;") != -1) { info = "请求体长度：" + request.getContentLength(); }
 		}
-		log.debug("携带参数：" + info + jsonObject.toJSONString());
+		log.info("携带参数：" + info + jsonObject.toJSONString());
 	}
 
 }
