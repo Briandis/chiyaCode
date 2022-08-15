@@ -1,4 +1,5 @@
 from src.util import StringUtil
+from abc import abstractmethod
 
 import_dirt = {
     "Date": "java.util.Date",
@@ -127,19 +128,109 @@ class Attribute:
         static = ""
         final = ""
         volatile = ""
+        scope = ""
         if self.volatile:
-            volatile = " volatile"
+            volatile = "volatile "
         if self.static:
-            static = " static"
+            static = "static "
             if self.final:
-                final = " final"
+                final = "final "
+        if self.scope is not None:
+            scope = self.scope + " "
         data = ""
         if self.annotation is not None:
             data += f'{indent}/** {self.annotation} */\n'
         for i in self.mate_value:
             data += f'{indent}{i}\n'
-        data += f'{indent}{volatile}{self.scope}{static}{final} {self.type} {self.name};\n'
+
+        data += f'{indent}{scope}{volatile}{static}{final}{self.type} {self.name};\n'
         return data
+
+
+class FunctionBody:
+    def __init__(self):
+        self.indentation = 0
+        # 代码块字符串
+        self.java_code = []
+
+    @abstractmethod
+    def function_body(self, parameter: list[Attribute]):
+        """
+        方法处理
+        :param parameter 传入的参数list[Attribute]
+        """
+        pass
+
+    def create_code(self):
+        """
+        生成代码块
+        :return: 代码块字符串
+        """
+        data = ""
+        for i in self.java_code:
+            data += i
+        return data
+
+    def line(self, data: str):
+        """
+        写入一行
+        :param data: 一行内容
+        """
+        indent = '\t' * self.indentation
+        self.java_code.append(f'{indent}{data}\n')
+
+    def indent_add(self, data: str):
+        """
+        增加缩进
+        """
+        self.indentation = self.indentation + 1
+        self.line(data)
+
+    def indent_sub(self, data: str):
+        """
+        减少缩进
+        """
+        self.indentation = self.indentation - 1
+        self.line(data)
+
+    def line_foreach(self, variable: str, lists: str):
+        """
+        增加foreach迭代代码块
+        :param variable: 迭代自变量
+        :param lists: 迭代的列表
+        """
+        self.line(f'for ({variable} : {lists}) {{')
+        self.indentation = self.indentation + 1
+
+    def line_if(self, data: str):
+        """
+        增加if代码块行
+        :param data:表达式
+        """
+        self.line(f'if ({data}) {{')
+        self.indentation = self.indentation + 1
+
+    def block_end(self):
+        """
+        代码块结束
+        """
+        self.indent_sub("}")
+
+    def line_annotation(self, data: str):
+        """
+        增加一行注释
+        :param data: 注释
+        """
+        if data is None:
+            data = ""
+        self.line(f'// {data}')
+
+    def line_blank(self):
+        """
+        增加一行空行
+        :return:
+        """
+        self.line("")
 
 
 class Function:
@@ -149,7 +240,7 @@ class Function:
             result: Attribute,
             name: str,
             annotation: str = None,
-            **parameter: Attribute
+            *parameter: Attribute
     ):
         """
         :param scope:方法作用域，如为None，则默认无
@@ -166,20 +257,37 @@ class Function:
         self.name = name
         # 字段注释
         self.annotation = annotation
+        # 方法体内容
+        self.functionBody = None
         # 类型所需要导入的包
         self.import_set = set()
         # 注解所引用的包
         self.mate_value = []
         # 提交的参数
-        self.parameter = parameter
+        self.parameter = list(parameter)
         # 其他类型，则将类型信息装入对象中
         if self.result is not None:
             for i in self.result.import_set:
                 self.import_set.add(i)
+        # 参数类型导入赋值
+        if self.parameter is not None:
+            for i in self.parameter:
+                for j in i.import_set:
+                    self.import_set.add(j)
 
     # 添加参数
-    def add_parameter(self):
-        pass
+    def add_parameter(self, parameter: Attribute):
+        """
+        添加参数
+        :param parameter: 属性对象
+        :return: 自身
+        """
+        if parameter is None:
+            return self
+        self.parameter.append(parameter)
+        for i in parameter.import_set:
+            self.import_set.add(i)
+        return self
 
     # 添加类注解
     def add_mate(self, value: str, package: str = None):
@@ -195,6 +303,15 @@ class Function:
         self._check_default_import(value)
         return self
 
+    def add_body(self, function: FunctionBody):
+        """
+        方法中的内容
+        :param function:方法处理函数
+        :return: 自身
+        """
+        self.functionBody = function
+        return self
+
     # 检查类型是否是默认的
     def _check_default_import(self, value: str):
         """
@@ -207,9 +324,91 @@ class Function:
         if import_what is not None:
             self.import_set.add(import_what)
 
-    # 构造文件对象
-    def create(self):
-        pass
+    # 构造方法内容
+    def _create_function(self, indentation=1):
+        """
+        构造方法内容
+        :param indentation: 缩进
+        :return: 方法内容字符串
+        """
+        indent = '\t' * indentation
+        data = ""
+        scope = ""
+        if self.scope is not None:
+            scope = self.scope + " "
+        result = "void "
+        if self.result is not None:
+            result = self.result.type + " "
+
+        data += f'{indent}{scope}{result}{self.name}('
+        if self.parameter is not None:
+            lists = []
+            for param in self.parameter:
+                lists.append(f'{param.type} {param.name}')
+            data += StringUtil.string_join_neglect_null(", ", *lists)
+        data += f') {{\n'
+        if self.functionBody is not None:
+            self.functionBody.indentation = indentation + 1
+            self.functionBody.function_body(self.parameter)
+            data += self.functionBody.create_code()
+        data += f'{indent}}}\n'
+        return data
+
+    # 构建注解代码段
+    def _create_mate(self, indentation=1):
+        """
+        构建注解代码段
+        :param indentation: 缩进
+        :return: 注解代码段
+        """
+        indent = '\t' * indentation
+        data = ""
+        for i in self.mate_value:
+            data += f'{indent}{i}\n'
+        return data
+
+    # 构建方法注释
+    def _create_annotation(self, indentation=1):
+        """
+        构建方法注释块
+        :param indentation:缩进
+        :return: 注释字符串
+        """
+        indent = '\t' * indentation
+        data = "\n"
+        # 注释块
+        data += f'{indent}/**\n'
+        data += f'{indent} * {self.annotation}\n'
+        # 参数
+        if self.parameter is not None:
+            space = 0
+            # 招到字符的最大值
+            for param in self.parameter:
+                i = len(param.name)
+                if i > space:
+                    space = i
+
+            data += f'{indent} * \n'
+            for param in self.parameter:
+                data += f'{indent} * @param {param.name}{" " * (space - len(param.name))} {param.annotation}\n'
+        # 返回值
+        if self.result is not None:
+            data += f'{indent} * @return {self.result.annotation}\n'
+        data += f'{indent} */\n'
+        return data
+
+    # 构造方法代码块
+    def create(self, indentation=1):
+        """
+        构造方法代码块
+        :param indentation: 缩进
+        :return: 方法代码块
+        """
+        data = ""
+        data += self._create_annotation(indentation)
+        data += self._create_mate(indentation)
+        data += self._create_function(indentation)
+        return data
 
 
 class JavaCode:
@@ -236,6 +435,8 @@ class JavaCode:
         self.is_abstract = False
         # 属性列表
         self.attribute = []
+        # 方法列表
+        self.function = []
 
     # 添加类的属性
     def add_attr(self, attr: Attribute):
@@ -249,8 +450,15 @@ class JavaCode:
             self.add_import(i)
 
     # 添加类中的方法
-    def add_function(self):
-        pass
+    def add_function(self, function: Function):
+        """
+        添加方法
+        :param function:
+        :return:
+        """
+        self.function.append(function)
+        for i in function.import_set:
+            self.add_import(i)
 
     # 添加导入的包
     def add_import(self, package: str):
@@ -308,7 +516,7 @@ class JavaCode:
     def _create_mate(self):
         data = ""
         for i in self.mate_value:
-            data += f'{i};\n'
+            data += f'{i}\n'
         return data
 
     # 创建类注释
@@ -344,6 +552,17 @@ class JavaCode:
             data += attr.create()
         return data
 
+    # 构建方法信息
+    def _create_function(self):
+        """
+        构建方法信息
+        :return: 方法的字符串
+        """
+        data = ""
+        for attr in self.function:
+            data += attr.create()
+        return data
+
     @staticmethod
     def _create_class_end():
         return f"}}\n"
@@ -371,5 +590,6 @@ class JavaCode:
         data += self._create_mate()
         data += self._create_class()
         data += self._create_attribute()
+        data += self._create_function()
         data += self._create_class_end()
         return data
