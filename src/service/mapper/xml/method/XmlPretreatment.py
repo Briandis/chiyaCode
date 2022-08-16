@@ -40,7 +40,7 @@ class XmlPretreatment:
         keyType = config["key"]["type"]
         package = config["package"]
         resultMapName = config["config"]["xmlConfig"]["resultMapName"]
-        baseMapperXmlPackage = config["baseMapperXml"]["package"]
+        baseMapperXmlPackage = config["module"]["baseMapperXml"]["package"]
         tableName = config["tableName"]
         path = config["path"]
 

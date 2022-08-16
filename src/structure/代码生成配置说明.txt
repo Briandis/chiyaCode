@@ -20,50 +20,52 @@
   "utilPath": "chiya.galgame.teahouse.module.util",                             工具库默认路径，现在已经废弃
   "path": "chiya.galgame.teahouse.module.game.entity",                          该实体类所在的路径
   "package": "chiya.galgame.teahouse.module.game.entity.Game",                  该实体类所在的完整路径，并且包括自身
-  "baseEntity": {                                                            实体类配置
-    "path": "chiya.galgame.teahouse.module.game.entity",                        所在路径             用于构造路径文件夹
-    "className": "BaseGame",                                                    实体类类名           构架文件名
-    "package": "chiya.galgame.teahouse.module.game.entity.BaseGame"             实体类完整路径
-  },
-  "serviceInterface": {                                                      业务层接口配置
-    "path": "chiya.galgame.teahouse.module.game.service",                       业务层接口所在路径
-    "className": "GameService",                                                 业务层接口类名
-    "package": "chiya.galgame.teahouse.module.game.service.GameService"         业务层接口所在完整的路径
-  },
-  "serviceImplements": {                                                        业务层实现类配置
-    "path": "chiya.galgame.teahouse.module.game.service.impl",                      业务层实现类所在路径
-    "className": "GameServiceImpl",                                                 业务层实现类类名
-    "package": "chiya.galgame.teahouse.module.game.service.impl.GameServiceImpl"    业务层实现类所在完整路径
-  },
-  "baseMapperInterface": {                                                      自动生成的mapper接口配置
-    "path": "chiya.galgame.teahouse.module.game.mapper",                            自动生成的mapper接口所在路径
-    "className": "BaseGameMapper",                                                  自动生成的mapper接口类名
-    "package": "chiya.galgame.teahouse.module.game.mapper.BaseGameMapper"           自动生成的mapper接口完整路径
-  },
-  "mapperInterface": {                                                          用户的mapper接口配置
-    "path": "chiya.galgame.teahouse.module.game.mapper",                            用户的mapper接口所在路径
-    "className": "GameMapper",                                                      用户的mapper接口类名
-    "package": "chiya.galgame.teahouse.module.game.mapper.GameMapper"               用户的mapper接口完整路径
-  },
-  "baseMapperXml": {                                                            自动生成的xml配置          特殊
-    "path": "chiya.galgame.teahouse.module.game.mapper",                            自动生成的xml所在路径
-    "className": "BaseGameMapper",                                                  自动生成的xml类名
-    "package": "chiya.galgame.teahouse.module.game.mapper.BaseGameMapper"           自动生成的xml完整路径
-  },
-  "mapperXml": {                                                                 用户生成的xml配置         特殊
-    "path": "chiya.galgame.teahouse.module.game.mapper",                            用户生成的xml配置
-    "className": "GameMapper",                                                      用户生成的xml所在路径
-    "package": "chiya.galgame.teahouse.module.game.mapper.GameMapper"               用户生成的xml完整路径
-  },
-  "controller": {                                                                控制层配置
-    "path": "chiya.galgame.teahouse.module.game.controller",                        控制层所在路径
-    "className": "GameController",                                                  控制层类名
-    "package": "chiya.galgame.teahouse.module.game.controller.GameController"       控制层所在完整路径
-  },
-  "Page": {                                                                      分页配置       现默认基于chiyaUtil中的分页路径
-    "path": "chiya.core.base.page",                                                 分页对象所在路径
-    "className": "Page",                                                            分页对象名称
-    "package": "chiya.core.base.page.Page"                                          分页对象所在完整路径
+  "module":{
+      "baseEntity": {                                                            实体类配置
+        "path": "chiya.galgame.teahouse.module.game.entity",                        所在路径             用于构造路径文件夹
+        "className": "BaseGame",                                                    实体类类名           构架文件名
+        "package": "chiya.galgame.teahouse.module.game.entity.BaseGame"             实体类完整路径
+      },
+      "serviceInterface": {                                                      业务层接口配置
+        "path": "chiya.galgame.teahouse.module.game.service",                       业务层接口所在路径
+        "className": "GameService",                                                 业务层接口类名
+        "package": "chiya.galgame.teahouse.module.game.service.GameService"         业务层接口所在完整的路径
+      },
+      "serviceImplements": {                                                        业务层实现类配置
+        "path": "chiya.galgame.teahouse.module.game.service.impl",                      业务层实现类所在路径
+        "className": "GameServiceImpl",                                                 业务层实现类类名
+        "package": "chiya.galgame.teahouse.module.game.service.impl.GameServiceImpl"    业务层实现类所在完整路径
+      },
+      "baseMapperInterface": {                                                      自动生成的mapper接口配置
+        "path": "chiya.galgame.teahouse.module.game.mapper",                            自动生成的mapper接口所在路径
+        "className": "BaseGameMapper",                                                  自动生成的mapper接口类名
+        "package": "chiya.galgame.teahouse.module.game.mapper.BaseGameMapper"           自动生成的mapper接口完整路径
+      },
+      "mapperInterface": {                                                          用户的mapper接口配置
+        "path": "chiya.galgame.teahouse.module.game.mapper",                            用户的mapper接口所在路径
+        "className": "GameMapper",                                                      用户的mapper接口类名
+        "package": "chiya.galgame.teahouse.module.game.mapper.GameMapper"               用户的mapper接口完整路径
+      },
+      "baseMapperXml": {                                                            自动生成的xml配置          特殊
+        "path": "chiya.galgame.teahouse.module.game.mapper",                            自动生成的xml所在路径
+        "className": "BaseGameMapper",                                                  自动生成的xml类名
+        "package": "chiya.galgame.teahouse.module.game.mapper.BaseGameMapper"           自动生成的xml完整路径
+      },
+      "mapperXml": {                                                                 用户生成的xml配置         特殊
+        "path": "chiya.galgame.teahouse.module.game.mapper",                            用户生成的xml配置
+        "className": "GameMapper",                                                      用户生成的xml所在路径
+        "package": "chiya.galgame.teahouse.module.game.mapper.GameMapper"               用户生成的xml完整路径
+      },
+      "controller": {                                                                控制层配置
+        "path": "chiya.galgame.teahouse.module.game.controller",                        控制层所在路径
+        "className": "GameController",                                                  控制层类名
+        "package": "chiya.galgame.teahouse.module.game.controller.GameController"       控制层所在完整路径
+      },
+      "Page": {                                                                      分页配置       现默认基于chiyaUtil中的分页路径
+        "path": "chiya.core.base.page",                                                 分页对象所在路径
+        "className": "Page",                                                            分页对象名称
+        "package": "chiya.core.base.page.Page"                                          分页对象所在完整路径
+      }
   },
   "config": {                       高级配置
     "fuzzySearch": {                  模糊搜索配置

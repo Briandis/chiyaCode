@@ -10,7 +10,7 @@ class CreateFile:
     def create(config):
         data = '<?xml version="1.0" encoding="UTF-8"?>\n'
         data += '<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">\n'
-        data += f'<mapper namespace="{config["mapperInterface"]["package"]}">\n'
+        data += f'<mapper namespace="{config["module"]["mapperInterface"]["package"]}">\n'
         data += "\n"
         data += CreateMethod.create(config)
         data += "</mapper>\n"
@@ -24,7 +24,7 @@ class CreateSqlFragment:
 
     @staticmethod
     def create(config: dict, tables):
-        baseMapperXmlPackage = config["baseMapperXml"]["package"]
+        baseMapperXmlPackage = config["module"]["baseMapperXml"]["package"]
         string_block = ""
         for table in tables:
             string_block += f'\t<sql id="sql_filed_{table}"><include refid="{baseMapperXmlPackage}.sql_filed_{table}"/></sql>\n'
@@ -48,7 +48,7 @@ class CreateResultMap:
         keyType = config["key"]["type"]
         package = config["package"]
         resultMapName = config["config"]["xmlConfig"]["resultMapName"]
-        baseMapperXmlPackage = config["baseMapperXml"]["package"]
+        baseMapperXmlPackage = config["module"]["baseMapperXml"]["package"]
 
         tag = "\t"
         data = ""

@@ -21,7 +21,7 @@ class CreateFile:
         data += f' * {config[JsonKey.remark]}\n'
         data += f' */\n'
         # 文件本体内容
-        data += f'public class {config["className"]} extends {config["baseEntity"]["className"]}<{config["className"]}> {{\n'
+        data += f'public class {config["className"]} extends {config["module"]["baseEntity"]["className"]}<{config["className"]}> {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -37,8 +37,8 @@ class CreateImportData:
     @staticmethod
     def create(config, importSet: set):
         data = ""
-        if config["path"] != config["baseEntity"]["path"]:
-            importSet.add(config["baseEntity"]["package"])
+        if config["path"] != config["module"]["baseEntity"]["path"]:
+            importSet.add(config["module"]["baseEntity"]["package"])
 
         for i in importSet:
             data += f'import {i}\n'

@@ -57,14 +57,14 @@ class CreateFile:
         importSet = set()
         methodData = CreateMethod.create(config, importSet)
 
-        data = f'package {config["serviceImplements"]["path"]};\n'
+        data = f'package {config["module"]["serviceImplements"]["path"]};\n'
         data += "\n"
         # 生成导包文件
         data += CreateImportData.create(config, importSet)
         data += "\n"
         # 文件本体内容
         data += f'@Service\n'
-        data += f'public class {config["serviceImplements"]["className"]} implements {config["serviceInterface"]["className"]} {{\n'
+        data += f'public class {config["module"]["serviceImplements"]["className"]} implements {config["module"]["serviceInterface"]["className"]} {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -81,16 +81,16 @@ class CreateImportData:
     def create(config, importSet: set):
         data = ""
         data += "import java.util.List;\n"
-        data += f'import {config["Page"]["package"]};\n'
+        data += f'import {config["module"]["Page"]["package"]};\n'
         data += "import org.springframework.stereotype.Service;\n"
         data += "import org.springframework.beans.factory.annotation.Autowired;\n"
 
-        if config["path"] != config["serviceImplements"]["path"]:
+        if config["path"] != config["module"]["serviceImplements"]["path"]:
             importSet.add(config["package"])
-        if config["serviceInterface"]["path"] != config["serviceImplements"]["path"]:
-            importSet.add(config["serviceInterface"]["package"])
-        if config["mapperXml"]["path"] != config["serviceImplements"]["path"]:
-            importSet.add(config["mapperXml"]["package"])
+        if config["module"]["serviceInterface"]["path"] != config["module"]["serviceImplements"]["path"]:
+            importSet.add(config["module"]["serviceInterface"]["package"])
+        if config["module"]["mapperXml"]["path"] != config["module"]["serviceImplements"]["path"]:
+            importSet.add(config["module"]["mapperXml"]["package"])
 
         for i in importSet:
             data += f'import {i};\n'
@@ -104,9 +104,9 @@ class CreateAttribute:
 
     @staticmethod
     def create(config, importSet: set):
-        mapperClassName = config["mapperInterface"]["className"]
+        mapperClassName = config["module"]["mapperInterface"]["className"]
         lowMapperClassName = StringUtil.first_char_lower_case(mapperClassName)
-        importSet.add(config["mapperInterface"]["package"])
+        importSet.add(config["module"]["mapperInterface"]["package"])
         attr_str = ""
         attr_str += f'\t@Autowired\n'
         attr_str += f'\tprivate {mapperClassName} {lowMapperClassName};\n\n'
@@ -128,7 +128,7 @@ class CreateMethodDefaultAPI:
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
         keyType = config["key"]["type"]
-        mapperClassName = config["mapperInterface"]["className"]
+        mapperClassName = config["module"]["mapperInterface"]["className"]
         lowMapperClassName = StringUtil.first_char_lower_case(mapperClassName)
 
         # 增
@@ -194,7 +194,7 @@ class CreateMethodExtraAPI:
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
         keyType = config["key"]["type"]
-        mapperClassName = config["mapperInterface"]["className"]
+        mapperClassName = config["module"]["mapperInterface"]["className"]
         lowMapperClassName = StringUtil.first_char_lower_case(mapperClassName)
 
         extraName = config["config"]["extraAPI"]["default"].split(",")

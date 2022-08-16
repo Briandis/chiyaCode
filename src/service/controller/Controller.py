@@ -23,7 +23,7 @@ class CreateFile:
         importSet.add("org.springframework.web.bind.annotation.RequestMapping")
         methodData = CreateMethod.create(config, importSet)
 
-        data = f'package {config["controller"]["path"]};\n'
+        data = f'package {config["module"]["controller"]["path"]};\n'
         data += "\n"
         # 生成导包文件
         data += CreateImportData.create(config, importSet)
@@ -32,11 +32,11 @@ class CreateFile:
         if isRestful:
             data += '@RestController\n'
             data += f'@RequestMapping("/{StringUtil.first_char_lower_case(config["className"])}")\n'
-            data += f'public class {config["controller"]["className"]} {{\n'
+            data += f'public class {config["module"]["controller"]["className"]} {{\n'
         else:
             data += '@Controller\n'
             data += f'@RequestMapping("/{StringUtil.first_char_lower_case(config["className"])}")\n'
-            data += f'public class {config["controller"]["className"]} {{\n'
+            data += f'public class {config["module"]["controller"]["className"]} {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -53,16 +53,16 @@ class CreateImportData:
     def create(config, importSet: set):
         data = ""
         data += "import java.util.List;\n"
-        data += f'import {config["Page"]["package"]};\n'
+        data += f'import {config["module"]["Page"]["package"]};\n'
         data += "import org.springframework.beans.factory.annotation.Autowired;\n"
         data += "import org.springframework.beans.factory.annotation.Qualifier;\n"
         data += "import chiya.core.base.result.Result;\n"
 
-        if config["controller"]["path"] != config["path"]:
+        if config["module"]["controller"]["path"] != config["path"]:
             importSet.add(config["package"])
 
-        if config["controller"]["path"] != config["serviceInterface"]["path"]:
-            importSet.add(config["serviceInterface"]["package"])
+        if config["module"]["controller"]["path"] != config["module"]["serviceInterface"]["path"]:
+            importSet.add(config["module"]["serviceInterface"]["package"])
 
         for i in importSet:
             data += f'import {i};\n'
@@ -76,9 +76,9 @@ class CreateAttribute:
 
     @staticmethod
     def create(config, importSet: set):
-        serviceClassName = config["serviceInterface"]["className"]
+        serviceClassName = config["module"]["serviceInterface"]["className"]
         lowServiceClassName = StringUtil.first_char_lower_case(serviceClassName)
-        serviceImplClassName = config["serviceImplements"]["className"]
+        serviceImplClassName = config["module"]["serviceImplements"]["className"]
         lowServiceImplClassName = StringUtil.first_char_lower_case(serviceImplClassName)
         attr_str = ""
         attr_str += f'\t@Autowired\n'
@@ -105,7 +105,7 @@ class CreateMethodDefaultAPI:
         upperKey = StringUtil.first_char_upper_case(key)
         keyType = config["key"]["type"]
 
-        serviceClassName = config["serviceInterface"]["className"]
+        serviceClassName = config["module"]["serviceInterface"]["className"]
         lowServiceClassName = StringUtil.first_char_lower_case(serviceClassName)
 
         # 增
@@ -209,7 +209,7 @@ class CreateMethodExtraAPI:
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
         keyType = config["key"]["type"]
-        serviceClassName = config["serviceInterface"]["className"]
+        serviceClassName = config["module"]["serviceInterface"]["className"]
         lowServiceClassName = StringUtil.first_char_lower_case(serviceClassName)
 
         extraName = config["config"]["extraAPI"]["default"].split(",")

@@ -8,14 +8,14 @@ class CreateFile:
         importSet = set()
         methodData = CreateMethod.create(config, importSet)
 
-        data = f'package {config["mapperInterface"]["path"]};\n'
+        data = f'package {config["module"]["mapperInterface"]["path"]};\n'
         data += "\n"
         # 生成导包文件
         data += CreateImportData.create(config, importSet)
         data += "\n"
         # 文件本体内容
         data += f'@Mapper\n'
-        data += f'public interface {config["mapperInterface"]["className"]} extends {config["baseMapperInterface"]["className"]} {{\n'
+        data += f'public interface {config["module"]["mapperInterface"]["className"]} extends {config["module"]["baseMapperInterface"]["className"]} {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -34,8 +34,8 @@ class CreateImportData:
         # data += "import java.util.List;\n"
         # data += f'import {config["Page"]["package"]};\n'
         data += f'import org.apache.ibatis.annotations.Mapper;\n'
-        if config["mapperInterface"]["path"] != config["baseMapperInterface"]["path"]:
-            importSet.add(config["baseMapperInterface"]["package"])
+        if config["module"]["mapperInterface"]["path"] != config["module"]["baseMapperInterface"]["path"]:
+            importSet.add(config["module"]["baseMapperInterface"]["package"])
 
         for i in importSet:
             data += f'import {i};\n'

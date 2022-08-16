@@ -7,7 +7,7 @@ class CreateFile:
     def create(config):
         data = '<?xml version="1.0" encoding="UTF-8"?>\n'
         data += '<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">\n'
-        data += f'<mapper namespace="{config["mapperInterface"]["package"]}">\n'
+        data += f'<mapper namespace="{config["module"]["mapperInterface"]["package"]}">\n'
         data += "\n"
         data += CreateMethod.create(config)
         data += "</mapper>\n"

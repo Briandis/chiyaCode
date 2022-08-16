@@ -11,7 +11,7 @@ class CreateFile:
         importSet = set()
         methodData = CreateMethod.create(config, importSet)
 
-        data = f'package {config["entityClone"]["path"]};\n'
+        data = f'package {config["module"]["entityClone"]["path"]};\n'
         data += "\n"
         data += f'import java.util.ArrayList;\n'
         data += f'import java.util.List;\n'
@@ -19,7 +19,7 @@ class CreateFile:
         data += CreateImportData.create(config, importSet)
         data += "\n"
         # 文件本体内容
-        data += f'public class {config["entityClone"]["className"]} {{\n'
+        data += f'public class {config["module"]["entityClone"]["className"]} {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -35,7 +35,7 @@ class CreateImportData:
     @staticmethod
     def create(config, importSet: set):
         data = ""
-        if config["path"] != config["entityClone"]["path"]:
+        if config["path"] != config["module"]["entityClone"]["path"]:
             importSet.add(config["package"])
         if config["config"]["toJsonString"]["isFastJson"]:
             data += f'import com.alibaba.fastjson.JSON;\n'
@@ -51,8 +51,8 @@ class CreateAttribute:
 
     @staticmethod
     def create(config, importSet: set, attrs: list):
-        attrs.append([config["entityClone"]["key"]])
-        for attr in config["entityClone"]["attr"]:
+        attrs.append([config["module"]["entityClone"]["key"]])
+        for attr in config["module"]["entityClone"]["attr"]:
             attrs.append(attr)
         attr_str = ""
         for attr in attrs:
@@ -151,14 +151,14 @@ class CreateMethodConstruction:
 
     @staticmethod
     def create(config, importSet: set, attrs: list):
-        className = config["entityClone"]["className"]
-        remark = config["entityClone"]["remark"]
-        key = config["entityClone"]["key"]["attr"]
+        className = config["module"]["entityClone"]["className"]
+        remark = config["module"]["entityClone"]["remark"]
+        key = config["module"]["entityClone"]["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["entityClone"]["key"]["type"]
+        keyType = config["module"]["entityClone"]["key"]["type"]
         baseClassName = config["className"]
         lowBaseClassName = StringUtil.first_char_lower_case(config["className"])
-        baseKey = config["entityClone"]["key"]["inAttr"]
+        baseKey = config["module"]["entityClone"]["key"]["inAttr"]
         upperBaseKey = StringUtil.first_char_upper_case(baseKey)
         attr_str = ""
         # 空构造方法
@@ -172,7 +172,7 @@ class CreateMethodConstruction:
         attr_str += f'\tpublic {className}({baseClassName} {lowBaseClassName}) {{\n\n'
         attr_str += f'\t\tif ({lowBaseClassName} != null){{\n'
         attr_str += f'\t\t\tthis.{key} = {lowBaseClassName}.get{upperBaseKey}();\n'
-        for attr in config["entityClone"]["attr"]:
+        for attr in config["module"]["entityClone"]["attr"]:
             if "inAttr" in attr and attr["inAttr"] is not None:
                 attr_str += f'\t\t\tthis.{attr["attr"]} = {lowBaseClassName}.get{StringUtil.first_char_upper_case(attr["inAttr"])}();\n'
         attr_str += f'\t\t}}\n'

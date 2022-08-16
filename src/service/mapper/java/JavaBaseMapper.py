@@ -13,14 +13,14 @@ class CreateFile:
         importSet = set()
         methodData = CreateMethod.create(config, importSet)
 
-        data = f'package {config["baseMapperInterface"]["path"]};\n'
+        data = f'package {config["module"]["baseMapperInterface"]["path"]};\n'
         data += "\n"
         # 生成导包文件
         data += CreateImportData.create(config, importSet)
         data += "\n"
         # 文件本体内容
         data += f'@Mapper\n'
-        data += f'public interface {config["baseMapperInterface"]["className"]} {{\n\n'
+        data += f'public interface {config["module"]["baseMapperInterface"]["className"]} {{\n\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -212,10 +212,10 @@ class CreateImportData:
     @staticmethod
     def create(config, importSet: set):
         data = "import java.util.List;\n"
-        data += f'import {config["Page"]["package"]};\n'
+        data += f'import {config["module"]["Page"]["package"]};\n'
         data += f'import org.apache.ibatis.annotations.Mapper;\n'
         data += f'import org.apache.ibatis.annotations.Param;\n'
-        if config["path"] != config["serviceInterface"]["path"]:
+        if config["path"] != config["module"]["serviceInterface"]["path"]:
             importSet.add(config["package"])
         for i in importSet:
             data += f'import {i};\n'

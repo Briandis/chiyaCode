@@ -12,7 +12,7 @@ class CreateFile:
         importSet = set()
         methodData = CreateMethod.create(config, importSet)
 
-        data = f'package {config["baseEntity"]["path"]};\n'
+        data = f'package {config["module"]["baseEntity"]["path"]};\n'
         data += "\n"
         # 生成导包文件
         data += CreateImportData.create(config, importSet)
@@ -22,7 +22,7 @@ class CreateFile:
         data += f' * 抽象的{config[JsonKey.remark]}\n'
         data += f' */\n'
         data += f'@SuppressWarnings("unchecked")\n'
-        data += f'public abstract class {config["baseEntity"]["className"]}<T> {{\n'
+        data += f'public abstract class {config["module"]["baseEntity"]["className"]}<T> {{\n'
         # 文件接口内容
         data += methodData
         data += "}"
@@ -38,8 +38,8 @@ class CreateImportData:
     @staticmethod
     def create(config, importSet: set):
         data = ""
-        if config["path"] != config["baseEntity"]["path"]:
-            importSet.add(config["baseEntity"]["package"])
+        if config["path"] != config["module"]["baseEntity"]["path"]:
+            importSet.add(config["module"]["baseEntity"]["package"])
         if config["config"]["toJsonString"]["isFastJson"]:
             data += f'import com.alibaba.fastjson.JSON;\n'
         for i in importSet:

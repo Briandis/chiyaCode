@@ -40,15 +40,15 @@ class ConditionalAssembly:
         :param bean: 配置
         :param lists:路径集合
         """
-        bean["baseEntity"]["path"] += f'.{lists[0]}'
+        bean["module"]["baseEntity"]["path"] += f'.{lists[0]}'
         bean["path"] += f'.{lists[1]}'
-        bean["serviceInterface"]["path"] += f'.{lists[2]}'
-        bean["serviceImplements"]["path"] += f'.{lists[3]}'
-        bean["baseMapperInterface"]["path"] += f'.{lists[4]}'
-        bean["mapperInterface"]["path"] += f'.{lists[5]}'
-        bean["baseMapperXml"]["path"] += f'.{lists[6]}'
-        bean["mapperXml"]["path"] += f'.{lists[7]}'
-        bean["controller"]["path"] += f'.{lists[8]}'
+        bean["module"]["serviceInterface"]["path"] += f'.{lists[2]}'
+        bean["module"]["serviceImplements"]["path"] += f'.{lists[3]}'
+        bean["module"]["baseMapperInterface"]["path"] += f'.{lists[4]}'
+        bean["module"]["mapperInterface"]["path"] += f'.{lists[5]}'
+        bean["module"]["baseMapperXml"]["path"] += f'.{lists[6]}'
+        bean["module"]["mapperXml"]["path"] += f'.{lists[7]}'
+        bean["module"]["controller"]["path"] += f'.{lists[8]}'
 
     @staticmethod
     def set_project_model(model: str, table_name: str, bean: dict):
@@ -127,15 +127,16 @@ class ConditionalAssembly:
         bean["utilPath"] = f'{project}.util'
         bean["path"] = project
         bean["package"] = project
-        bean["baseEntity"] = information_block(project, f'Base{className}', project)
-        bean["serviceInterface"] = information_block(project, f'{className}Service', project)
-        bean["serviceImplements"] = information_block(project, f'{className}ServiceImpl', project)
-        bean["baseMapperInterface"] = information_block(project, f'Base{className}Mapper', project)
-        bean["mapperInterface"] = information_block(project, f'{className}Mapper', project)
-        bean["baseMapperXml"] = information_block(project, f'Base{className}Mapper', project)
-        bean["mapperXml"] = information_block(project, f'{className}Mapper', project)
-        bean["controller"] = information_block(project, f'{className}Controller', project)
-        bean["Page"] = information_block("chiya.core.base.page", "Page", "chiya.core.base.page.Page")
+        bean["module"] = {}
+        bean["module"]["baseEntity"] = information_block(project, f'Base{className}', project)
+        bean["module"]["serviceInterface"] = information_block(project, f'{className}Service', project)
+        bean["module"]["serviceImplements"] = information_block(project, f'{className}ServiceImpl', project)
+        bean["module"]["baseMapperInterface"] = information_block(project, f'Base{className}Mapper', project)
+        bean["module"]["mapperInterface"] = information_block(project, f'{className}Mapper', project)
+        bean["module"]["baseMapperXml"] = information_block(project, f'Base{className}Mapper', project)
+        bean["module"]["mapperXml"] = information_block(project, f'{className}Mapper', project)
+        bean["module"]["controller"] = information_block(project, f'{className}Controller', project)
+        bean["module"]["Page"] = information_block("chiya.core.base.page", "Page", "chiya.core.base.page.Page")
         bean["config"] = {
             "fuzzySearch": {
                 "name": "fuzzySearch",
@@ -231,14 +232,14 @@ class ConditionalAssembly:
         :param bean: 配置
         """
         integrate_package(bean)
-        integrate_package(bean["baseEntity"])
-        integrate_package(bean["serviceInterface"])
-        integrate_package(bean["serviceImplements"])
-        integrate_package(bean["baseMapperInterface"])
-        integrate_package(bean["mapperInterface"])
-        integrate_package(bean["baseMapperXml"])
-        integrate_package(bean["mapperXml"])
-        integrate_package(bean["controller"])
+        integrate_package(bean["module"]["baseEntity"])
+        integrate_package(bean["module"]["serviceInterface"])
+        integrate_package(bean["module"]["serviceImplements"])
+        integrate_package(bean["module"]["baseMapperInterface"])
+        integrate_package(bean["module"]["mapperInterface"])
+        integrate_package(bean["module"]["baseMapperXml"])
+        integrate_package(bean["module"]["mapperXml"])
+        integrate_package(bean["module"]["controller"])
 
     @staticmethod
     def assembly(tables: dict, config: dict):
