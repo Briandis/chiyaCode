@@ -265,6 +265,8 @@ class Function:
         self.mate_value = []
         # 提交的参数
         self.parameter = list(parameter)
+        # 是否是接口
+        self.is_interface = False
         # 其他类型，则将类型信息装入对象中
         if self.result is not None:
             for i in self.result.import_set:
@@ -312,6 +314,14 @@ class Function:
         self.functionBody = function
         return self
 
+    def set_is_interface(self):
+        """
+        声明该方法是个接口
+        :return: 自身
+        """
+        self.is_interface = True
+        return self
+
     # 检查类型是否是默认的
     def _check_default_import(self, value: str):
         """
@@ -352,6 +362,28 @@ class Function:
             self.functionBody.function_body(self.parameter)
             data += self.functionBody.create_code()
         data += f'{indent}}}\n'
+        return data
+
+    # 构造接口方法
+    def _create_interface(self, indentation=1):
+        """
+        构造接口方法
+        :param indentation: 缩进
+        :return: 方法内容字符串
+        """
+        indent = '\t' * indentation
+        data = ""
+        result = "void "
+        if self.result is not None:
+            result = self.result.type + " "
+
+        data += f'{indent}{result}{self.name}('
+        if self.parameter is not None:
+            lists = []
+            for param in self.parameter:
+                lists.append(f'{param.type} {param.name}')
+            data += StringUtil.string_join_neglect_null(", ", *lists)
+        data += f');\n'
         return data
 
     # 构建注解代码段
@@ -407,7 +439,12 @@ class Function:
         data = ""
         data += self._create_annotation(indentation)
         data += self._create_mate(indentation)
-        data += self._create_function(indentation)
+        if self.is_interface:
+            # 接口的情况
+            data += self._create_interface(indentation)
+        else:
+            # 普通的方法
+            data += self._create_function(indentation)
         return data
 
 
@@ -437,6 +474,32 @@ class JavaCode:
         self.attribute = []
         # 方法列表
         self.function = []
+        # 继承的类型
+        self.extends: [Attribute] = []
+        # 实现的类
+        self.implements: [Attribute] = []
+
+    # 添加类的继承关系
+    def add_extend(self, attr: Attribute):
+        """
+        添加类的继承关系
+        :param attr:属性对象
+        :return: Node
+        """
+        self.extends.append(attr)
+        for i in attr.import_set:
+            self.add_import(i)
+
+    # 添加类的实现关系
+    def add_implement(self, attr: Attribute):
+        """
+        添加类的实现关系
+        :param attr:属性对象
+        :return: Node
+        """
+        self.implements.append(attr)
+        for i in attr.import_set:
+            self.add_import(i)
 
     # 添加类的属性
     def add_attr(self, attr: Attribute):
@@ -533,12 +596,21 @@ class JavaCode:
         构造类头信息
         :return: 类头信息文本
         """
-        data = f'public interface {self.class_name} {{\n'
+        data = f'public interface {self.class_name}'
         if self.is_class:
             i = ""
             if self.is_abstract:
                 i = " abstract"
-            data = f'public{i} class {self.class_name} {{\n'
+            data = f'public{i} class {self.class_name}'
+        if len(self.extends) > 0:
+            data += f' extends'
+            for i in self.extends:
+                data += f' {i.type}'
+        if len(self.implements) > 0:
+            data += f' implements'
+            for i in self.implements:
+                data += f' {i.type}'
+        data += f' {{\n'
         return data
 
     # 构建属性信息

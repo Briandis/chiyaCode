@@ -10,26 +10,21 @@ class CreateFile:
 
     @staticmethod
     def create(config: CodeConfig):
-
         code = JavaCode.JavaCode(
-            config.module.controller.path,
-            config.module.controller.className,
-            f'{config.remark}web接入层'
+            config.module.serviceImplements.path,
+            config.module.serviceImplements.className,
+            f'{config.remark}业务层实现'
         )
-
-        if config.createConfig.restful.enable:
-            code.add_mate("@RestController")
-        else:
-            code.add_mate("@Controller")
-        code.add_mate(f'@RequestMapping("/{config.low_name()}")')
+        code.add_implement(JavaCode.Attribute(config.module.serviceInterface.className, "", "实现的业务层", config.module.serviceInterface.package))
+        code.add_mate(f'@Service')
 
         code.add_attr(
             JavaCode.Attribute(
-                config.module.serviceInterface.className,
-                config.module.serviceInterface.low_name(),
-                f'{config.remark}业务接口',
-                config.module.serviceInterface.package,
-            ).add_mate("@Autowired").add_mate(f'@Qualifier("{config.module.serviceImplements.low_name()}")')
+                config.module.domain.className,
+                config.module.domain.low_name(),
+                f'{config.remark}领域层接口',
+                config.module.domain.package,
+            ).add_mate("@Autowired").add_mate(f'@Qualifier("{config.module.domainImpl.low_name()}")')
         )
         code.add_import(config.package)
         code.add_function(CreateMethodDefaultAPI.insert(config))
@@ -52,22 +47,18 @@ class CreateMethodDefaultAPI:
     def insert(config: CodeConfig):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute("boolean", "b", "true:添加成功/false:添加失败"),
             f'{config.createConfig.methodName.get(0)}{config.className}',
             f'前台添加{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@PostMapping("/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(0)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
-                self.line(f'b = {config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(0)}{config.className}({config.low_name()});')
-                self.line(f'return Result.judge(b);')
+                self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(0)}{config.className}({config.low_name()});')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -76,24 +67,20 @@ class CreateMethodDefaultAPI:
     def delete(config: CodeConfig):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
             f'{config.createConfig.methodName.get(1)}{config.className}',
             f'前台删除{config.remark},{config.key.attr}必传',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@DeleteMapping("/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(1)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
-                self.line(f'b = {config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({config.key.attr});')
+                self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({config.key.attr});')
                 self.block_end()
-                self.line(f'return Result.judge(b);')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -102,24 +89,20 @@ class CreateMethodDefaultAPI:
     def update(config: CodeConfig):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute("boolean", "b", "true:修改成功/false:修改失败"),
             f'{config.createConfig.methodName.get(2)}{config.className}',
             f'前台修改{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@PutMapping("/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(2)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.low_name()}.get{config.key.upper_name()}() != null')
-                self.line(f'b = {config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(2)}{config.className}({config.low_name()});')
+                self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(2)}{config.className}({config.low_name()});')
                 self.block_end()
-                self.line(f'return Result.judge(b);')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -128,24 +111,20 @@ class CreateMethodDefaultAPI:
     def get(config: CodeConfig):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute(config.className, config.className, f'获取到的{config.remark}对象'),
             f'{config.createConfig.methodName.get(3)}{config.className}',
             f'前台根据{config.key.attr}查询一个{config.remark}',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@GetMapping("/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(3)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
-                self.line(f'return Result.success({config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(3)}{config.className}({config.key.attr}));')
+                self.line(f'return {config.module.domain.low_name()}.{config.createConfig.methodName.get(3)}{config.className}({config.key.attr});')
                 self.block_end()
-                self.line(f'return Result.judge(b);')
+                self.line(f'return null;')
 
         function.add_body(Body())
         return function
@@ -154,22 +133,18 @@ class CreateMethodDefaultAPI:
     def lists(config: CodeConfig):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
             f'{config.createConfig.methodName.get(4)}{config.className}',
             f'前台获取多个{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
             JavaCode.Attribute("Page", "page", f'分页对象'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@GetMapping("/{config.createConfig.methodName.get(4)}{config.className}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(4)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'List<{config.className}> list = {config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(4)}{config.className}({config.low_name()}, page);')
-                self.line(f'return Result.success(list, page);')
+                self.line(f'List<{config.className}> list = {config.module.domain.low_name()}.{config.createConfig.methodName.get(4)}{config.className}({config.low_name()}, page);')
+                self.line(f'return list;')
 
         function.add_body(Body())
         return function
@@ -199,22 +174,18 @@ class CreateMethodExtraAPI:
     def insert(config: CodeConfig, extra: str):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute("boolean", "b", "true:修改成功/false:修改失败"),
             f'{extra}{config.createConfig.methodName.get_upper(0)}{config.className}',
             f'{extra}添加{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@PostMapping("/{extra}/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(0)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
-                self.line(f'b = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(0)}{config.className}({config.low_name()});')
-                self.line(f'return Result.judge(b);')
+                self.line(f'b = {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(0)}{config.className}({config.low_name()});')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -223,24 +194,20 @@ class CreateMethodExtraAPI:
     def delete(config: CodeConfig, extra: str):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
             f'{extra}{config.createConfig.methodName.get_upper(1)}{config.className}',
             f'{extra}删除{config.remark},{config.key.attr}必传',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@DeleteMapping("/{extra}/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(1)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
-                self.line(f'b = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(1)}{config.className}({config.key.attr});')
+                self.line(f'b = {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(1)}{config.className}({config.key.attr});')
                 self.block_end()
-                self.line(f'return Result.judge(b);')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -249,24 +216,20 @@ class CreateMethodExtraAPI:
     def update(config: CodeConfig, extra: str):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute("boolean", "b", "true:修改成功/false:修改失败"),
             f'{extra}{config.createConfig.methodName.get_upper(2)}{config.className}',
             f'{extra}修改{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@PutMapping("/{extra}/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(2)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.low_name()}.get{config.key.upper_name()}() != null')
-                self.line(f'b = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(2)}{config.className}({config.low_name()});')
+                self.line(f'b = {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(2)}{config.className}({config.low_name()});')
                 self.block_end()
-                self.line(f'return Result.judge(b);')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -275,24 +238,20 @@ class CreateMethodExtraAPI:
     def get(config: CodeConfig, extra: str):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute(config.className, config.className, f'获取到的{config.remark}对象'),
             f'{extra}{config.createConfig.methodName.get_upper(3)}{config.className}',
             f'{extra}根据{config.key.attr}查询一个{config.remark}',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@GetMapping("/{extra}/{config.low_name()}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(3)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
-                self.line(f'return Result.success({config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(3)}{config.className}({config.key.attr}));')
+                self.line(f'return {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(3)}{config.className}({config.key.attr});')
                 self.block_end()
-                self.line(f'return Result.judge(b);')
+                self.line(f'return null;')
 
         function.add_body(Body())
         return function
@@ -301,22 +260,18 @@ class CreateMethodExtraAPI:
     def lists(config: CodeConfig, extra: str):
         function = JavaCode.Function(
             "public",
-            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
             f'{extra}{config.createConfig.methodName.get_upper(4)}{config.className}',
             f'{extra}获取多个{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
             JavaCode.Attribute("Page", "page", f'分页对象'),
         )
-        if config.createConfig.restful.enable:
-            function.add_mate(f'@GetMapping("/{extra}/{config.createConfig.methodName.get(4)}{config.className}")')
-        else:
-            function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(4)}{config.className}")')
-            function.add_mate(f'@ResponseBody')
+        function.add_mate(f'@Override')
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'List<{config.className}> list = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(4)}{config.className}({config.low_name()}, page);')
-                self.line(f'return Result.success(list, page);')
+                self.line(f'List<{config.className}> list = {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(4)}{config.className}({config.low_name()}, page);')
+                self.line(f'return list;')
 
         function.add_body(Body())
         return function

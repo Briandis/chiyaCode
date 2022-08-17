@@ -1,5 +1,5 @@
 from src.constant.PublicConstant import Constant
-from src.service.generate.generateAnalysis import FileType
+from src.structure.CreateConfig import FileType
 from src.util import StringUtil
 from src.util import JavaBaseObject
 
@@ -49,6 +49,13 @@ class ConditionalAssembly:
         bean["module"]["baseMapperXml"]["path"] += f'.{lists[6]}'
         bean["module"]["mapperXml"]["path"] += f'.{lists[7]}'
         bean["module"]["controller"]["path"] += f'.{lists[8]}'
+        # 领域驱动设计
+        bean["module"]["api"]["path"] += f'.{lists[9]}'
+        bean["module"]["domain"]["path"] += f'.{lists[10]}'
+        bean["module"]["domainImpl"]["path"] += f'.{lists[11]}'
+        bean["module"]["repository"]["path"] += f'.{lists[12]}'
+        bean["module"]["repositoryImpl"]["path"] += f'.{lists[13]}'
+        bean["module"]["cache"]["path"] += f'.{lists[14]}'
 
     @staticmethod
     def set_project_model(model: str, table_name: str, bean: dict):
@@ -59,7 +66,15 @@ class ConditionalAssembly:
         :param bean: 配置信息
         :return:
         """
-        l = ["entity", "entity", "service", "service.impl", "mapper", "mapper", "mapper", "mapper", "controller"]
+        l = ["entity", "entity",
+             "service", "service.impl",
+             "mapper", "mapper",
+             "mapper", "mapper",
+             "controller", "controller",
+             "domain", "domain.impl",
+             "repository", "repository.impl",
+             "cache"
+             ]
         if model is None:
             ConditionalAssembly.set_model_value(bean, l)
             return
@@ -67,38 +82,90 @@ class ConditionalAssembly:
         if StringUtil.eq_not_case(model, "model"):
             # 表模块化
             suffix = table_name.replace("_", "").lower()
-            l = [suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix]
+            l = [suffix, suffix,  # 抽象实体、实体
+                 suffix, suffix,  # 业务层、业务实现层
+                 suffix, suffix,  # 抽象javaMapper、javaMapper
+                 suffix, suffix,  # 抽象xmlMapper、xmlMapper
+                 suffix, suffix,  # 控制层、RPC接入层
+                 suffix, suffix,  # 领域层、领域层实现
+                 suffix, suffix,  # 仓库层、仓库层实现
+                 suffix, suffix,  # 缓存层
+                 ]
         elif StringUtil.eq_not_case(model, "superModel"):
             # 表多级模块化
             suffix = table_name.replace("_", ".").lower()
-            l = [suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix]
+            l = [suffix, suffix,  # 抽象实体、实体
+                 suffix, suffix,  # 业务层、业务实现层
+                 suffix, suffix,  # 抽象javaMapper、javaMapper
+                 suffix, suffix,  # 抽象xmlMapper、xmlMapper
+                 suffix, suffix,  # 控制层、RPC接入层
+                 suffix, suffix,  # 领域层、领域层实现
+                 suffix, suffix,  # 仓库层、仓库层实现
+                 suffix, suffix,  # 缓存层
+                 ]
         elif StringUtil.eq_not_case(model, "XMLModel"):
-            # 表多级模块化，XML独立
-            suffix = table_name.replace("_", ".").lower()
-            l = [suffix, suffix, suffix, suffix, suffix, suffix, "xml", "xml", suffix]
+            # 表模块化,XML独立
+            suffix = table_name.replace("_", "").lower()
+            l = [suffix, suffix,  # 抽象实体、实体
+                 suffix, suffix,  # 业务层、业务实现层
+                 suffix, suffix,  # 抽象javaMapper、javaMapper
+                 "xml", "xml",  # 抽象xmlMapper、xmlMapper
+                 suffix, suffix,  # 控制层、RPC接入层
+                 suffix, suffix,  # 领域层、领域层实现
+                 suffix, suffix,  # 仓库层、仓库层实现
+                 suffix, suffix,  # 缓存层
+                 ]
         elif StringUtil.eq_not_case(model, "superXMLModel"):
             # 表多级模块化，XML独立
             suffix = table_name.replace("_", ".").lower()
             l = [suffix, suffix, suffix, suffix, suffix, suffix, "xml", "xml", suffix]
+            l = [suffix, suffix,  # 抽象实体、实体
+                 suffix, suffix,  # 业务层、业务实现层
+                 suffix, suffix,  # 抽象javaMapper、javaMapper
+                 "xml", "xml",  # 抽象xmlMapper、xmlMapper
+                 suffix, suffix,  # 控制层、RPC接入层
+                 suffix, suffix,  # 领域层、领域层实现
+                 suffix, suffix,  # 仓库层、仓库层实现
+                 suffix, suffix,  # 缓存层
+                 ]
         elif StringUtil.eq_not_case(model, "mvcSuperModel"):
             # 表多级模块化，MVC模式
             suffix = table_name.replace("_", ".").lower()
             l = [
-                f'{suffix}.entity', f'{suffix}.entity',
-                f'{suffix}.service', f'{suffix}.service.impl',
-                f'{suffix}.mapper', f'{suffix}.mapper',
-                f'{suffix}.mapper', f'{suffix}.mapper',
-                f'{suffix}.controller'
+                f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
+                f'{suffix}.service', f'{suffix}.service.impl',  # 业务层、业务实现层
+                f'{suffix}.mapper', f'{suffix}.mapper',  # 抽象javaMapper、javaMapper
+                f'{suffix}.mapper', f'{suffix}.mapper',  # 抽象xmlMapper、xmlMapper
+                f'{suffix}.controller', f'{suffix}.controller',  # 控制层、RPC接入层
+                f'{suffix}.domain', f'{suffix}.domain.impl',  # 领域层、领域层实现
+                f'{suffix}.repository', f'{suffix}.repository.impl',  # 仓库层、仓库层实现
+                f'{suffix}.repository.cache'  # 缓存层
             ]
         elif StringUtil.eq_not_case(model, "mvcSuperXMLModel"):
             # 表多级模块化，MVC模式，XML独立
             suffix = table_name.replace("_", ".").lower()
             l = [
-                f'{suffix}.entity', f'{suffix}.entity',
-                f'{suffix}.service', f'{suffix}.service.impl',
-                f'{suffix}.mapper', f'{suffix}.mapper',
-                f'xml', f'xml',
-                f'{suffix}.controller'
+                f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
+                f'{suffix}.service', f'{suffix}.service.impl',  # 业务层、业务实现层
+                f'{suffix}.mapper', f'{suffix}.mapper',  # 抽象javaMapper、javaMapper
+                "xml", "xml",  # 抽象xmlMapper、xmlMapper
+                f'{suffix}.controller', f'{suffix}.controller',  # 控制层、RPC接入层
+                f'{suffix}.domain', f'{suffix}.domain.impl',  # 领域层、领域层实现
+                f'{suffix}.repository', f'{suffix}.repository.impl',  # 仓库层、仓库层实现
+                f'{suffix}.repository.cache'  # 缓存层
+            ]
+        elif StringUtil.eq_not_case(model, "ddd"):
+            # 表多级模块化，MVC模式，并且是领域驱动设计
+            suffix = table_name.replace("_", ".").lower()
+            l = [
+                f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
+                f'{suffix}.service', f'{suffix}.service.impl',  # 业务层、业务实现层
+                f'{suffix}.repository.mapper', f'{suffix}.repository.mapper',  # 抽象javaMapper、javaMapper
+                f'{suffix}.repository.mapper', f'{suffix}.repository.mapper',  # 抽象xmlMapper、xmlMapper
+                f'{suffix}.api', f'{suffix}.api',  # 控制层、RPC接入层
+                f'{suffix}.domain', f'{suffix}.domain.impl',  # 领域层、领域层实现
+                f'{suffix}.repository', f'{suffix}.repository.impl',  # 仓库层、仓库层实现
+                f'{suffix}.repository.cache'  # 缓存层
             ]
         ConditionalAssembly.set_model_value(bean, l)
 
@@ -137,6 +204,14 @@ class ConditionalAssembly:
         bean["module"]["mapperXml"] = information_block(project, f'{className}Mapper', project)
         bean["module"]["controller"] = information_block(project, f'{className}Controller', project)
         bean["module"]["Page"] = information_block("chiya.core.base.page", "Page", "chiya.core.base.page.Page")
+
+        bean["module"]["api"] = information_block(project, f'{className}Api', project)
+        bean["module"]["domain"] = information_block(project, f'{className}Domain', project)
+        bean["module"]["domainImpl"] = information_block(project, f'{className}DomainImpl', project)
+        bean["module"]["repository"] = information_block(project, f'{className}Repository', project)
+        bean["module"]["repositoryImpl"] = information_block(project, f'{className}RepositoryImpl', project)
+        bean["module"]["cache"] = information_block(project, f'{className}Cache', project)
+
         bean["config"] = {
             "fuzzySearch": {
                 "name": "fuzzySearch",
@@ -202,10 +277,21 @@ class ConditionalAssembly:
                 "enable": True,
                 "value": [FileType.entityBase, FileType.javaBaseMapper, FileType.xmlBaseMapper],
                 "default": [
-                    FileType.entityBase, FileType.entity, FileType.service, FileType.serviceImpl,
-                    FileType.javaBaseMapper, FileType.javaMapper,
-                    FileType.xmlBaseMapper, FileType.xmlMapper,
-                    FileType.controller,
+                    FileType.entityBase,  # 抽象基础实体
+                    FileType.entity,  # 实体
+                    FileType.service,  # 业务层接口
+                    FileType.serviceImpl,  # 业务层实现
+                    FileType.javaBaseMapper,  # mapper层抽象接口
+                    FileType.javaMapper,  # mapper接口
+                    FileType.xmlBaseMapper,  # mapper抽象接口的xml
+                    FileType.xmlMapper,  # mapper接口的xml
+                    FileType.controller,  # web控制层
+                    FileType.api,  # rpc对外服务层
+                    FileType.domain,  # 领域接口
+                    FileType.domainImpl,  # 领域实现
+                    FileType.cache,  # 缓存层
+                    FileType.repository,  # 仓库接口
+                    FileType.repositoryImpl,  # 仓库实现
                 ]
             },
             "notCreateFile": {
@@ -240,6 +326,13 @@ class ConditionalAssembly:
         integrate_package(bean["module"]["baseMapperXml"])
         integrate_package(bean["module"]["mapperXml"])
         integrate_package(bean["module"]["controller"])
+
+        integrate_package(bean["module"]["api"])
+        integrate_package(bean["module"]["domain"])
+        integrate_package(bean["module"]["domainImpl"])
+        integrate_package(bean["module"]["repository"])
+        integrate_package(bean["module"]["repositoryImpl"])
+        integrate_package(bean["module"]["cache"])
 
     @staticmethod
     def assembly(tables: dict, config: dict):

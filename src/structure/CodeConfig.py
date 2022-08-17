@@ -89,6 +89,9 @@ class ModuleConfig:
     """
 
     def __init__(self):
+        # 分页信息
+        self.Page = ModuleInfo()
+
         # 实体
         self.baseEntity = ModuleInfo()
         # 业务层
@@ -101,10 +104,18 @@ class ModuleConfig:
         self.mapperXml = ModuleInfo()
         # 控制层
         self.controller = ModuleInfo()
+
+        # 领域驱动设计相关
         # api接入层
         self.api = ModuleInfo()
-        # 分页信息
-        self.Page = ModuleInfo()
+        # 领域层
+        self.domain = ModuleInfo()
+        self.domainImpl = ModuleInfo()
+        # 仓库层
+        self.repository = ModuleInfo()
+        self.repositoryImpl = ModuleInfo()
+        # 缓存层
+        self.cache = ModuleInfo()
 
 
 class CodeConfig:

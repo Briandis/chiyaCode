@@ -1,7 +1,10 @@
 import json
 import os
 
-from src.ddd.api import Controller
+from src.ddd.api import Controller, Api
+from src.ddd.domain import Domain, DomainImpl
+from src.ddd.repository import Repository, RepositoryImpl
+from src.ddd.service import Service, ServiceImpl
 from src.structure.CodeConfig import CodeConfig, Field
 from src.structure.CreateConfig import FileType
 from src.util.OSUtil import save_file
@@ -64,6 +67,41 @@ class Generate:
         if self.check_create(FileType.controller, config):
             string = Controller.CreateFile.create(config)
             save_file(config.module.controller.path, config.module.controller.className, "java", string)
+
+        # RPC接入层
+        if self.check_create(FileType.controller, config):
+            string = Api.CreateFile.create(config)
+            save_file(config.module.api.path, config.module.api.className, "java", string)
+
+        # 业务接口层
+        if self.check_create(FileType.service, config):
+            string = Service.CreateFile.create(config)
+            save_file(config.module.serviceInterface.path, config.module.serviceInterface.className, "java", string)
+
+        # 业务接口实现
+        if self.check_create(FileType.serviceImpl, config):
+            string = ServiceImpl.CreateFile.create(config)
+            save_file(config.module.serviceImplements.path, config.module.serviceImplements.className, "java", string)
+
+        # 领域层接口
+        if self.check_create(FileType.domain, config):
+            string = Domain.CreateFile.create(config)
+            save_file(config.module.domain.path, config.module.domain.className, "java", string)
+
+        # 领域层接口实现
+        if self.check_create(FileType.domainImpl, config):
+            string = DomainImpl.CreateFile.create(config)
+            save_file(config.module.domainImpl.path, config.module.domainImpl.className, "java", string)
+
+        # 仓库层接口
+        if self.check_create(FileType.repository, config):
+            string = Repository.CreateFile.create(config)
+            save_file(config.module.repository.path, config.module.repository.className, "java", string)
+
+        # 仓库层接口实现
+        if self.check_create(FileType.repositoryImpl, config):
+            string = RepositoryImpl.CreateFile.create(config)
+            save_file(config.module.repositoryImpl.path, config.module.repositoryImpl.className, "java", string)
 
     @staticmethod
     def check_create(create_type: str, config: CodeConfig):

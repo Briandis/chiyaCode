@@ -1,3 +1,6 @@
+from src.util import StringUtil
+
+
 class FileType:
     controller = "Controller"  # web控制层
     service = "Service"  # 业务层接口
@@ -9,12 +12,12 @@ class FileType:
     entity = "Entity"  # 实体
     entityBase = "EntityBase"  # 抽象基础实体
 
-    api = "API",  # rpc对外服务层
-    domain = "Domain",  # 领域接口
-    domainImpl = "DomainImpl",  # 领域实现
-    cache = "Cache",  # 缓存层
-    repository = "repository",  # 仓库接口
-    repositoryImpl = "RepositoryImpl",  # 仓库实现
+    api = "API"  # rpc对外服务层
+    domain = "Domain"  # 领域接口
+    domainImpl = "DomainImpl"  # 领域实现
+    cache = "Cache"  # 缓存层
+    repository = "Repository"  # 仓库接口
+    repositoryImpl = "RepositoryImpl"  # 仓库实现
 
 
 class BaseConfig:
@@ -188,6 +191,14 @@ class MethodName(BaseConfig):
             return self.default.split(",")[index]
         else:
             return self.value.split(",")[index]
+
+    def get_upper(self, index: int):
+        """
+        获取大写的前缀
+        :param index:对应下标
+        :return: 大写的前缀
+        """
+        return StringUtil.first_char_upper_case(self.get(index))
 
 
 # 该配置要生成的文件
