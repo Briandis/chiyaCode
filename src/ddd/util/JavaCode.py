@@ -19,7 +19,8 @@ import_dirt = {
     "Service": "org.springframework.stereotype.Service",
     "Mapper": "org.apache.ibatis.annotations.Mapper",
     "Param": "org.apache.ibatis.annotations.Param",
-    "RequestMapping": "org.springframework.web.bind.annotation.RequestMapping"
+    "RequestMapping": "org.springframework.web.bind.annotation.RequestMapping",
+    "BigDecimal": "java.math.BigDecimal",
 }
 
 

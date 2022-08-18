@@ -15,6 +15,7 @@ class CreateFile:
             config.module.serviceInterface.className,
             f'{config.remark}业务层'
         )
+        code.is_class = False
         code.add_import(config.package)
         code.add_function(CreateMethodDefaultAPI.insert(config))
         code.add_function(CreateMethodDefaultAPI.delete(config))

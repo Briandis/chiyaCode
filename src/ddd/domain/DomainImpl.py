@@ -120,7 +120,6 @@ class CreateMethodDefaultAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
                 self.line(f'return {config.module.repository.low_name()}.{config.createConfig.methodName.get(3)}{config.className}({config.key.attr});')
                 self.block_end()
@@ -184,7 +183,7 @@ class CreateMethodExtraAPI:
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
-                self.line(f'b = {config.module.repository.low_name()}.{config.createConfig.methodName.get_upper(0)}{config.className}({config.low_name()});')
+                self.line(f'b = {config.module.repository.low_name()}.{config.createConfig.methodName.get(0)}{config.className}({config.low_name()});')
                 self.line(f'return b;')
 
         function.add_body(Body())
@@ -205,7 +204,7 @@ class CreateMethodExtraAPI:
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
-                self.line(f'b = {config.module.repository.low_name()}.{config.createConfig.methodName.get_upper(1)}{config.className}({config.key.attr});')
+                self.line(f'b = {config.module.repository.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({config.key.attr});')
                 self.block_end()
                 self.line(f'return b;')
 
@@ -227,7 +226,7 @@ class CreateMethodExtraAPI:
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line_if(f'{config.low_name()}.get{config.key.upper_name()}() != null')
-                self.line(f'b = {config.module.repository.low_name()}.{config.createConfig.methodName.get_upper(2)}{config.className}({config.low_name()});')
+                self.line(f'b = {config.module.repository.low_name()}.{config.createConfig.methodName.get(2)}{config.className}({config.low_name()});')
                 self.block_end()
                 self.line(f'return b;')
 
@@ -247,9 +246,8 @@ class CreateMethodExtraAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
-                self.line(f'return {config.module.repository.low_name()}.{config.createConfig.methodName.get_upper(3)}{config.className}({config.key.attr});')
+                self.line(f'return {config.module.repository.low_name()}.{config.createConfig.methodName.get(3)}{config.className}({config.key.attr});')
                 self.block_end()
                 self.line(f'return null;')
 
@@ -270,7 +268,7 @@ class CreateMethodExtraAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'List<{config.className}> list = {config.module.repository.low_name()}.{config.createConfig.methodName.get_upper(4)}{config.className}({config.low_name()}, page);')
+                self.line(f'List<{config.className}> list = {config.module.repository.low_name()}.{config.createConfig.methodName.get(4)}{config.className}({config.low_name()}, page);')
                 self.line(f'return list;')
 
         function.add_body(Body())

@@ -32,13 +32,17 @@ class CreateFile:
             ).add_mate("@Autowired").add_mate(f'@Qualifier("{config.module.serviceImplements.low_name()}")')
         )
         code.add_import(config.package)
-        code.add_function(CreateMethodDefaultAPI.insert(config))
-        code.add_function(CreateMethodDefaultAPI.delete(config))
-        code.add_function(CreateMethodDefaultAPI.update(config))
-        code.add_function(CreateMethodDefaultAPI.get(config))
-        code.add_function(CreateMethodDefaultAPI.lists(config))
+        if config.createConfig.defaultAPI.enable:
+            code.add_import("java.util.List")
+            code.add_function(CreateMethodDefaultAPI.insert(config))
+            code.add_function(CreateMethodDefaultAPI.delete(config))
+            code.add_function(CreateMethodDefaultAPI.update(config))
+            code.add_function(CreateMethodDefaultAPI.get(config))
+            code.add_function(CreateMethodDefaultAPI.lists(config))
         # 额外的接口
-        CreateMethodExtraAPI.create(config, code)
+        if config.createConfig.extraAPI.enable:
+            code.add_import("java.util.List")
+            CreateMethodExtraAPI.create(config, code)
 
         return code.create()
 

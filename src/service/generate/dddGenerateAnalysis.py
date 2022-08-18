@@ -3,8 +3,13 @@ import os
 
 from src.ddd.api import Controller, Api
 from src.ddd.domain import Domain, DomainImpl
+from src.ddd.entity import Entity, BaseEntity
 from src.ddd.repository import Repository, RepositoryImpl
+from src.ddd.repository.cache import Cache
+from src.ddd.repository.mapper import JavaMapper
 from src.ddd.service import Service, ServiceImpl
+from src.service.mapper.java import JavaBaseMapper
+from src.service.mapper.xml import XmlMapper, XmlBaseMapper
 from src.structure.CodeConfig import CodeConfig, Field
 from src.structure.CreateConfig import FileType
 from src.util.OSUtil import save_file
@@ -58,10 +63,10 @@ class Generate:
     def generate(self):
         print("开始准备解析")
         self.code_config()
-        for i in self.config:
-            self.__parsing(i)
+        for i in range(len(self.config)):
+            self.__parsing(self.config[i], self.data[i])
 
-    def __parsing(self, config: CodeConfig):
+    def __parsing(self, config: CodeConfig, dict_config: dict):
 
         # 生成控制层
         if self.check_create(FileType.controller, config):
@@ -102,6 +107,41 @@ class Generate:
         if self.check_create(FileType.repositoryImpl, config):
             string = RepositoryImpl.CreateFile.create(config)
             save_file(config.module.repositoryImpl.path, config.module.repositoryImpl.className, "java", string)
+
+        # mapper层接口
+        if self.check_create(FileType.javaMapper, config):
+            string = JavaMapper.CreateFile.create(config)
+            save_file(config.module.mapperInterface.path, config.module.mapperInterface.className, "java", string)
+
+        # cache层接口
+        if self.check_create(FileType.cache, config):
+            string = Cache.CreateFile.create(config)
+            save_file(config.module.cache.path, config.module.cache.className, "java", string)
+
+        # 实体
+        if self.check_create(FileType.entity, config):
+            string = Entity.CreateFile.create(config)
+            save_file(config.path, config.className, "java", string)
+
+        # 抽象实体
+        if self.check_create(FileType.entityBase, config):
+            string = BaseEntity.CreateFile.create(config)
+            save_file(config.module.baseEntity.path, config.module.baseEntity.className, "java", string)
+
+        # 生成自动生成的mapper.java文件
+        if self.check_create(FileType.cache, config):
+            string = JavaBaseMapper.CreateFile.create(dict_config)
+            save_file(dict_config["module"]["baseMapperInterface"]["path"], f'{dict_config["module"]["baseMapperInterface"]["className"]}', "java", string)
+
+        # 生成Mapper.xml文件
+        if self.check_create(FileType.xmlMapper, config):
+            string = XmlMapper.CreateFile.create(dict_config)
+            save_file(dict_config["module"]["mapperXml"]["path"], f'{dict_config["module"]["mapperXml"]["className"]}', "xml", string)
+
+        # 生成自动生成的XML文件
+        if self.check_create(FileType.xmlBaseMapper, config):
+            string = XmlBaseMapper.CreateFile.create(dict_config)
+            save_file(dict_config["module"]["baseMapperXml"]["path"], f'{dict_config["module"]["baseMapperXml"]["className"]}', "xml", string)
 
     @staticmethod
     def check_create(create_type: str, config: CodeConfig):

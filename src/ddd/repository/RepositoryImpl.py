@@ -163,9 +163,9 @@ class CreateMethodDefaultAPI:
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line_if(f'page != null')
-                self.line(f'page.setMax({config.module.serviceInterface.low_name()}.count{config.className}({config.low_name()}));')
+                self.line(f'page.setMax({config.module.mapperInterface.low_name()}.count{config.className}({config.low_name()}{FuzzySearch.param(config)}));')
                 self.block_end()
-                self.line(f'return {config.module.serviceInterface.low_name()}.select{config.className}({config.low_name()}, page{FuzzySearch.param(config)}{SplicingSQL.param(config)});')
+                self.line(f'return {config.module.mapperInterface.low_name()}.select{config.className}({config.low_name()}, page{FuzzySearch.param(config)}{SplicingSQL.param(config)});')
 
         function.add_body(Body())
         return function

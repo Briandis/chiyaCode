@@ -120,7 +120,6 @@ class CreateMethodDefaultAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
                 self.line(f'return {config.module.domain.low_name()}.{config.createConfig.methodName.get(3)}{config.className}({config.key.attr});')
                 self.block_end()
@@ -247,7 +246,6 @@ class CreateMethodExtraAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'boolean b = false;')
                 self.line_if(f'{config.key.attr} != null')
                 self.line(f'return {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(3)}{config.className}({config.key.attr});')
                 self.block_end()
