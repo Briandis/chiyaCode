@@ -265,7 +265,10 @@ class Function:
         # 注解所引用的包
         self.mate_value = []
         # 提交的参数
-        self.parameter = list(parameter)
+        self.parameter = []
+        for i in parameter:
+            if i is not None:
+                self.parameter.append(i)
         # 是否是接口
         self.is_interface = False
         # 其他类型，则将类型信息装入对象中

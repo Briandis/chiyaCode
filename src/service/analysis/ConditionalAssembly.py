@@ -155,16 +155,16 @@ class ConditionalAssembly:
                 f'{suffix}.repository.cache'  # 缓存层
             ]
         elif StringUtil.eq_not_case(model, "ddd"):
-            # 表多级模块化，MVC模式，并且是领域驱动设计
+            # 领域驱动设计
             suffix = table_name.replace("_", ".").lower()
             l = [
                 f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
-                f'{suffix}.service', f'{suffix}.service.impl',  # 业务层、业务实现层
+                f'{suffix}.service', f'{suffix}.service',  # 业务层、业务实现层
                 f'{suffix}.repository.mapper', f'{suffix}.repository.mapper',  # 抽象javaMapper、javaMapper
                 f'{suffix}.repository.mapper', f'{suffix}.repository.mapper',  # 抽象xmlMapper、xmlMapper
                 f'{suffix}.api', f'{suffix}.api',  # 控制层、RPC接入层
-                f'{suffix}.domain', f'{suffix}.domain.impl',  # 领域层、领域层实现
-                f'{suffix}.repository', f'{suffix}.repository.impl',  # 仓库层、仓库层实现
+                f'{suffix}.domain', f'{suffix}.domain',  # 领域层、领域层实现
+                f'{suffix}.repository', f'{suffix}.repository',  # 仓库层、仓库层实现
                 f'{suffix}.repository.cache'  # 缓存层
             ]
         ConditionalAssembly.set_model_value(bean, l)

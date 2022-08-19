@@ -118,6 +118,27 @@ class ModuleConfig:
         self.cache = ModuleInfo()
 
 
+class ManyToMany:
+
+    def __init__(self):
+        # 中间表
+        self.to: CodeConfig = None
+        # 另一方多的
+        self.many: CodeConfig = None
+
+    @staticmethod
+    def get_many_to_many(config: dict):
+        """
+        多对多的配置字段转对象
+        :param config: 配置字典
+        :return: 对象
+        """
+        many_to_many = ManyToMany()
+        many_to_many.to = CodeConfig.get_code_config(config.get("to"))
+        many_to_many.many = CodeConfig.get_code_config(config.get("many"))
+        return many_to_many
+
+
 class CodeConfig:
     """
     生成器依赖的配置实体
@@ -143,6 +164,14 @@ class CodeConfig:
         self.createConfig: CreateConfig = CreateConfig()
         # 模块配置信息
         self.module = ModuleConfig()
+        # 一对一的配置
+        self.oneToOne: [CodeConfig] = []
+        # 一对多的配置
+        self.oneToMany: [CodeConfig] = []
+        # 多对多
+        self.manyToMany: [ManyToMany] = []
+        # 在多表关系中，充当的外键
+        self.foreignKey = None
 
     def low_name(self):
         """
@@ -150,3 +179,41 @@ class CodeConfig:
         :return: 小写的类名
         """
         return StringUtil.first_char_lower_case(self.className)
+
+    @staticmethod
+    def get_code_config(config: dict):
+        """
+        根据配置字典，构造配置对象
+        :param config:配置字典
+        :return: 配置对象
+        """
+
+        code_config = CodeConfig()
+        for i in code_config.__dict__:
+            if code_config.__getattribute__(i) is None:
+                code_config.__setattr__(i, config.get(i))
+        # 主键数据处理
+        code_config.key = Field.create_field(config.get("key"))
+        for attr in config.get("attr"):
+            code_config.attr.append(Field.create_field(attr))
+        # 模块处理
+        for module in config["module"]:
+            code_config.module.__getattribute__(module).set_field(config["module"][module])
+        # 生成配置处理
+        for key in config["config"]:
+            value = config["config"][key]
+            base_config = code_config.createConfig.__getattribute__(key)
+            base_config.set_field(value)
+        # 一对一关系处理
+        if "oneToOne" in config:
+            for i in config["oneToOne"]:
+                code_config.oneToOne.append(CodeConfig.get_code_config(i))
+        # 一对多关系处理
+        if "oneToMany" in config:
+            for i in config["oneToMany"]:
+                code_config.oneToMany.append(CodeConfig.get_code_config(i))
+        # 多对多关系处理
+        if "manyToMany" in config:
+            for i in config["manyToMany"]:
+                code_config.manyToMany.append(ManyToMany.get_many_to_many(i))
+        return code_config

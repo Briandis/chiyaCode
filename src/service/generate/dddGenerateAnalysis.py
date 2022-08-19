@@ -6,11 +6,10 @@ from src.ddd.domain import Domain, DomainImpl
 from src.ddd.entity import Entity, BaseEntity
 from src.ddd.repository import Repository, RepositoryImpl
 from src.ddd.repository.cache import Cache
-from src.ddd.repository.mapper import JavaMapper
+from src.ddd.repository.mapper import JavaMapper, JavaBaseMapper
 from src.ddd.service import Service, ServiceImpl
-from src.service.mapper.java import JavaBaseMapper
 from src.service.mapper.xml import XmlMapper, XmlBaseMapper
-from src.structure.CodeConfig import CodeConfig, Field
+from src.structure.CodeConfig import CodeConfig
 from src.structure.CreateConfig import FileType
 from src.util.OSUtil import save_file
 
@@ -36,29 +35,14 @@ class Generate:
         字典转对象配置
         """
         for d in self.data:
-            config = CodeConfig()
-            for i in config.__dict__:
-                if config.__getattribute__(i) is None:
-                    config.__setattr__(i, d.get(i))
-            # 主键数据处理
-            config.key = Field.create_field(d.get("key"))
-            for attr in d.get("attr"):
-                config.attr.append(Field.create_field(attr))
-            # 模块处理
-            for module in d["module"]:
-                config.module.__getattribute__(module).set_field(d["module"][module])
-            # 生成配置处理
-            for key in d["config"]:
-                value = d["config"][key]
-                base_config = config.createConfig.__getattribute__(key)
-                base_config.set_field(value)
-            self.config.append(config)
-            # for i in config.module.__dict__:
-            #     print(config.module.__getattribute__(i).__dict__)
-            # for i in config.createConfig.__dict__:
-            #     print(i, config.createConfig.__getattribute__(i).__dict__)
-            # for j in config.__dict__:
-            #     print(j, config.__getattribute__(j))
+            code_config = CodeConfig.get_code_config(d)
+            self.config.append(code_config)
+            # for i in code_config.__dict__:
+            #     print(i, code_config.__getattribute__(i))
+            # print()
+            # for i in code_config.oneToMany:
+            #     for j in i.__dict__:
+            #         print(j, i.__getattribute__(j))
 
     def generate(self):
         print("开始准备解析")
@@ -113,6 +97,11 @@ class Generate:
             string = JavaMapper.CreateFile.create(config)
             save_file(config.module.mapperInterface.path, config.module.mapperInterface.className, "java", string)
 
+        # 抽象mapper层接口
+        if self.check_create(FileType.javaBaseMapper, config):
+            string = JavaBaseMapper.CreateFile.create(config)
+            save_file(config.module.baseMapperInterface.path, config.module.baseMapperInterface.className, "java", string)
+
         # cache层接口
         if self.check_create(FileType.cache, config):
             string = Cache.CreateFile.create(config)
@@ -128,10 +117,10 @@ class Generate:
             string = BaseEntity.CreateFile.create(config)
             save_file(config.module.baseEntity.path, config.module.baseEntity.className, "java", string)
 
-        # 生成自动生成的mapper.java文件
-        if self.check_create(FileType.cache, config):
-            string = JavaBaseMapper.CreateFile.create(dict_config)
-            save_file(dict_config["module"]["baseMapperInterface"]["path"], f'{dict_config["module"]["baseMapperInterface"]["className"]}', "java", string)
+        # # 生成自动生成的mapper.java文件
+        # if self.check_create(FileType.cache, config):
+        #     string = JavaBaseMapper.CreateFile.create(dict_config)
+        #     save_file(dict_config["module"]["baseMapperInterface"]["path"], f'{dict_config["module"]["baseMapperInterface"]["className"]}', "java", string)
 
         # 生成Mapper.xml文件
         if self.check_create(FileType.xmlMapper, config):

@@ -18,16 +18,62 @@ class CreateFile:
         code.is_abstract = True
 
         code.add_mate(f'@SuppressWarnings("unchecked")')
-        CreateField.create_field(config.key, config, code)
-        for field in config.attr:
+
+        field_list = FieldMap.get_map_filed(config, code)
+
+        for field in field_list:
             CreateField.create_field(field, config, code)
-        ToString.create_field(config, code)
+
+        ToString.create_field(field_list, config, code)
         return code.create()
 
 
+# 生成全部的字段信息
+class FieldMap:
+    @staticmethod
+    def get_map_filed(config: CodeConfig, code: JavaCode.JavaCode):
+        """
+        获取字段列表
+        :param config:配置信息
+        :return: 字段列表
+        """
+        field_map = {
+            config.key.attr: config.key
+        }
+        for attr in config.attr:
+            field_map[attr.attr] = attr
+
+        for obj in config.oneToOne:
+            field = Field()
+            field.attr = obj.low_name()
+            field.type = obj.className
+            field.remark = obj.remark
+            field_map[field.attr] = field
+            code.add_import(obj.package)
+
+        for obj in config.oneToMany:
+            field = Field()
+            field.attr = f'list{obj.className}'
+            field.type = f'List<{obj.className}>'
+            field.remark = obj.remark
+            field_map[field.attr] = field
+            code.add_import(obj.package)
+
+        for obj in config.manyToMany:
+            field = Field()
+            field.attr = f'list{obj.many.className}'
+            field.type = f'List<{obj.many.className}>'
+            field.remark = obj.many.remark
+            field_map[field.attr] = field
+            code.add_import(obj.many.package)
+
+        return field_map.values()
+
+
+# 字符串方法
 class ToString:
     @staticmethod
-    def create_field(config: CodeConfig, code: JavaCode.JavaCode):
+    def create_field(field_list, config: CodeConfig, code: JavaCode.JavaCode):
         if config.createConfig.toJsonString.enable:
             if config.createConfig.toJsonString.isFastJson:
                 code.add_import("com.alibaba.fastjson.JSON")
@@ -39,12 +85,10 @@ class ToString:
                     else:
                         self.line("StringBuilder builder = new StringBuilder();")
                         self.line(f'builder.append("{{");')
-                        self.line(f'builder.append("\\"{config.key.attr}\\" : \\"" + {config.key.attr} + "\\"");')
-                        self.line(f'builder.append(",");')
                         i = 0
-                        for attr in config.attr:
+                        for attr in field_list:
                             self.line(f'builder.append("\\"{attr.attr}\\" : \\"" + {attr.attr} + "\\"");')
-                            if i < len(config.attr) - 1:
+                            if i < len(field_list) - 1:
                                 self.line(f'builder.append(",");')
                             i += 1
                         self.line(f'builder.append("}}");')
