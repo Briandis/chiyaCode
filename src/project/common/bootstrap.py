@@ -11,15 +11,25 @@ def create_file(root: str):
     template += """
 import javax.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
+import chiya.web.security.ChiyaSecurityExtract;
+import chiya.web.security.SecurityCertification;
 
 /**
  * 服务初始化启动操作
  */
 @Component
 public class ServerBootStrap {
-    
+
+    @Autowired
+	private ChiyaSecurityExtract chiyaSecurityExtract;
+	
     @PostConstruct
     public void init(){
+        // 装配所有角色注册的URL
+		SecurityCertification.chiyaHashMapValueMap = chiyaSecurityExtract.getURL();
+		// TODO:需要手动编写加载用户->角色的关系代码
+		
         // TODO:要进行的初始化操作
     }
 

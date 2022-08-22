@@ -24,6 +24,7 @@ import_dirt = {
     "BaseRedisService": "chiya.web.redis.BaseRedisService",
     "ChiyaSecurity": "chiya.security.annotation.ChiyaSecurity",
     "ChiyaRole": "chiya.web.security.entity.ChiyaRole",
+    "Repository": "org.springframework.stereotype.Repository"
 }
 
 

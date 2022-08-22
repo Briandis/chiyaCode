@@ -51,7 +51,7 @@ class CreateFile:
             f'{config.remark}仓库层实现'
         )
         code.add_implement(JavaCode.Attribute(config.module.repository.className, "", "实现的仓库层", config.module.repository.package))
-        code.add_mate(f'@Service')
+        code.add_mate(f'@Repository')
 
         code.add_attr(
             JavaCode.Attribute(
