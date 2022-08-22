@@ -21,6 +21,9 @@ import_dirt = {
     "Param": "org.apache.ibatis.annotations.Param",
     "RequestMapping": "org.springframework.web.bind.annotation.RequestMapping",
     "BigDecimal": "java.math.BigDecimal",
+    "BaseRedisService": "chiya.web.redis.BaseRedisService",
+    "ChiyaSecurity": "chiya.security.annotation.ChiyaSecurity",
+    "ChiyaRole": "chiya.web.security.entity.ChiyaRole",
 }
 
 
@@ -226,12 +229,22 @@ class FunctionBody:
             data = ""
         self.line(f'// {data}')
 
+    def line_todo(self):
+        self.line_annotation(f'TODO: 后续行为编写')
+
     def line_blank(self):
         """
         增加一行空行
-        :return:
         """
         self.line("")
+
+    def line_if_one_block(self, if_value: str, data: str = ""):
+        """
+        单行if块块
+        :param if_value: if条件
+        :param data: 做什么操作
+        """
+        self.line(f'if ({if_value}) {{ {data} }}')
 
 
 class Function:

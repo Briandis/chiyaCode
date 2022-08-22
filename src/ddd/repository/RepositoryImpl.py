@@ -61,6 +61,15 @@ class CreateFile:
                 config.module.mapperInterface.package,
             ).add_mate("@Autowired")
         )
+        code.add_attr(
+            JavaCode.Attribute(
+                config.module.cache.className,
+                config.module.cache.low_name(),
+                f'{config.remark}缓存',
+                config.module.cache.package,
+            ).add_mate("@Autowired")
+        )
+
         code.add_import(config.package)
         code.add_function(CreateMethodDefaultAPI.insert(config))
         code.add_function(CreateMethodDefaultAPI.delete(config))
@@ -89,7 +98,9 @@ class CreateMethodDefaultAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'return {config.module.mapperInterface.low_name()}.insert{config.className}({config.low_name()}) > 0;')
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.mapperInterface.low_name()}.insert{config.className}({parameter[0].name}) > 0;')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -107,7 +118,10 @@ class CreateMethodDefaultAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'return {config.module.mapperInterface.low_name()}.delete{config.className}By{config.key.upper_name()}({config.key.attr}) > 0;')
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.mapperInterface.low_name()}.delete{config.className}By{config.key.upper_name()}({parameter[0].name}) > 0;')
+                self.line_if_one_block(f'b', f'{config.module.cache.low_name()}.removeValue({parameter[0].name});')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -125,7 +139,10 @@ class CreateMethodDefaultAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'return {config.module.mapperInterface.low_name()}.update{config.className}By{config.key.upper_name()}({config.low_name()}) > 0;')
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.mapperInterface.low_name()}.update{config.className}By{config.key.upper_name()}({config.low_name()}) > 0;')
+                self.line_if_one_block(f'b', f'{config.module.cache.low_name()}.removeValue({parameter[0].name}.get{config.key.upper_name()}());')
+                self.line(f'return b;')
 
         function.add_body(Body())
         return function
@@ -143,7 +160,8 @@ class CreateMethodDefaultAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'return {config.module.mapperInterface.low_name()}.select{config.className}By{config.key.upper_name()}({config.key.attr});')
+                self.line(f'{config.className} {config.low_name()} = {config.module.cache.low_name()}.loadAndGet({parameter[0].name});')
+                self.line(f'return {config.low_name()};')
 
         function.add_body(Body())
         return function
