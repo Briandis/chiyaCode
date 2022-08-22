@@ -117,11 +117,6 @@ class Generate:
             string = BaseEntity.CreateFile.create(config)
             save_file(config.module.baseEntity.path, config.module.baseEntity.className, "java", string)
 
-        # # 生成自动生成的mapper.java文件
-        # if self.check_create(FileType.cache, config):
-        #     string = JavaBaseMapper.CreateFile.create(dict_config)
-        #     save_file(dict_config["module"]["baseMapperInterface"]["path"], f'{dict_config["module"]["baseMapperInterface"]["className"]}', "java", string)
-
         # 生成Mapper.xml文件
         if self.check_create(FileType.xmlMapper, config):
             string = XmlMapper.CreateFile.create(dict_config)

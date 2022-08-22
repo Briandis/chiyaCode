@@ -1,25 +1,26 @@
-import os
-import shutil
-import traceback
 import json
 
+from src.constant.PublicConstant import Constant
 from src.httpServer.HttpRequest import HttpRequest
 from src.httpServer.HttpResponse import HttpResponse
 from src.httpServer.Servlet import Servlet
+from src.project import createProject
+from src.service.analysis.ConditionalAssembly import ConditionalAssembly
+from src.service.analysis.CreateConfig import CreateConfig
 from src.service.analysis.MySQLAnalysis import MySQLAnalysis, AnalysisConfig, StructureAnalysis
+from src.service.generate import dddGenerateAnalysis, generateAnalysis
 
 
 class LinkMySqlServlet(Servlet):
 
     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-
-        host = httpRequest.get_param("host")
-        name = httpRequest.get_param("name")
-        password = httpRequest.get_param("password")
-        port = httpRequest.get_param("port")
-        database = httpRequest.get_param("database")
-        port = int(port)
         try:
+            host = httpRequest.get_param("host")
+            name = httpRequest.get_param("name")
+            password = httpRequest.get_param("password")
+            port = httpRequest.get_param("port")
+            database = httpRequest.get_param("database")
+            port = int(port)
             mysql = MySQLAnalysis(database, host=host, name=name, password=password, port=port)
             tables = mysql.get_all_table()
             print(f"查询到表数量：{len(tables)}")
@@ -33,164 +34,86 @@ class LinkMySqlServlet(Servlet):
 
 
 class CreateConfigServlet(Servlet):
+    @staticmethod
+    def create_config(mySQL, config, create_list, not_create_list):
+        """
+        生成配置
+        :param mySQL : 数据库连接
+        :param config: 生成的配置
+        :param create_list: 生成的列表
+        :param not_create_list: 不生成的列表
+        """
+        # 创建连接
+        # 获取全部的表
+        l = mySQL.get_all_table()
+        beanConfig = AnalysisConfig()
+        beanConfig.assembly_config({
+        })
+
+        # 构建解析对象
+        s = StructureAnalysis(l, beanConfig)
+        # 解析表字段成可以识别字段
+        tables = s.parsing_field()
+        # 解析
+        ConditionalAssembly.assembly(tables, config)
+        # 构建配置
+        CreateConfig.create(tables, config)
+        # 根据配置文件生成
+        CreateConfig.save_model_json(tables, create_list, not_create_list)
+
     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-        data = httpRequest.get_param("data")
+        # 获取创建的文件列表
+        create_table = httpRequest.get_param("createTable")
+        not_create_table = httpRequest.get_param("notCreateTable")
+        create_list = httpRequest.get_param("createList")
+        create_model = httpRequest.get_param("createModel")
+        project = httpRequest.get_param("project")
+        config = {
+            Constant.MULTI_TABLE: True,
+            Constant.UNDERSCORE_REPLACE: True,
+            Constant.PROJECT: project,
+            Constant.CREATE_FILE: create_list,
+            Constant.CREATE_MODEL: create_model
+        }
+        host = httpRequest.get_param("host")
+        name = httpRequest.get_param("name")
+        password = httpRequest.get_param("password")
+        port = httpRequest.get_param("port")
+        database = httpRequest.get_param("database")
+        port = int(port)
         try:
-            with open("config.json", "w", encoding="utf-8") as file:
-                file.write(data)
+            mysql = MySQLAnalysis(database, host=host, name=name, password=password, port=port)
+            CreateConfigServlet.create_config(mysql, config, create_table, not_create_table)
+            httpResponse.write_body('{"code":"200"}')
+        except:
+            httpResponse.write_body('{"code":"-1"}')
+
+
+class GenerateDDD(Servlet):
+
+    def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
+        try:
+            dddGenerateAnalysis.Generate().generate()
             httpResponse.write_body(json.dumps({"code": 200}))
         except:
-            httpResponse.write_body(json.dumps({"code": -1, "msg": "配置文件错误"}))
-#
-#
-# class CreateOneServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         if os.path.exists(os.path.join(os.getcwd(), "config.json")):
-#             try:
-#                 data = json.load(open("config.json", encoding="utf-8"))
-#                 analysis = SQLLinkUtil(data)
-#                 analysis.get_all_table()
-#                 analysis.mapping_relations()
-#                 analysis.save_model_json()
-#             except:
-#                 httpResponse.write_body(json.dumps({"code": -1, "msg": "配置文件生成错误"}))
-#                 return
-#             try:
-#                 g = Generate()
-#                 g.generate()
-#                 httpResponse.write_body(json.dumps({"code": 200}))
-#             except Exception:
-#                 traceback.print_exc()
-#                 httpResponse.write_body(json.dumps({"code": -1, "msg": "代码生成错误"}))
-#         else:
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "配置文件不存在"}))
-#
-#
-# class CreateTowServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         try:
-#             data = json.load(open("config.json", encoding="utf-8"))
-#             analysis = SQLLinkUtil(data)
-#             analysis.get_all_table()
-#             analysis.mapping_relations()
-#             analysis.save_model_json()
-#             httpResponse.write_body(json.dumps({"code": 200}))
-#         except:
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "配置文件生成错误"}))
-#
-#
-# class CreateThreeServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         try:
-#             g = Generate()
-#             g.generate()
-#             httpResponse.write_body(json.dumps({"code": 200}))
-#         except:
-#             traceback.print_exc()
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "代码生成依赖的config目录错误"}))
-#
-#
-# class GetInfoServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         path = os.path.join(os.getcwd(), "config.json")
-#         a = os.path.exists(path)
-#         path = os.path.join(os.getcwd(), "config")
-#         b = os.path.exists(path)
-#         path = os.path.join(os.getcwd(), "data")
-#         c = os.path.exists(path)
-#         path = os.path.join(os.getcwd(), "exConfig")
-#         d = os.path.exists(path)
-#         httpResponse.write_body(json.dumps({
-#             "code": 200,
-#             "data": {"a": a, "b": b, "c": c, "d": d}
-#         }))
-#
-#
-# def del_file(filepath):
-#     del_list = os.listdir(filepath)
-#     for f in del_list:
-#         file_path = os.path.join(filepath, f)
-#         if os.path.isfile(file_path):
-#             os.remove(file_path)
-#         elif os.path.isdir(file_path):
-#             shutil.rmtree(file_path)
-#
-#
-# class RemoveConfigServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         path = os.path.join(os.getcwd(), "config")
-#         del_file(path)
-#         os.removedirs(path)
-#         httpResponse.write_body(json.dumps({"code": 200}))
-#
-#
-# class RemoveDataServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         path = os.path.join(os.getcwd(), "data")
-#         del_file(path)
-#         os.removedirs(path)
-#         httpResponse.write_body(json.dumps({"code": 200}))
-#
-#
-# class RemoveExConfigServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         path = os.path.join(os.getcwd(), "exConfig")
-#         del_file(path)
-#         os.removedirs(path)
-#         httpResponse.write_body(json.dumps({"code": 200}))
-#
-#
-# class GetConfigList(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         path = os.path.join(os.getcwd(), "config")
-#         if os.path.exists(path):
-#             list_file = os.listdir(path)
-#             data = []
-#             for file in list_file:
-#                 if ".json" in file:
-#                     data.append(file)
-#             httpResponse.write_body(json.dumps({"code": 200, "data": data}))
-#         else:
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "目录不存在"}))
-#
-#
-# class GetOneJson(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         file = httpRequest.get_param("file")
-#         path = os.path.join(os.getcwd(), "config")
-#         if os.path.exists(path) and file is not None:
-#             file_path = os.path.join(path, file)
-#             if os.path.exists(file_path):
-#                 httpResponse.write_body(json.dumps({"code": 200, "data": json.load(open(os.path.join(file_path)))}))
-#                 return
-#         httpResponse.write_body(json.dumps({"code": -1, "msg": "目录不存在"}))
-#
-#
-# class CreateExConfigServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         data = httpRequest.get_param("data")
-#         class_name = httpRequest.get_param("className")
-#         if class_name is None or data is None:
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "缺少必要参数"}))
-#             return
-#
-#         path = os.path.join(os.getcwd(), "exConfig")
-#         if not os.path.exists(path):
-#             os.mkdir(path)
-#         try:
-#             with open(os.path.join(path, class_name) + ".json", "w", encoding="utf-8") as file:
-#                 file.write(data)
-#             httpResponse.write_body(json.dumps({"code": 200}))
-#         except:
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "写入文件出错"}))
-#
-#
-# class CreateExCodeServlet(Servlet):
-#     def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
-#         try:
-#             g = ExGenerate()
-#             g.generate()
-#             httpResponse.write_body(json.dumps({"code": 200}))
-#         except:
-#             traceback.print_exc()
-#             httpResponse.write_body(json.dumps({"code": -1, "msg": "代码生成依赖的exConfig目录错误"}))
+            httpResponse.write_body('{"code":"-1"}')
+
+
+class GenerateModel(Servlet):
+
+    def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
+        try:
+            generateAnalysis.Generate().generate()
+            httpResponse.write_body(json.dumps({"code": 200}))
+        except:
+            httpResponse.write_body('{"code":"-1"}')
+
+
+class ProjectInit(Servlet):
+
+    def servlet(self, httpRequest: HttpRequest, httpResponse: HttpResponse):
+        try:
+            createProject.init(httpRequest.get_param("project"))
+            httpResponse.write_body(json.dumps({"code": 200}))
+        except:
+            httpResponse.write_body('{"code":"-1"}')

@@ -1,7 +1,6 @@
-import json
 import _thread
-import sys
 import os
+import webbrowser
 
 from src.controller.ServletController import *
 
@@ -16,29 +15,25 @@ if __name__ == '__main__':
     print(f"服务器静态资源路径:{path}")
     listen_size = 35
     run_flag = False
+    server_obj = None
     while True:
         try:
             server_obj = Server(path, address=(ip, port), listen_size=listen_size)
             print(f"服务器地址：http://127.0.0.1:{port}")
+            webbrowser.open(f'http://127.0.0.1:{port}')
             # 注册页面
             server_obj.index[""] = "/index.html"
             server_obj.index["/"] = "/index.html"
             server_obj.index["/index"] = "/index.html"
             server_obj.index["/index.html"] = "/index.html"
+
             # 注册servlet
             server_obj.servlet["/javaCode/login"] = LinkMySqlServlet()
             server_obj.servlet["/javaCode/createConfig"] = CreateConfigServlet()
-            server_obj.servlet["/javaCode/create1"] = CreateOneServlet()
-            server_obj.servlet["/javaCode/create2"] = CreateTowServlet()
-            server_obj.servlet["/javaCode/create3"] = CreateThreeServlet()
-            server_obj.servlet["/javaCode/getInfo"] = GetInfoServlet()
-            server_obj.servlet["/javaCode/removeConfig"] = RemoveConfigServlet()
-            server_obj.servlet["/javaCode/removeData"] = RemoveDataServlet()
-            server_obj.servlet["/javaCode/removeExConfig"] = RemoveExConfigServlet()
-            server_obj.servlet["/javaCode/getConfigInfo"] = GetConfigList()
-            server_obj.servlet["/javaCode/getOneJson"] = GetOneJson()
-            server_obj.servlet["/javaCode/saveExJson"] = CreateExConfigServlet()
-            server_obj.servlet["/javaCode/createEx"] = CreateExCodeServlet()
+            server_obj.servlet["/javaCode/generate/ddd"] = GenerateDDD()
+            server_obj.servlet["/javaCode/generate"] = GenerateModel()
+            server_obj.servlet["/javaCode/projectInit"] = ProjectInit()
+
             run_flag = True
             print("服务器启动成功")
             break
