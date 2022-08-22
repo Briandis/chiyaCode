@@ -384,9 +384,25 @@ class Function:
         data += f'{indent}{result}{self.name}('
         if self.parameter is not None:
             lists = []
+            count_len = 0
             for param in self.parameter:
-                lists.append(f'{param.type} {param.name}')
-            data += StringUtil.string_join_neglect_null(", ", *lists)
+                param_str = f'{param.type} {param.name}'
+                lists.append(param_str)
+                count_len += len(param_str)
+            # 如果字符串大于85，则需要换行展示
+            if count_len > 85:
+                param_indent = '\t' * (indentation + 1)
+                count = 0
+                data += f'\n'
+                for i in lists:
+                    if count + 1 == len(lists):
+                        data += f'{param_indent}{i}\n'
+                    else:
+                        data += f'{param_indent}{i},\n'
+                    count += 1
+                data += f'{indent}'
+            else:
+                data += StringUtil.string_join_neglect_null(", ", *lists)
         data += f');\n'
         return data
 

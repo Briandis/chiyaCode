@@ -1,5 +1,4 @@
 from src.ddd.util import JavaCode
-from src.ddd.util.JavaCode import Attribute
 from src.structure.CodeConfig import CodeConfig
 
 

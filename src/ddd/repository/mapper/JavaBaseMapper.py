@@ -18,6 +18,17 @@ class Page:
 
         return JavaCode.Attribute(f'@Param("page{index}") Page', f'page{index}', f"{msg}分页对象")
 
+    @staticmethod
+    def param(name, msg=""):
+        """
+        方法参数
+        :param name:参数名
+        :param msg:消息
+        :return: None|方法参数字符串
+        """
+
+        return JavaCode.Attribute(f'@Param("{name}") Page', f'{name}', f"{msg}分页对象")
+
 
 class ThisObject:
     """
@@ -106,15 +117,16 @@ class FuzzySearch:
     """
 
     @staticmethod
-    def attribute(config: CodeConfig):
+    def attribute(config: CodeConfig, index=""):
         """
         获取模糊搜索的方法参数
         :param config: 配置
+        :param index : 参数索引
         :return: None|方法参数字符串
         """
         if config.createConfig.fuzzySearch.enable:
             if len(config.createConfig.fuzzySearch.data) != 0:
-                return JavaCode.Attribute(f'@Param("{config.createConfig.fuzzySearch.value}") String', f'{config.createConfig.fuzzySearch.value}', f'模糊搜索内容')
+                return JavaCode.Attribute(f'@Param("{config.createConfig.fuzzySearch.value}{index}") String', f'{config.createConfig.fuzzySearch.value}{index}', f'模糊搜索内容')
         return None
 
 
@@ -131,7 +143,7 @@ class SplicingSQL:
         :return: None|方法参数
         """
         if config.createConfig.splicingSQL.enable:
-            return JavaCode.Attribute(f'@Param("{config.createConfig.splicingSQL.value}") String', f'{config.createConfig.splicingSQL.value}', f'拼接的sql语句')
+            return JavaCode.Attribute(f'@Param("{config.createConfig.splicingSQL.value}") String', f'{config.createConfig.splicingSQL.value}', f'拼接的SQL语句')
         return None
 
 
@@ -157,6 +169,10 @@ class CreateFile:
         Delete.create(code, config)
         Update.create(code, config)
         Select.create(code, config)
+        SelectOneToOne.create(code, config)
+        SelectOneToMany.create(code, config)
+        SelectManyToMany.create(code, config)
+        SelectForeignKey.create(code, config)
         return code.create()
 
 
@@ -516,6 +532,331 @@ class Select:
             JavaCode.Attribute("Integer", "i", "查询到的记录数"),
             f'count{config.className}',
             f'统计{config.remark}记录数',
+            ThisObject.attribute(config),
+            FuzzySearch.attribute(config),
+        )
+        function.is_interface = True
+        return function
+
+
+# 一对一接口
+class SelectOneToOne:
+    """
+    单表查接口
+    """
+
+    @staticmethod
+    def create(code: JavaCode.JavaCode, config: CodeConfig):
+        """
+        构建方法对象
+        :param code:源码
+        :param config: 配置
+        """
+        if len(config.oneToOne) == 0:
+            return
+        for one_to_one in config.oneToOne:
+            code.add_import(one_to_one.package)
+            code.add_function(SelectOneToOne.find_one_to_one(config, one_to_one))
+            code.add_function(SelectOneToOne.count_find_one_to_one(config, one_to_one))
+            code.add_function(SelectOneToOne.link_one_to_one(config, one_to_one))
+            code.add_function(SelectOneToOne.query_one_to_one(config, one_to_one))
+            code.add_function(SelectOneToOne.count_query_one_to_one(config, one_to_one))
+
+    @staticmethod
+    def find_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一内联
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'find{config.className}OneToOne{another.className}',
+            f'内联一对一查询{another.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.attribute(),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_find_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一内联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            f'countFind{config.className}OneToOne{another.className}',
+            f'内联一对一统计{config.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def link_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一获取对方
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{another.className}>', "list", f'{another.remark}列表'),
+            f'linkOneToOne{another.className}',
+            f'内联一对一查询{config.remark}，只返回{another.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.attribute(),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def query_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一外联
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'query{config.className}OneToOne{another.className}',
+            f'外联一对一查询{another.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.attribute(),
+            Page.attribute("1"),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_query_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一外联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            f'countQuery{config.className}OneToOne{another.className}',
+            f'外联一对一统计{another.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.attribute(),
+            Page.attribute("1"),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+        )
+        function.is_interface = True
+        return function
+
+
+# 一对多接口
+class SelectOneToMany:
+    """
+    一对多接口
+    """
+
+    @staticmethod
+    def create(code: JavaCode.JavaCode, config: CodeConfig):
+        """
+        构建方法对象
+        :param code:源码
+        :param config: 配置
+        """
+        if len(config.oneToMany) == 0:
+            return
+        for one_to_many in config.oneToMany:
+            code.add_import(one_to_many.package)
+            code.add_function(SelectOneToMany.find_one_to_many(config, one_to_many))
+            code.add_function(SelectOneToMany.count_find_one_to_many(config, one_to_many))
+            code.add_function(SelectOneToMany.link_one_to_many(config, one_to_many))
+            code.add_function(SelectOneToMany.query_one_to_many(config, one_to_many))
+            code.add_function(SelectOneToMany.count_query_one_to_many(config, one_to_many))
+
+    @staticmethod
+    def find_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一内联
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'find{config.className}OneToMany{another.className}',
+            f'内联一对多查询{another.remark}，双方均可分页',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.param("onePage", config.remark),
+            Page.param("manyPage", another.remark),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_find_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一内联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            f'countFind{config.className}OneToMany{another.className}',
+            f'内联一对多统计{config.remark}，双方均可分页',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.param("onePage", config.remark),
+            Page.param("manyPage", another.remark),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def link_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一获取对方
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{another.className}>', "list", f'{another.remark}列表'),
+            f'linkOneToMany{another.className}',
+            f'内联一对多查询{config.remark}，只返回{another.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.param("onePage", config.remark),
+            Page.param("manyPage", another.remark),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def query_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一外联
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'query{config.className}OneToMany{another.className}',
+            f'外联一对多查询{another.remark}',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.param("onePage", config.remark),
+            Page.param("manyPage", another.remark),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_query_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一外联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            f'countQuery{config.className}OneToMany{another.className}',
+            f'外联一对多统计{another.remark}，双方均可分页',
+            ThisObject.attribute(config),
+            ThisObject.attribute(another),
+            Page.param("onePage", config.remark),
+            Page.param("manyPage", another.remark),
+            FuzzySearch.attribute(config),
+            FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+
+# 多对多接口
+class SelectManyToMany:
+    """
+    多对多接口
+    """
+
+    @staticmethod
+    def create(code: JavaCode.JavaCode, config: CodeConfig):
+        """
+        构建方法对象
+        :param code:源码
+        :param config: 配置
+        """
+        if len(config.manyToMany) == 0:
+            return
+        for many_to_many in config.manyToMany:
+            code.add_function(SelectManyToMany.find_many_to_many(config, many_to_many.to, many_to_many.many))
+            code.add_function(SelectManyToMany.query_many_to_many(config, many_to_many.to, many_to_many.many))
+
+    @staticmethod
+    def find_many_to_many(config: CodeConfig, to: CodeConfig, many: CodeConfig):
+        # 内联多对多查询
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'find{config.className}ManyToManyLink{to.className}On{many.className}',
+            f'内联多对多查询{config.remark},根据{to.remark}联查{many.remark}',
+            ThisObject.attribute(config),
+            Page.attribute(),
+            FuzzySearch.attribute(config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def query_many_to_many(config: CodeConfig, to: CodeConfig, many: CodeConfig):
+        # 外联多对多查询
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'query{config.className}ManyToManyLink{to.className}On{many.className}',
+            f'外联多对多查询{config.remark},根据{to.remark}联查{many.remark}',
+            ThisObject.attribute(config),
+            Page.attribute(),
+            FuzzySearch.attribute(config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+
+# 外键查接口
+class SelectForeignKey:
+    """
+    外键查接口
+    """
+
+    @staticmethod
+    def create(code: JavaCode.JavaCode, config: CodeConfig):
+        """
+        构建方法对象
+        :param code:源码
+        :param config: 配置
+        """
+        if len(config.oneToOne) == 0:
+            return
+        for one_to_one in config.oneToOne:
+            code.add_function(SelectForeignKey.select_in_and_where(config, one_to_one))
+
+    @staticmethod
+    def select_in_and_where(config: CodeConfig, another: CodeConfig):
+        # 查找外键是属于这个表中的那个属性
+        attr = None
+        for i in config.attr:
+            if i.filed == another.foreignKey:
+                attr = i
+        if attr is None:
+            return
+
+            # 内联多对多查询
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
+            f'select{config.className}In{attr.upper_name()}AndWhere',
+            f'根据{attr.remark}列表和其他条件查询{config.remark}',
+            JavaCode.Attribute(f'@Param("list") List<{attr.type}>', "list", f'{config.remark}的{attr.remark}列表'),
             ThisObject.attribute(config),
             FuzzySearch.attribute(config),
         )
