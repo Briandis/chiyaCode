@@ -4,6 +4,13 @@
 
 ---
 
+### 下载地址：右侧，发行版内下载最新版的chiyaCode.zip，解压运行start.ext即可用。
+
+> 只支持windows
+
+
+---
+
 ## 特征优势
 
 1.MyBatis的多表语句生成。
@@ -13,7 +20,7 @@
 > 如user和user_info表\
 > user中存在主键字段名为id的字段\
 > user_info表中存在字段名为user_id的字段即构成自动扫描的多表关系\
-> 多表关系自动识别一对一、一对多、多对多>
+> 多表关系自动识别一对一、一对多、多对多
 
 2. 多表查询中自动解决字段名重复问题，无需解决多表字段别名问题
 3. 自动根据多表关系，提供本表的外键查询，完全可以做到单表查全部
@@ -26,7 +33,7 @@
 4.多种生成模式，支持MVC传统模式，支持模块化分包模式，支持领域驱动设计模式
 
 5.轻度的依赖，如果你不需要chiya-util和chiya-web这两个jar包做依赖，完全可以舍去，对于Page这样的分页对象\
-您可以自行构建Page对象，只需要其中拥有start和count字段即可无缝兼容生成的mapper\
+您可以自行构建Page对象，只需要其中拥有start和count字段即可无缝兼容生成的mapper
 > 如果你要修改，就要做好要改多个mapper中的import的Page路径的准备
 
 6.生成的代码全面的文档类型的注释，你只需阅读方法注释的文档，即可知道要做什么
@@ -78,5 +85,24 @@
 ## 项目依赖
 
 生成的代码默认依赖 chiya-util、chiya-web、fastJson、spring-redis、spring全家桶\
-在chiya-web中，有的的模块需要自行引入pom\
-chiya-util无任何依赖，开箱即可用。
+chiya-util、chiya-web两者都需自行拉取源码，然后手动打jar包，\
+两者打包不需要maven进行打包，普通打包即可\
+参考
+```xml
+<!-- chiyaUtil工具库 -->
+<dependency>
+    <groupId>chiya</groupId>
+    <artifactId>chiya</artifactId>
+    <version>0.0.1</version>
+    <scope>system</scope>
+    <systemPath>chiyaUtil.jar的路径</systemPath>
+</dependency>
+<!-- chiya-web 工具库 -->
+<dependency>
+    <groupId>chiya-web</groupId>
+    <artifactId>chiya-web</artifactId>
+    <version>0.0.1</version>
+    <scope>system</scope>
+    <systemPath>chiya-web.jar的路径</systemPath>
+</dependency>
+```
