@@ -26,6 +26,8 @@ public class ServerBootStrap {
 	
     @PostConstruct
     public void init(){
+        // TODO:如果项目配置了统一接口路径前缀，则在这里修改，注意开头需要'/'这个斜杠
+        ChiyaSecurityExtract.servicePath = "/";
         // 装配所有角色注册的URL
 		SecurityCertification.chiyaHashMapValueMap = chiyaSecurityExtract.getURL();
 		// TODO:需要手动编写加载用户->角色的关系代码

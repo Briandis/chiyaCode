@@ -23,14 +23,13 @@ import chiya.core.base.number.NumberUtil;
 import chiya.security.Method;
 import chiya.web.security.SecurityCertification;
 import chiya.web.token.TokenUtil;
-import lombok.extern.slf4j.Slf4j;
+import chiya.log.ChiyaLog;
 
 import """ + root + """.common.util.ThreadSession;
 
 /**
  * 拦截器，用于权限控制，token基础数据处理
  */
-@Slf4j
 public class Security implements HandlerInterceptor {
 
 	/** 计数工具 */
@@ -76,7 +75,7 @@ public class Security implements HandlerInterceptor {
 		}
 		// 计数统计
 		interfaceCount.increment(isRelease);
-		log.info("-->" + user + "\t用户\t" + msg + "\t" + interfaceCount.getCountMsg() + "\t业务放行：" + isRelease);
+        ChiyaLog.info(StringUtil.spliceStringJoiner("\t", "用户", user, "请求方式", method, "请求地址", url, "IP", ip, interfaceCount.getCountMsg(), "业务执行状态", isRelease));
 		logParameter(request);
 		if (!isRelease) { response.setStatus(403); }
 		return isRelease;
@@ -88,7 +87,7 @@ public class Security implements HandlerInterceptor {
 	@Override
 	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
 		int time = (int) (System.currentTimeMillis() - ThreadSession.getRunStartTime());
-		log.info("业务结束，清空线程临时数据,运行花费时间：" + (time));
+		ChiyaLog.info("业务结束，清空线程临时数据,运行花费时间：", time);
 		INTERFACE_PERFORMANCE.put(ThreadSession.getMethod() + ThreadSession.getURL(), time);
 		// 清除该线程所使用的数据
 		ThreadSession.clear();
@@ -110,7 +109,7 @@ public class Security implements HandlerInterceptor {
 			if (StringUtil.eqString("image/jpeg", contentType)) { info = "上传了图片"; }
 			if (contentType.indexOf("multipart/form-data;") != -1) { info = "请求体长度：" + request.getContentLength(); }
 		}
-		log.info("携带参数：" + info + jsonObject.toJSONString());
+		ChiyaLog.info("携带参数", info, jsonObject.toJSONString());
 	}
 
 }
