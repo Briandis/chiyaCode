@@ -3,6 +3,42 @@ from src.ddd.util.JavaCode import Attribute
 from src.structure.CodeConfig import CodeConfig
 
 
+class ModuleConfigCreate:
+    """
+    根据配置进行处理
+    """
+    class ChiyaSecurity:
+        @staticmethod
+        def add_import(config: CodeConfig, code: JavaCode.JavaCode):
+            """
+            添加导入配置
+            :param config: 配置信息
+            :param code: 源码实例
+            """
+            if config.createConfig.chiyaSecurity.enable:
+                code.add_import("chiya.web.security.entity.ChiyaRole")
+
+        @staticmethod
+        def add_default_mate(config: CodeConfig, function: JavaCode.Function):
+            """
+            添加默认接口的权限
+            :param config: 配置信息
+            :param function: 方法实例
+            """
+            if config.createConfig.chiyaSecurity.enable:
+                function.add_mate(f'@ChiyaSecurity(ChiyaRole.USER)')
+
+        @staticmethod
+        def add_extra_mate(config: CodeConfig, function: JavaCode.Function):
+            """
+            添加扩展接口的权限
+            :param config: 配置信息
+            :param function: 方法实例
+            """
+            if config.createConfig.chiyaSecurity.enable:
+                function.add_mate(f'@ChiyaSecurity(ChiyaRole.ADMIN)')
+
+
 class CreateFile:
     """
     创建整个文件内容，主要是文件流程的组装
@@ -34,7 +70,7 @@ class CreateFile:
         code.add_import(config.package)
         if config.createConfig.defaultAPI.enable:
             code.add_import("java.util.List")
-            code.add_import("chiya.web.security.entity.ChiyaRole")
+            ModuleConfigCreate.ChiyaSecurity.add_import(config, code)
             code.add_function(CreateMethodDefaultAPI.insert(config))
             code.add_function(CreateMethodDefaultAPI.delete(config))
             code.add_function(CreateMethodDefaultAPI.update(config))
@@ -43,7 +79,7 @@ class CreateFile:
         # 额外的接口
         if config.createConfig.extraAPI.enable:
             code.add_import("java.util.List")
-            code.add_import("chiya.web.security.entity.ChiyaRole")
+            ModuleConfigCreate.ChiyaSecurity.add_import(config, code)
             CreateMethodExtraAPI.create(config, code)
 
         return code.create()
@@ -69,7 +105,7 @@ class CreateMethodDefaultAPI:
             function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(0)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.USER)')
+        ModuleConfigCreate.ChiyaSecurity.add_default_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -95,7 +131,7 @@ class CreateMethodDefaultAPI:
             function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(1)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.USER)')
+        ModuleConfigCreate.ChiyaSecurity.add_default_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -123,7 +159,7 @@ class CreateMethodDefaultAPI:
             function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(2)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.USER)')
+        ModuleConfigCreate.ChiyaSecurity.add_default_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -151,7 +187,7 @@ class CreateMethodDefaultAPI:
             function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(3)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.USER)')
+        ModuleConfigCreate.ChiyaSecurity.add_default_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -180,7 +216,7 @@ class CreateMethodDefaultAPI:
             function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(4)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.USER)')
+        ModuleConfigCreate.ChiyaSecurity.add_default_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -226,7 +262,7 @@ class CreateMethodExtraAPI:
             function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(0)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.ADMIN)')
+        ModuleConfigCreate.ChiyaSecurity.add_extra_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -252,7 +288,7 @@ class CreateMethodExtraAPI:
             function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(1)}{config.className}")')
             function.add_mate(f'@ResponseBody')
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.ADMIN)')
+        ModuleConfigCreate.ChiyaSecurity.add_extra_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -281,7 +317,7 @@ class CreateMethodExtraAPI:
             function.add_mate(f'@ResponseBody')
 
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.ADMIN)')
+        ModuleConfigCreate.ChiyaSecurity.add_extra_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -310,7 +346,7 @@ class CreateMethodExtraAPI:
             function.add_mate(f'@ResponseBody')
 
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.ADMIN)')
+        ModuleConfigCreate.ChiyaSecurity.add_extra_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
@@ -340,7 +376,7 @@ class CreateMethodExtraAPI:
             function.add_mate(f'@ResponseBody')
 
         # 用户权限
-        function.add_mate(f'@ChiyaSecurity(ChiyaRole.ADMIN)')
+        ModuleConfigCreate.ChiyaSecurity.add_extra_mate(config, function)
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):

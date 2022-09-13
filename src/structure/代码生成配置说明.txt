@@ -164,6 +164,14 @@
     "xmlConfig": {                          xml中字段别名配置
       "fieldAlias": "chiya",                    自动默认使用的别名前置
       "resultMapName": "result"                 默认使用的resultmap的前缀名称
+    },
+    "chiyaSecurity":{
+      "name":"chiyaSecurity",           接口权限
+      "enable":true
+    },
+    "repositoryUseCache":{
+      "name":"repositoryUseCache",         仓库层的实现，是否使用缓存
+      "enable":true
     }
   },
   "entityClone": {                      如果是实体克隆，则赋值的配置

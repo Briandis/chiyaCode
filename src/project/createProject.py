@@ -1,4 +1,4 @@
-from src.project.common import bootstrap, cache, converter, exception, threadSession, security, securityTask
+from src.project.common import bootstrap, cache, converter, exception, threadSession, security, securityTask,bodyReaderFilter
 from src.project.config import globalCorsConfig, redisConfig, webConfig, beanConfig
 from src.util import OSUtil
 
@@ -61,6 +61,7 @@ def create_java_file(root: str):
     beanConfig.create_file(root)
     security.create_file(root)
     securityTask.create_file(root)
+    bodyReaderFilter.create_file(root)
 
 
 def init(root: str):

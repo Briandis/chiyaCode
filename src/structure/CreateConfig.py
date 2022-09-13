@@ -260,6 +260,25 @@ class XmlConfig(BaseConfig):
         self.resultMapName = "result"
 
 
+# 控制层中，是否使用权限
+class ChiyaSecurity(BaseConfig):
+    """
+    是否在控制层中生成接口权限
+    """
+
+    def __init__(self):
+        super().__init__()
+
+
+# 仓库层中，是否使用缓存
+class RepositoryUseCache(BaseConfig):
+    """
+    仓库层实现中，是否使用缓存
+    """
+    def __init__(self):
+        super().__init__()
+
+
 class CreateConfig:
     """
     构建的配置文件
@@ -294,3 +313,7 @@ class CreateConfig:
         self.notCreateFile = NotCreateFile()
         # xml配置
         self.xmlConfig = XmlConfig()
+        # 是否生成接口权限
+        self.chiyaSecurity = ChiyaSecurity()
+        # 仓库层实现，是否使用缓存
+        self.repositoryUseCache = RepositoryUseCache()
