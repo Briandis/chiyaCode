@@ -52,7 +52,6 @@ public class Security implements HandlerInterceptor {
 		ThreadSession.setIP(ip);
 		ThreadSession.setMethod(method);
 		ThreadSession.setURL(url);
-		String msg = "请求方式：" + method + "\t请求地址：" + url + "\tIP：" + ip;
 		// 获取token
 		String token = request.getHeader("token");
 		// 用户标识

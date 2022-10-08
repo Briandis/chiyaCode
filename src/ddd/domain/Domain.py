@@ -22,7 +22,8 @@ class CreateFile:
         code.add_function(CreateMethodDefaultAPI.get(config))
         code.add_function(CreateMethodDefaultAPI.lists(config))
         # 额外的接口
-        CreateMethodExtraAPI.create(config, code)
+        # 现在不在提供额外接口
+        # CreateMethodExtraAPI.create(config, code)
 
         return code.create()
 
@@ -38,7 +39,7 @@ class CreateMethodDefaultAPI:
             "public",
             JavaCode.Attribute("boolean", "b", "true:添加成功/false:添加失败"),
             f'{config.createConfig.methodName.get(0)}{config.className}',
-            f'前台添加{config.remark}',
+            f'添加{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
         )
         function.set_is_interface()
@@ -50,7 +51,7 @@ class CreateMethodDefaultAPI:
             "public",
             JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
             f'{config.createConfig.methodName.get(1)}{config.className}',
-            f'前台删除{config.remark},{config.key.attr}必传',
+            f'删除{config.remark},{config.key.attr}必传',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
         )
         function.set_is_interface()
@@ -74,7 +75,7 @@ class CreateMethodDefaultAPI:
             "public",
             JavaCode.Attribute(config.className, config.className, f'获取到的{config.remark}对象'),
             f'{config.createConfig.methodName.get(3)}{config.className}',
-            f'前台根据{config.key.attr}查询一个{config.remark}',
+            f'根据{config.key.attr}查询一个{config.remark}',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
         )
         function.set_is_interface()
@@ -86,7 +87,7 @@ class CreateMethodDefaultAPI:
             "public",
             JavaCode.Attribute(f'List<{config.className}>', "list", f'{config.remark}列表'),
             f'{config.createConfig.methodName.get(4)}{config.className}',
-            f'前台获取多个{config.remark}',
+            f'获取多个{config.remark}',
             JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}对象'),
             JavaCode.Attribute("Page", "page", f'分页对象'),
         )

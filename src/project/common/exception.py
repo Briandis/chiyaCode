@@ -49,9 +49,9 @@ public class GlobalExceptionHandler {
 	public Result handle(Exception exception) throws Exception {
 		StringBuilder stringBuilder = new StringBuilder();
 		for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
-			stringBuilder.append("\t").append(stackTraceElement).append("\n");
+			stringBuilder.append("\\t").append(stackTraceElement).append("\\n");
 		}
-		ChiyaLog.error(exception, "\n", stringBuilder);
+		ChiyaLog.error(exception, "\\n", stringBuilder);
 		throw exception;
 	}
 }
