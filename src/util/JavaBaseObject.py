@@ -53,6 +53,10 @@ class MySQLObjectDict:
         "mediumtext": Constant.STRING,
         "longblob": Constant.STRING,
         "longtext": Constant.STRING,
+        # postgres类型
+        "int2": Constant.INTEGER,
+        "int4": Constant.INTEGER,
+        "int8": Constant.LONG,
 
     }
 
