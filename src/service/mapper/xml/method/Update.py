@@ -14,6 +14,8 @@ class CreateMethodUpdate:
         创建修改块
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -38,8 +40,10 @@ class CreateMethodUpdate:
         :param config: 配置文件
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
 
         tag = "\t"
@@ -48,7 +52,10 @@ class CreateMethodUpdate:
         data += f'{tag * 2}<set>\n'
         data += CreateXmlBlock.if_mod_3(config, 3, f'save{className}')
         data += f'{tag * 2}</set>\n'
-        data += f'{tag * 2}WHERE {keyFiled} = #{{save{className}.{key}}}\n'
+        if key:
+            data += f'{tag * 2}WHERE {keyFiled} = #{{save{className}.{key}}}\n'
+        else:
+            data += f'{tag * 2}WHERE\n'
 
         temp_str = f'condition{className}.{key}!=null'
         for attr in config["attr"]:
@@ -56,7 +63,10 @@ class CreateMethodUpdate:
 
         data += f'{tag * 2}<if test="condition{className}!=null and ({temp_str})">\n'
         data += f'{tag * 3}AND NOT EXISTS (\n'
-        data += f'{tag * 4}SELECT {keyFiled} FROM (SELECT * FROM {tableName} ) AS t \n'
+        if key:
+            data += f'{tag * 4}SELECT {keyFiled} FROM (SELECT * FROM {tableName} ) AS t \n'
+        else:
+            data += f'{tag * 4}SELECT * FROM (SELECT * FROM {tableName} ) AS t \n'
         data += f'{tag * 4}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 5, f'condition{className}', False, "t")
         data += f'{tag * 4}</where>\n'
@@ -72,6 +82,8 @@ class CreateMethodUpdate:
         根据主键条件删除
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -98,6 +110,8 @@ class CreateMethodUpdate:
         根据条件修改
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         keyFiled = config["key"]["filed"]
@@ -125,6 +139,8 @@ class CreateMethodUpdate:
         根据传入参数设置Null
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)

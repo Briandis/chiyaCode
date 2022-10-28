@@ -15,16 +15,21 @@ class CreateMethodInsert:
         :param config: 配置文件
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
         attrs = []
-        attrs.append(config["key"])
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
+            attrs.append(config["key"])
         for attr in config["attr"]:
             attrs.append(attr)
         attrs = {"attr": attrs}
         tag = "\t"
-        data = f'{tag}<insert id="insert{className}" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
+        if "key" in config:
+            data = f'{tag}<insert id="insert{className}" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
+        else:
+            data = f'{tag}<insert id="insert{className}">\n'
         data += f'{tag * 2}INSERT INTO {tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3)
@@ -45,18 +50,22 @@ class CreateMethodInsert:
         :param config: 配置文件
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
-
         attrs = []
-        attrs.append(config["key"])
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
+            attrs.append(config["key"])
         for attr in config["attr"]:
             attrs.append(attr)
         i, max_len = 0, len(attrs)
 
         tag = "\t"
-        data = f'{tag}<insert id="insert{className}List" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
+        if "key" in config:
+            data = f'{tag}<insert id="insert{className}List" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
+        else:
+            data = f'{tag}<insert id="insert{className}List">\n'
         data += f'{tag * 2}INSERT INTO {tableName} (\n'
         data += f'{tag * 3}'
 
@@ -86,18 +95,22 @@ class CreateMethodInsert:
         :param config: 配置文件
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
-
         attrs = []
-        attrs.append(config["key"])
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
+            attrs.append(config["key"])
         for attr in config["attr"]:
             attrs.append(attr)
         attrs = {"attr": attrs}
 
         tag = "\t"
-        data = f'{tag}<insert id="insertOrUpdate{className}ByUnique" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
+        if "key" in config:
+            data = f'{tag}<insert id="insertOrUpdate{className}ByUnique" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
+        else:
+            data = f'{tag}<insert id="insertOrUpdate{className}ByUnique">\n'
         data += f'{tag * 2}INSERT INTO {tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3)
@@ -119,6 +132,9 @@ class CreateMethodInsert:
         添加或更新,根据查询
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
+
         className = config["className"]
         key = config["key"]["attr"]
         keyFiled = config["key"]["filed"]
@@ -170,18 +186,22 @@ class CreateMethodInsert:
         :param config: 配置文件
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
-
         attrs = []
-        attrs.append(config["key"])
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
+            attrs.append(config["key"])
         for attr in config["attr"]:
             attrs.append(attr)
         attrs = {"attr": attrs}
 
         tag = "\t"
-        data = f'{tag}<insert id="insert{className}ByExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
+        if "key" in config:
+            data = f'{tag}<insert id="insert{className}ByExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
+        else:
+            data = f'{tag}<insert id="insert{className}ByExistWhere">\n'
         data += f'{tag * 2}INSERT INTO {tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3, f'save{className}')
@@ -191,7 +211,10 @@ class CreateMethodInsert:
         data += CreateXmlBlock.if_mod_2(attrs, 3, f'save{className}')
         data += f"{tag * 2}</trim>\n"
         data += f'{tag * 2}FROM DUAL WHERE EXISTS (\n'
-        data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+        if "key" in config:
+            data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+        else:
+            data += f'{tag * 3}SELECT * FROM {tableName}\n'
         data += f'{tag * 3}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 4, f'condition{className}', False)
         data += f'{tag * 3}</where>\n'
@@ -207,18 +230,22 @@ class CreateMethodInsert:
         :param config: 配置文件
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
-
         attrs = []
-        attrs.append(config["key"])
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
+            attrs.append(config["key"])
         for attr in config["attr"]:
             attrs.append(attr)
         attrs = {"attr": attrs}
 
         tag = "\t"
-        data = f'{tag}<insert id="insert{className}ByNotExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
+        if "key" in config:
+            data = f'{tag}<insert id="insert{className}ByNotExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
+        else:
+            data = f'{tag}<insert id="insert{className}ByNotExistWhere">\n'
         data += f'{tag * 2}INSERT INTO {tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3, f'save{className}')
@@ -228,7 +255,10 @@ class CreateMethodInsert:
         data += CreateXmlBlock.if_mod_2(attrs, 3, f'save{className}')
         data += f"{tag * 2}</trim>\n"
         data += f'{tag * 2}FROM DUAL WHERE NOT EXISTS (\n'
-        data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+        if "key" in config:
+            data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+        else:
+            data += f'{tag * 3}SELECT * FROM {tableName}\n'
         data += f'{tag * 3}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 4, f'condition{className}', False)
         data += f'{tag * 3}</where>\n'

@@ -7,6 +7,7 @@ class ModuleConfigCreate:
     """
     根据配置进行处理
     """
+
     class ChiyaSecurity:
         @staticmethod
         def add_import(config: CodeConfig, code: JavaCode.JavaCode):
@@ -72,9 +73,10 @@ class CreateFile:
             code.add_import("java.util.List")
             ModuleConfigCreate.ChiyaSecurity.add_import(config, code)
             code.add_function(CreateMethodDefaultAPI.insert(config))
-            code.add_function(CreateMethodDefaultAPI.delete(config))
-            code.add_function(CreateMethodDefaultAPI.update(config))
-            code.add_function(CreateMethodDefaultAPI.get(config))
+            if config.key:
+                code.add_function(CreateMethodDefaultAPI.delete(config))
+                code.add_function(CreateMethodDefaultAPI.update(config))
+                code.add_function(CreateMethodDefaultAPI.get(config))
             code.add_function(CreateMethodDefaultAPI.lists(config))
         # 额外的接口
         if config.createConfig.extraAPI.enable:
@@ -111,6 +113,32 @@ class CreateMethodDefaultAPI:
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
                 self.line(f'b = {config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(0)}{config.className}({config.low_name()});')
+                self.line(f'return Result.judge(b);')
+
+        function.add_body(Body())
+        return function
+
+    @staticmethod
+    def delete_not_key(config: CodeConfig):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            f'{config.createConfig.methodName.get(1)}{config.className}',
+            f'前台删除{config.remark},{config.low_name()}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        if config.createConfig.restful.enable:
+            function.add_mate(f'@DeleteMapping("/{config.low_name()}")')
+        else:
+            function.add_mate(f'@RequestMapping("/{config.createConfig.methodName.get(1)}{config.className}")')
+            function.add_mate(f'@ResponseBody')
+        # 用户权限
+        ModuleConfigCreate.ChiyaSecurity.add_default_mate(config, function)
+
+        class Body(JavaCode.FunctionBody):
+            def function_body(self, parameter: list[Attribute]):
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.serviceInterface.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({parameter[0]});')
                 self.line(f'return Result.judge(b);')
 
         function.add_body(Body())
@@ -242,9 +270,10 @@ class CreateMethodExtraAPI:
             lists = value.split(",")
             for i in lists:
                 code.add_function(CreateMethodExtraAPI.insert(config, i))
-                code.add_function(CreateMethodExtraAPI.delete(config, i))
-                code.add_function(CreateMethodExtraAPI.update(config, i))
-                code.add_function(CreateMethodExtraAPI.get(config, i))
+                if config.key:
+                    code.add_function(CreateMethodExtraAPI.delete(config, i))
+                    code.add_function(CreateMethodExtraAPI.update(config, i))
+                    code.add_function(CreateMethodExtraAPI.get(config, i))
                 code.add_function(CreateMethodExtraAPI.lists(config, i))
 
     @staticmethod
@@ -296,6 +325,32 @@ class CreateMethodExtraAPI:
                 self.line_if(f'{config.key.attr} != null')
                 self.line(f'b = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(1)}{config.className}({config.key.attr});')
                 self.block_end()
+                self.line(f'return Result.judge(b);')
+
+        function.add_body(Body())
+        return function
+
+    @staticmethod
+    def delete_not_key(config: CodeConfig, extra: str):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute("Result", "Result", "Result 业务对象"),
+            f'{extra}{config.createConfig.methodName.get_upper(1)}{config.className}',
+            f'{extra}删除{config.remark},{config.low_name()}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        if config.createConfig.restful.enable:
+            function.add_mate(f'@DeleteMapping("/{extra}/{config.low_name()}")')
+        else:
+            function.add_mate(f'@RequestMapping("/{extra}/{config.createConfig.methodName.get(1)}{config.className}")')
+            function.add_mate(f'@ResponseBody')
+        # 用户权限
+        ModuleConfigCreate.ChiyaSecurity.add_extra_mate(config, function)
+
+        class Body(JavaCode.FunctionBody):
+            def function_body(self, parameter: list[Attribute]):
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(1)}{config.className}({parameter[0]});')
                 self.line(f'return Result.judge(b);')
 
         function.add_body(Body())
@@ -380,7 +435,8 @@ class CreateMethodExtraAPI:
 
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
-                self.line(f'List<{config.className}> list = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(4)}{config.className}({config.low_name()}, page);')
+                self.line(
+                    f'List<{config.className}> list = {config.module.serviceInterface.low_name()}.{extra}{config.createConfig.methodName.get_upper(4)}{config.className}({config.low_name()}, page);')
                 self.line(f'return Result.success(list, page);')
 
         function.add_body(Body())

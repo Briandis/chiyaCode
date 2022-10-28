@@ -28,9 +28,12 @@ class CreateFile:
         )
         code.add_import(config.package)
         code.add_function(CreateMethodDefaultAPI.insert(config))
-        code.add_function(CreateMethodDefaultAPI.delete(config))
-        code.add_function(CreateMethodDefaultAPI.update(config))
-        code.add_function(CreateMethodDefaultAPI.get(config))
+        if config.key:
+            code.add_function(CreateMethodDefaultAPI.delete(config))
+            code.add_function(CreateMethodDefaultAPI.update(config))
+            code.add_function(CreateMethodDefaultAPI.get(config))
+        else:
+            code.add_function(CreateMethodDefaultAPI.delete_not_key(config))
         code.add_function(CreateMethodDefaultAPI.lists(config))
         # 额外的接口
         CreateMethodExtraAPI.create(config, code)
@@ -80,6 +83,26 @@ class CreateMethodDefaultAPI:
                 self.line_if(f'{config.key.attr} != null')
                 self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({config.key.attr});')
                 self.block_end()
+                self.line(f'return b;')
+
+        function.add_body(Body())
+        return function
+
+    @staticmethod
+    def delete_not_key(config: CodeConfig):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
+            f'{config.createConfig.methodName.get(1)}{config.className}',
+            f'前台删除{config.remark},{config.low_name()}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        function.add_mate(f'@Override')
+
+        class Body(JavaCode.FunctionBody):
+            def function_body(self, parameter: list[Attribute]):
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({parameter[0].name});')
                 self.line(f'return b;')
 
         function.add_body(Body())
@@ -164,9 +187,12 @@ class CreateMethodExtraAPI:
             lists = value.split(",")
             for i in lists:
                 code.add_function(CreateMethodExtraAPI.insert(config, i))
-                code.add_function(CreateMethodExtraAPI.delete(config, i))
-                code.add_function(CreateMethodExtraAPI.update(config, i))
-                code.add_function(CreateMethodExtraAPI.get(config, i))
+                if config.key:
+                    code.add_function(CreateMethodExtraAPI.delete(config, i))
+                    code.add_function(CreateMethodExtraAPI.update(config, i))
+                    code.add_function(CreateMethodExtraAPI.get(config, i))
+                else:
+                    code.add_function(CreateMethodExtraAPI.delete_not_key(config, i))
                 code.add_function(CreateMethodExtraAPI.lists(config, i))
 
     @staticmethod
@@ -208,6 +234,26 @@ class CreateMethodExtraAPI:
                 self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({config.key.attr});')
                 # self.line(f'b = {config.module.domain.low_name()}.{extra}{config.createConfig.methodName.get_upper(1)}{config.className}({config.key.attr});')
                 self.block_end()
+                self.line(f'return b;')
+
+        function.add_body(Body())
+        return function
+
+    @staticmethod
+    def delete_not_key(config: CodeConfig, extra: str):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
+            f'{extra}{config.createConfig.methodName.get_upper(1)}{config.className}',
+            f'{extra}删除{config.remark},{config.low_name()}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        function.add_mate(f'@Override')
+
+        class Body(JavaCode.FunctionBody):
+            def function_body(self, parameter: list[Attribute]):
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.domain.low_name()}.{config.createConfig.methodName.get(1)}{config.className}({parameter[0].name});')
                 self.line(f'return b;')
 
         function.add_body(Body())

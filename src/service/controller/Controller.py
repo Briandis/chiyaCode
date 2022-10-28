@@ -101,9 +101,11 @@ class CreateMethodDefaultAPI:
         remark = config["remark"]
         method_str = ""
         name = CreateMethodDefaultAPI.methodName(config)
-        key = config["key"]["attr"]
-        upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            upperKey = StringUtil.first_char_upper_case(key)
+            keyType = config["key"]["type"]
 
         serviceClassName = config["module"]["serviceInterface"]["className"]
         lowServiceClassName = StringUtil.first_char_lower_case(serviceClassName)
@@ -123,50 +125,62 @@ class CreateMethodDefaultAPI:
         method_str += f'\t}}\n'
 
         # 删除方法主键
-        method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
+        if key:
+            method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
+        else:
+            method_str += StringUtil.create_annotation(f'删除{remark}', f'Result 业务对象', f'{lowClassName} {remark}')
 
         if isRestful:
             method_str += f'\t@DeleteMapping("/{lowClassName}")\n'
         else:
             method_str += f'\t@RequestMapping("/{name[1]}{className}")\n'
 
-        method_str += f'\tpublic Result {name[1]}{className}({keyType} {key}){{\n'
-        method_str += f'\t\tboolean b = false;\n'
-        method_str += f'\t\tif ({key} != null) {{\n'
-        method_str += f'\t\t\tb = {lowServiceClassName}.{name[1]}{className}({key});\n'
-        method_str += f'\t\t}}\n'
-        method_str += f'\t\treturn Result.judge(b);\n'
-        method_str += f'\t}}\n'
-
-        # 更新
-        method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result 业务对象', f'{lowClassName} {remark}对象')
-        if isRestful:
-            method_str += f'\t@PutMapping("/{lowClassName}")\n'
+        if key:
+            method_str += f'\tpublic Result {name[1]}{className}({keyType} {key}){{\n'
+            method_str += f'\t\tboolean b = false;\n'
+            method_str += f'\t\tif ({key} != null) {{\n'
+            method_str += f'\t\t\tb = {lowServiceClassName}.{name[1]}{className}({key});\n'
+            method_str += f'\t\t}}\n'
+            method_str += f'\t\treturn Result.judge(b);\n'
+            method_str += f'\t}}\n'
         else:
-            method_str += f'\t@RequestMapping("/{name[2]}{className}")\n'
+            method_str += f'\tpublic Result {name[1]}{className}({className} {lowClassName}){{\n'
+            method_str += f'\t\tboolean b = false;\n'
+            method_str += f'\t\tb = {lowServiceClassName}.{name[1]}{className}({lowClassName});\n'
+            method_str += f'\t\treturn Result.judge(b);\n'
+            method_str += f'\t}}\n'
 
-        method_str += f'\tpublic Result {name[2]}{className}({className} {lowClassName}) {{\n'
-        method_str += f'\t\tboolean b = false;\n'
-        method_str += f'\t\tif ({lowClassName}.get{upperKey}() != null) {{\n'
-        method_str += f'\t\t\tb = {lowServiceClassName}.{name[2]}{className}({lowClassName});\n'
-        method_str += f'\t\t}}\n'
-        method_str += f'\t\treturn Result.judge(b);\n'
-        method_str += f'\t}}\n'
+        # 更新，只有主键存在才提供更新
+        if key:
+            method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result 业务对象', f'{lowClassName} {remark}对象')
+            if isRestful:
+                method_str += f'\t@PutMapping("/{lowClassName}")\n'
+            else:
+                method_str += f'\t@RequestMapping("/{name[2]}{className}")\n'
 
-        # 单个查询
-        method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
-        if isRestful:
-            method_str += f'\t@GetMapping("/{lowClassName}")\n'
-        else:
-            method_str += f'\t@RequestMapping("/{name[3]}{className}")\n'
+            method_str += f'\tpublic Result {name[2]}{className}({className} {lowClassName}) {{\n'
+            method_str += f'\t\tboolean b = false;\n'
+            method_str += f'\t\tif ({lowClassName}.get{upperKey}() != null) {{\n'
+            method_str += f'\t\t\tb = {lowServiceClassName}.{name[2]}{className}({lowClassName});\n'
+            method_str += f'\t\t}}\n'
+            method_str += f'\t\treturn Result.judge(b);\n'
+            method_str += f'\t}}\n'
 
-        method_str += f'\tpublic Result {name[3]}{className}({keyType} {key}) {{\n'
-        method_str += f'\t\tboolean b = false;\n'
-        method_str += f'\t\tif ({key} != null) {{\n'
-        method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{name[3]}{className}({key}));\n'
-        method_str += f'\t\t}}\n'
-        method_str += f'\t\treturn Result.judge(b);\n'
-        method_str += f'\t}}\n'
+        # 单个查询，只有主键存在，才提供单个查询
+        if key:
+            method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
+            if isRestful:
+                method_str += f'\t@GetMapping("/{lowClassName}")\n'
+            else:
+                method_str += f'\t@RequestMapping("/{name[3]}{className}")\n'
+
+            method_str += f'\tpublic Result {name[3]}{className}({keyType} {key}) {{\n'
+            method_str += f'\t\tboolean b = false;\n'
+            method_str += f'\t\tif ({key} != null) {{\n'
+            method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{name[3]}{className}({key}));\n'
+            method_str += f'\t\t}}\n'
+            method_str += f'\t\treturn Result.judge(b);\n'
+            method_str += f'\t}}\n'
         # 多个查询
         method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象',
                                                    f'page 分页对象')
@@ -206,9 +220,11 @@ class CreateMethodExtraAPI:
         remark = config["remark"]
         method_str = ""
         name = CreateMethodExtraAPI.methodName(config)
-        key = config["key"]["attr"]
-        upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["key"]["type"]
+        key = None
+        if key:
+            key = config["key"]["attr"]
+            upperKey = StringUtil.first_char_upper_case(key)
+            keyType = config["key"]["type"]
         serviceClassName = config["module"]["serviceInterface"]["className"]
         lowServiceClassName = StringUtil.first_char_lower_case(serviceClassName)
 
@@ -232,51 +248,62 @@ class CreateMethodExtraAPI:
             method_str += f'\t}}\n'
 
             # 删除方法主键
-            method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
+            if key:
+                method_str += StringUtil.create_annotation(f'删除{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
+            else:
+                method_str += StringUtil.create_annotation(f'删除{remark}', f'Result 业务对象', f'{lowClassName} {remark}')
 
             if isRestful:
                 method_str += f'\t@DeleteMapping("/{i}/{lowClassName}")\n'
             else:
                 method_str += f'\t@RequestMapping("/{i}/{name[1]}{className}")\n'
-
-            method_str += f'\tpublic Result {i}{name[1]}{className}({keyType} {key}) {{\n'
-            method_str += f'\t\tboolean b = false;\n'
-            method_str += f'\t\tif ({key} != null) {{\n'
-            method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[1]}{className}({key});\n'
-            method_str += f'\t\t}}\n'
-            method_str += f'\t\treturn Result.judge(b);\n'
-            method_str += f'\t}}\n'
+            if key:
+                method_str += f'\tpublic Result {i}{name[1]}{className}({keyType} {key}) {{\n'
+                method_str += f'\t\tboolean b = false;\n'
+                method_str += f'\t\tif ({key} != null) {{\n'
+                method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[1]}{className}({key});\n'
+                method_str += f'\t\t}}\n'
+                method_str += f'\t\treturn Result.judge(b);\n'
+                method_str += f'\t}}\n'
+            else:
+                method_str += f'\tpublic Result {i}{name[1]}{className}({className} {lowClassName}) {{\n'
+                method_str += f'\t\tboolean b = false;\n'
+                method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[1]}{className}({lowClassName});\n'
+                method_str += f'\t\treturn Result.judge(b);\n'
+                method_str += f'\t}}\n'
 
             # 更新
-            method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result 业务对象',
-                                                       f'{lowClassName} {remark}对象')
-            if isRestful:
-                method_str += f'\t@PutMapping("/{i}/{lowClassName}")\n'
-            else:
-                method_str += f'\t@RequestMapping("/{i}/{name[2]}{className}")\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'修改{remark},{key}必传', f'Result 业务对象',
+                                                           f'{lowClassName} {remark}对象')
+                if isRestful:
+                    method_str += f'\t@PutMapping("/{i}/{lowClassName}")\n'
+                else:
+                    method_str += f'\t@RequestMapping("/{i}/{name[2]}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[2]}{className}({className} {lowClassName}) {{\n'
-            method_str += f'\t\tboolean b = false;\n'
-            method_str += f'\t\tif ({lowClassName}.get{upperKey}() != null) {{\n'
-            method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[2]}{className}({lowClassName});\n'
-            method_str += f'\t\t}}\n'
-            method_str += f'\t\treturn Result.judge(b);\n'
-            method_str += f'\t}}\n'
+                method_str += f'\tpublic Result {i}{name[2]}{className}({className} {lowClassName}) {{\n'
+                method_str += f'\t\tboolean b = false;\n'
+                method_str += f'\t\tif ({lowClassName}.get{upperKey}() != null) {{\n'
+                method_str += f'\t\t\tb = {lowServiceClassName}.{i}{name[2]}{className}({lowClassName});\n'
+                method_str += f'\t\t}}\n'
+                method_str += f'\t\treturn Result.judge(b);\n'
+                method_str += f'\t}}\n'
 
             # 单个查询
-            method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
-            if isRestful:
-                method_str += f'\t@GetMapping("/{i}/{lowClassName}")\n'
-            else:
-                method_str += f'\t@RequestMapping("/{i}/{name[3]}{className}")\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'获取一个{remark},{key}必传', f'Result 业务对象', f'{key} {remark}的{key}')
+                if isRestful:
+                    method_str += f'\t@GetMapping("/{i}/{lowClassName}")\n'
+                else:
+                    method_str += f'\t@RequestMapping("/{i}/{name[3]}{className}")\n'
 
-            method_str += f'\tpublic Result {i}{name[3]}{className}({keyType} {key}) {{\n'
-            method_str += f'\t\tboolean b = false;\n'
-            method_str += f'\t\tif ({key} != null) {{\n'
-            method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{i}{name[3]}{className}({key}));\n'
-            method_str += f'\t\t}}\n'
-            method_str += f'\t\treturn Result.judge(b);\n'
-            method_str += f'\t}}\n'
+                method_str += f'\tpublic Result {i}{name[3]}{className}({keyType} {key}) {{\n'
+                method_str += f'\t\tboolean b = false;\n'
+                method_str += f'\t\tif ({key} != null) {{\n'
+                method_str += f'\t\t\treturn Result.success({lowServiceClassName}.{i}{name[3]}{className}({key}));\n'
+                method_str += f'\t\t}}\n'
+                method_str += f'\t\treturn Result.judge(b);\n'
+                method_str += f'\t}}\n'
             # 多个查询
             method_str += StringUtil.create_annotation(f'获取多个{remark}', f'Result 业务对象', f'{lowClassName} {remark}对象',
                                                        f'page 分页对象')

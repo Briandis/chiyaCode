@@ -26,6 +26,8 @@ class CreateMethodSelect:
         创建查询块
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -47,6 +49,8 @@ class CreateMethodSelect:
         根据id获取多个对象
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -69,6 +73,8 @@ class CreateMethodSelect:
         根据id获取多个对象
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -97,7 +103,6 @@ class CreateMethodSelect:
         """
         className = config["className"]
         lowClassName = StringUtil.first_char_lower_case(className)
-        key = config["key"]["attr"]
         tableName = config["tableName"]
 
         tag = "\t"
@@ -144,7 +149,6 @@ class CreateMethodSelect:
         """
         className = config["className"]
         lowClassName = StringUtil.first_char_lower_case(className)
-        key = config["key"]["attr"]
         tableName = config["tableName"]
 
         tag = "\t"

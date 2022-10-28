@@ -14,6 +14,8 @@ class CreateMethodDelete:
         创建删除块
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -33,6 +35,8 @@ class CreateMethodDelete:
         创建批量删除id块
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)
@@ -53,6 +57,8 @@ class CreateMethodDelete:
         根据主键条件删除
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         lowClassName = StringUtil.first_char_lower_case(className)
         key = config["key"]["attr"]
@@ -97,6 +103,8 @@ class CreateMethodDelete:
         假删
         :param config: 配置文件
         """
+        if "key" not in config:
+            return ""
         className = config["className"]
         key = config["key"]["attr"]
         upperKey = StringUtil.first_char_upper_case(key)

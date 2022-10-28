@@ -37,9 +37,9 @@ class FieldMap:
         :param config:配置信息
         :return: 字段列表
         """
-        field_map = {
-            config.key.attr: config.key
-        }
+        field_map = {}
+        if config.key:
+            field_map[config.key.attr]: config.key
         for attr in config.attr:
             field_map[attr.attr] = attr
 

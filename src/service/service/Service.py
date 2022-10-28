@@ -65,21 +65,29 @@ class CreateMethodDefaultAPI:
         remark = config["remark"]
         method_str = "\n"
         name = CreateMethodDefaultAPI.methodName(config)
-        key = config["key"]["attr"]
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyType = config["key"]["type"]
 
         # 增
         method_str += StringUtil.create_annotation(f'添加{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
         method_str += f'\tboolean {name[0]}{className}({className} {lowClassName});\n\n'
         # 删除方法主键
-        method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
-        method_str += f'\tboolean {name[1]}{className}({keyType} {key});\n\n'
+        if key:
+            method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
+            method_str += f'\tboolean {name[1]}{className}({keyType} {key});\n\n'
+        else:
+            method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}')
+            method_str += f'\tboolean {name[1]}{className}({className} {lowClassName});\n\n'
         # 更新
-        method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
-        method_str += f'\tboolean {name[2]}{className}({className} {lowClassName});\n\n'
+        if key:
+            method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
+            method_str += f'\tboolean {name[2]}{className}({className} {lowClassName});\n\n'
         # 单个查询
-        method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
-        method_str += f'\t{className} {name[3]}{className}({keyType} {key});\n\n'
+        if key:
+            method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
+            method_str += f'\t{className} {name[3]}{className}({keyType} {key});\n\n'
         # 多个查询
         method_str += StringUtil.create_annotation(f'获取多个{remark}', f'{remark}对象列表', f'{lowClassName} {remark}对象', f'page 分页对象')
         method_str += f'\tList<{className}> {name[4]}{className}({className} {lowClassName}, Page page);\n\n'
@@ -108,8 +116,10 @@ class CreateMethodExtraAPI:
         remark = config["remark"]
         method_str = ""
         name = CreateMethodExtraAPI.methodName(config)
-        key = config["key"]["attr"]
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyType = config["key"]["type"]
 
         extraName = config["config"]["extraAPI"]["default"].split(",")
         if config["config"]["extraAPI"]["value"] is not None:
@@ -119,14 +129,20 @@ class CreateMethodExtraAPI:
             method_str += StringUtil.create_annotation(f'添加{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
             method_str += f'\tboolean {i}{name[0]}{className}({className} {lowClassName});\n\n'
             # 删除方法主键
-            method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
-            method_str += f'\tboolean {i}{name[1]}{className}({keyType} {key});\n\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
+                method_str += f'\tboolean {i}{name[1]}{className}({keyType} {key});\n\n'
+            else:
+                method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{className} {remark}')
+                method_str += f'\tboolean {i}{name[1]}{className}({className} {lowClassName});\n\n'
             # 更新
-            method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
-            method_str += f'\tboolean {i}{name[2]}{className}({className} {lowClassName});\n\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
+                method_str += f'\tboolean {i}{name[2]}{className}({className} {lowClassName});\n\n'
             # 单个查询
-            method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
-            method_str += f'\t{className} {i}{name[3]}{className}({keyType} {key});\n\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
+                method_str += f'\t{className} {i}{name[3]}{className}({keyType} {key});\n\n'
             # 多个查询
             method_str += StringUtil.create_annotation(f'获取多个{remark}', f'{remark}对象列表', f'{lowClassName} {remark}对象', f'page 分页对象')
             method_str += f'\tList<{className}> {i}{name[4]}{className}({className} {lowClassName}, Page page);\n\n'

@@ -52,9 +52,9 @@ class CreateConfig:
         """
         if config.get(Constant.MULTI_TABLE):
             for table in tables:
-                key = tables[table][JsonKey.key.self][JsonKey.key.filed]
-                if key is None:
+                if JsonKey.key.self not in tables[table]:
                     continue
+                key = tables[table][JsonKey.key.self][JsonKey.key.filed]
                 # 标准id起名补全，和非id起名
 
                 if key.lower() in ["id", "id_"] or tables[table][JsonKey.tableName] not in key:

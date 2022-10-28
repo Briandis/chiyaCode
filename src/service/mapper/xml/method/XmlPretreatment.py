@@ -15,7 +15,9 @@ class XmlPretreatment:
         :param config: 配置对象
         :return: list 属性参数列表
         """
-        lists = [config["key"].copy()]
+        lists = []
+        if "key" in config:
+            lists.append(config["key"].copy())
         for i in config["attr"]:
             lists.append(i.copy())
         return lists
@@ -35,9 +37,11 @@ class XmlPretreatment:
         className = config["className"]
         lowClassName = StringUtil.first_char_lower_case(className)
         remark = config["remark"]
-        key = config["key"]["attr"]
-        upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            upperKey = StringUtil.first_char_upper_case(key)
+            keyType = config["key"]["type"]
         package = config["package"]
         resultMapName = config["config"]["xmlConfig"]["resultMapName"]
         baseMapperXmlPackage = config["module"]["baseMapperXml"]["package"]

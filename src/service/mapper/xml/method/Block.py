@@ -172,8 +172,10 @@ class CreateXmlBlock:
         :param table_as_name: 表别名
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
 
         tap = "\t" * indent
@@ -189,7 +191,8 @@ class CreateXmlBlock:
         table_as_name = util.if_return(table_as_name, f'{table_as_name}.', "")
         data += start
 
-        data += f'{tap}<if test="{prefix}{key}!=null">AND {table_as_name}{keyFiled} = #{{{prefix}{key}}}</if>\n'
+        if key:
+            data += f'{tap}<if test="{prefix}{key}!=null">AND {table_as_name}{keyFiled} = #{{{prefix}{key}}}</if>\n'
         for attr in config["attr"]:
             if "Date" == attr.get("type"):
                 data += f'{tap}<if test="{prefix}{attr["attr"]}!=null">AND DATE({table_as_name}{attr["filed"]}) = DATE(#{{{prefix}{attr["attr"]}}})</if>\n'
@@ -212,8 +215,10 @@ class CreateXmlBlock:
         :param table_as_name: 表别名
         """
         className = config["className"]
-        key = config["key"]["attr"]
-        keyFiled = config["key"]["filed"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyFiled = config["key"]["filed"]
         tableName = config["tableName"]
 
         tap = "\t" * indent
@@ -228,8 +233,9 @@ class CreateXmlBlock:
 
         table_as_name = util.if_return(table_as_name, f'{table_as_name}.', "")
         data += start
+        if "key" in config:
+            data += f'{tap}<if test="{prefix}{key}!=null">AND {table_as_name}{keyFiled} = #{{{prefix}{key}}}</if>\n'
 
-        data += f'{tap}<if test="{prefix}{key}!=null">AND {table_as_name}{keyFiled} = #{{{prefix}{key}}}</if>\n'
         for attr in config["attr"]:
             data += f'{tap}<if test="{prefix}{attr["attr"]}!=null">AND {table_as_name}{attr["filed"]} = #{{{prefix}{attr["attr"]}}}</if>\n'
         data += f'{end}'

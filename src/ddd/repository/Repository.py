@@ -17,9 +17,14 @@ class CreateFile:
         code.is_class = False
         code.add_import(config.package)
         code.add_function(CreateMethodDefaultAPI.insert(config))
-        code.add_function(CreateMethodDefaultAPI.delete(config))
-        code.add_function(CreateMethodDefaultAPI.update(config))
-        code.add_function(CreateMethodDefaultAPI.get(config))
+        if config.key:
+            code.add_function(CreateMethodDefaultAPI.delete(config))
+            code.add_function(CreateMethodDefaultAPI.update(config))
+            code.add_function(CreateMethodDefaultAPI.get(config))
+        else:
+            code.add_function(CreateMethodDefaultAPI.delete_not_key(config))
+
+        code.add_function(CreateMethodDefaultAPI.get_one(config))
         code.add_function(CreateMethodDefaultAPI.lists(config))
 
         return code.create()
@@ -55,6 +60,18 @@ class CreateMethodDefaultAPI:
         return function
 
     @staticmethod
+    def delete_not_key(config: CodeConfig):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
+            f'{config.createConfig.methodName.get(1)}{config.className}',
+            f'删除{config.remark},{config.low_name()}必传',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        function.set_is_interface()
+        return function
+
+    @staticmethod
     def update(config: CodeConfig):
         function = JavaCode.Function(
             "public",
@@ -74,6 +91,18 @@ class CreateMethodDefaultAPI:
             f'{config.createConfig.methodName.get(3)}{config.className}',
             f'根据{config.key.attr}查询一个{config.remark}',
             JavaCode.Attribute(config.key.type, config.key.attr, f'{config.remark}的{config.key.attr}'),
+        )
+        function.set_is_interface()
+        return function
+
+    @staticmethod
+    def get_one(config: CodeConfig):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute(config.className, config.className, f'获取到的{config.remark}对象'),
+            f'{config.createConfig.methodName.get(3)}One{config.className}',
+            f'查询一个{config.remark}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
         )
         function.set_is_interface()
         return function

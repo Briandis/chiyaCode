@@ -25,6 +25,8 @@ class Field:
         :return: 字段对象
         """
         field = Field()
+        if d is None:
+            return None
         for i in field.__dict__:
             field.__setattr__(i, d.get(i))
         return field

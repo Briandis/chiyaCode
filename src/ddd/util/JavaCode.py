@@ -230,8 +230,8 @@ class FunctionBody:
             data = ""
         self.line(f'// {data}')
 
-    def line_todo(self):
-        self.line_annotation(f'TODO: 后续行为编写')
+    def line_todo(self, data="后续行为编写"):
+        self.line_annotation(f'TODO: {data}')
 
     def line_blank(self):
         """

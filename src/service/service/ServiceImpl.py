@@ -125,9 +125,12 @@ class CreateMethodDefaultAPI:
         remark = config["remark"]
         method_str = ""
         name = CreateMethodDefaultAPI.methodName(config)
-        key = config["key"]["attr"]
-        upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            upperKey = StringUtil.first_char_upper_case(key)
+            keyType = config["key"]["type"]
+
         mapperClassName = config["module"]["mapperInterface"]["className"]
         lowMapperClassName = StringUtil.first_char_lower_case(mapperClassName)
 
@@ -139,24 +142,32 @@ class CreateMethodDefaultAPI:
         method_str += f'\t}}\n\n'
 
         # 删除方法主键
-        method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
-        method_str += f'\t@Override\n'
-        method_str += f'\tpublic boolean {name[1]}{className}({keyType} {key}){{\n'
-        method_str += f'\t\treturn {lowMapperClassName}.delete{className}By{upperKey}({key}) > 0;\n'
-        method_str += f'\t}}\n\n'
-
+        if key:
+            method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
+            method_str += f'\t@Override\n'
+            method_str += f'\tpublic boolean {name[1]}{className}({keyType} {key}){{\n'
+            method_str += f'\t\treturn {lowMapperClassName}.delete{className}By{upperKey}({key}) > 0;\n'
+            method_str += f'\t}}\n\n'
+        else:
+            method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}')
+            method_str += f'\t@Override\n'
+            method_str += f'\tpublic boolean {name[1]}{className}({className} {lowClassName}){{\n'
+            method_str += f'\t\treturn {lowMapperClassName}.delete{className}({lowClassName}{FuzzySearch.param(config)}) > 0;\n'
+            method_str += f'\t}}\n\n'
         # 更新
-        method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
-        method_str += f'\t@Override\n'
-        method_str += f'\tpublic boolean {name[2]}{className}({className} {lowClassName}){{\n'
-        method_str += f'\t\treturn {lowMapperClassName}.update{className}By{upperKey}({lowClassName}) > 0;\n'
-        method_str += f'\t}}\n\n'
+        if key:
+            method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
+            method_str += f'\t@Override\n'
+            method_str += f'\tpublic boolean {name[2]}{className}({className} {lowClassName}){{\n'
+            method_str += f'\t\treturn {lowMapperClassName}.update{className}By{upperKey}({lowClassName}) > 0;\n'
+            method_str += f'\t}}\n\n'
         # 单个查询
-        method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
-        method_str += f'\t@Override\n'
-        method_str += f'\tpublic {className} {name[3]}{className}({keyType} {key}){{\n'
-        method_str += f'\t\treturn {lowMapperClassName}.select{className}By{upperKey}({key});\n'
-        method_str += f'\t}}\n\n'
+        if key:
+            method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
+            method_str += f'\t@Override\n'
+            method_str += f'\tpublic {className} {name[3]}{className}({keyType} {key}){{\n'
+            method_str += f'\t\treturn {lowMapperClassName}.select{className}By{upperKey}({key});\n'
+            method_str += f'\t}}\n\n'
         # 多个查询
         method_str += StringUtil.create_annotation(f'获取多个{remark}', f'{remark}对象列表', f'{lowClassName} {remark}对象', f'page 分页对象')
         method_str += f'\t@Override\n'
@@ -191,9 +202,11 @@ class CreateMethodExtraAPI:
         remark = config["remark"]
         method_str = ""
         name = CreateMethodExtraAPI.methodName(config)
-        key = config["key"]["attr"]
-        upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            upperKey = StringUtil.first_char_upper_case(key)
+            keyType = config["key"]["type"]
         mapperClassName = config["module"]["mapperInterface"]["className"]
         lowMapperClassName = StringUtil.first_char_lower_case(mapperClassName)
 
@@ -210,24 +223,33 @@ class CreateMethodExtraAPI:
             method_str += f'\t}}\n\n'
 
             # 删除方法主键
-            method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
-            method_str += f'\t@Override\n'
-            method_str += f'\tpublic boolean {i}{name[1]}{className}({keyType} {key}){{\n'
-            method_str += f'\t\treturn {lowMapperClassName}.delete{className}By{upperKey}({key}) > 0;\n'
-            method_str += f'\t}}\n\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{key} {remark}的{key}')
+                method_str += f'\t@Override\n'
+                method_str += f'\tpublic boolean {i}{name[1]}{className}({keyType} {key}){{\n'
+                method_str += f'\t\treturn {lowMapperClassName}.delete{className}By{upperKey}({key}) > 0;\n'
+                method_str += f'\t}}\n\n'
+            else:
+                method_str += StringUtil.create_annotation(f'删除{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}')
+                method_str += f'\t@Override\n'
+                method_str += f'\tpublic boolean {i}{name[1]}{className}({className} {lowClassName}){{\n'
+                method_str += f'\t\treturn {lowMapperClassName}.delete{className}({lowClassName}{FuzzySearch.param(config)}) > 0;\n'
+                method_str += f'\t}}\n\n'
 
             # 更新
-            method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
-            method_str += f'\t@Override\n'
-            method_str += f'\tpublic boolean {i}{name[2]}{className}({className} {lowClassName}){{\n'
-            method_str += f'\t\treturn {lowMapperClassName}.update{className}By{upperKey}({lowClassName}) > 0;\n'
-            method_str += f'\t}}\n\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'修改{remark}', f'true:成功/false:失败', f'{lowClassName} {remark}对象')
+                method_str += f'\t@Override\n'
+                method_str += f'\tpublic boolean {i}{name[2]}{className}({className} {lowClassName}){{\n'
+                method_str += f'\t\treturn {lowMapperClassName}.update{className}By{upperKey}({lowClassName}) > 0;\n'
+                method_str += f'\t}}\n\n'
             # 单个查询
-            method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
-            method_str += f'\t@Override\n'
-            method_str += f'\tpublic {className} {i}{name[3]}{className}({keyType} {key}){{\n'
-            method_str += f'\t\treturn {lowMapperClassName}.select{className}By{upperKey}({key});\n'
-            method_str += f'\t}}\n\n'
+            if key:
+                method_str += StringUtil.create_annotation(f'获取一个{remark}', f'{remark}对象', f'{key} {remark}的{key}')
+                method_str += f'\t@Override\n'
+                method_str += f'\tpublic {className} {i}{name[3]}{className}({keyType} {key}){{\n'
+                method_str += f'\t\treturn {lowMapperClassName}.select{className}By{upperKey}({key});\n'
+                method_str += f'\t}}\n\n'
             # 多个查询
             method_str += StringUtil.create_annotation(f'获取多个{remark}', f'{remark}对象列表', f'{lowClassName} {remark}对象', f'page 分页对象')
             method_str += f'\t@Override\n'

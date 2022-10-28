@@ -54,7 +54,7 @@ class CreateAttribute:
 
     @staticmethod
     def create(config, importSet: set, attrs: list):
-        if config["key"]["filed"] is not None:
+        if "key" in config:
             attrs.append(config["key"])
         for attr in config["attr"]:
             attrs.append(attr)

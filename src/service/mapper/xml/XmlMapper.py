@@ -43,9 +43,11 @@ class CreateResultMap:
         className = config["className"]
         remark = config["remark"]
         method_str = ""
-        key = config["key"]["attr"]
-        upperKey = StringUtil.first_char_upper_case(key)
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            upperKey = StringUtil.first_char_upper_case(key)
+            keyType = config["key"]["type"]
         package = config["package"]
         resultMapName = config["config"]["xmlConfig"]["resultMapName"]
         baseMapperXmlPackage = config["module"]["baseMapperXml"]["package"]

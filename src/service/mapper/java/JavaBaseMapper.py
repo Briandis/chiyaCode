@@ -266,30 +266,33 @@ class CreateMethodDelete:
         lowClassName = StringUtil.first_char_lower_case(config["className"])
         className = config["className"]
         remark = config["remark"]
-        upperKey = StringUtil.first_char_upper_case(config["key"]["attr"])
-        key = config["key"]["attr"]
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyType = config["key"]["type"]
+            upperKey = StringUtil.first_char_upper_case(config["key"]["attr"])
 
         method_str = ""
         # 主键删除
-        method_str += create_annotation(f'根据{key}真删{remark}', "受影响行数", f'{key} {remark}的{key}')
-        method_str += create_java_interface("Integer", f'delete{className}By{upperKey}', f'{keyType} {key}')
+        if key:
+            method_str += create_annotation(f'根据{key}真删{remark}', "受影响行数", f'{key} {remark}的{key}')
+            method_str += create_java_interface("Integer", f'delete{className}By{upperKey}', f'{keyType} {key}')
+            # 多个主键删除
+            method_str += create_annotation(f'根据{key}列表真删{remark}', "受影响行数", f'list {remark}的{key}列表')
+            method_str += create_java_interface("Integer", f'delete{className}In{upperKey}', f'List<{keyType}> list')
+            # 主键条件删
+            method_str += create_annotation(f'根据{key}和其他条件真删{remark}', "受影响行数", f'{key} {remark}的{key}', f'{lowClassName} {remark}条件对象', FuzzySearch.annotation(config))
+            method_str += create_java_interface("Integer", f'delete{className}By{upperKey}AndWhere', f'@Param("{key}") {keyType} {key}', ThisObject.param(config), FuzzySearch.param(config))
 
-        # 多个主键删除
-        method_str += create_annotation(f'根据{key}列表真删{remark}', "受影响行数", f'list {remark}的{key}列表')
-        method_str += create_java_interface("Integer", f'delete{className}In{upperKey}', f'List<{keyType}> list')
-
-        # 主键条件删
-        method_str += create_annotation(f'根据{key}和其他条件真删{remark}', "受影响行数", f'{key} {remark}的{key}', f'{lowClassName} {remark}条件对象', FuzzySearch.annotation(config))
-        method_str += create_java_interface("Integer", f'delete{className}By{upperKey}AndWhere', f'@Param("{key}") {keyType} {key}', ThisObject.param(config), FuzzySearch.param(config))
         # 条件删除
         method_str += create_annotation(f'根据条件真删{remark}', "受影响行数", f'{lowClassName} {remark}条件对象', FuzzySearch.annotation(config))
         method_str += create_java_interface("Integer", f'delete{className}', ThisObject.param(config), FuzzySearch.param(config))
 
         # 主键假删
-        if config["config"]["falseDelete"]["enable"]:
-            method_str += create_annotation(f'根据{key}假删{remark}', "受影响行数", f'{key} {remark}的{key}')
-            method_str += create_java_interface("Integer", f'falseDelete{className}By{upperKey}', f'{keyType} {key}')
+        if key:
+            if config["config"]["falseDelete"]["enable"]:
+                method_str += create_annotation(f'根据{key}假删{remark}', "受影响行数", f'{key} {remark}的{key}')
+                method_str += create_java_interface("Integer", f'falseDelete{className}By{upperKey}', f'{keyType} {key}')
 
         return method_str
 
@@ -305,29 +308,34 @@ class CreateMethodUpdate:
         lowClassName = StringUtil.first_char_lower_case(config["className"])
         className = config["className"]
         remark = config["remark"]
-        upperKey = StringUtil.first_char_upper_case(config["key"]["attr"])
-        key = config["key"]["attr"]
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            key = config["key"]["attr"]
+            keyType = config["key"]["type"]
+            upperKey = StringUtil.first_char_upper_case(config["key"]["attr"])
         method_str = ""
         # 根据主键更新
-        method_str += create_annotation(f'根据{key}修改{remark}', "受影响行数", f'{lowClassName} 要更新的{remark}对象')
-        method_str += create_java_interface("Integer", f'update{className}By{upperKey}', ThisObject.param(config, False))
+        if key:
+            method_str += create_annotation(f'根据{key}修改{remark}', "受影响行数", f'{lowClassName} 要更新的{remark}对象')
+            method_str += create_java_interface("Integer", f'update{className}By{upperKey}', ThisObject.param(config, False))
         # 不重复条件改
         method_str += create_annotation(f'根据{key}和不满足的条件更新{remark}，查询条件不满足时更新对象', "受影响行数",
                                         f'save{className} 更新的{remark}对象', f'condition{className} 不存在的{remark}对象')
         method_str += create_java_interface("Integer", f'update{className}ByNotRepeatWhere', SaveObject.param(config), ConditionObject.param(config))
 
         # 条件更新ID
-        method_str += create_annotation(f'根据{key}和其他的条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} {remark}条件对象')
-        method_str += create_java_interface("Integer", f'update{className}By{upperKey}AndWhere', SaveObject.param(config), ConditionObject.param(config))
+        if key:
+            method_str += create_annotation(f'根据{key}和其他的条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} {remark}条件对象')
+            method_str += create_java_interface("Integer", f'update{className}By{upperKey}AndWhere', SaveObject.param(config), ConditionObject.param(config))
 
         # 条件改
         method_str += create_annotation(f'根据条件更新{remark}', "受影响行数", f'save{className} 更新的{remark}对象', f'condition{className} 条件{remark}对象')
         method_str += create_java_interface("Integer", f'update{className}', SaveObject.param(config), ConditionObject.param(config))
 
-        # 设置空字段
-        method_str += create_annotation(f'记录{key}设置其他字段为null', "受影响行数", f'{lowClassName} 设置成null的{remark}对象，对象中字段不为Null则是要设置成null的字段')
-        method_str += create_java_interface("Integer", f'update{className}SetNullBy{upperKey}', ThisObject.param(config, False))
+        if key:
+            # 设置空字段
+            method_str += create_annotation(f'记录{key}设置其他字段为null', "受影响行数", f'{lowClassName} 设置成null的{remark}对象，对象中字段不为Null则是要设置成null的字段')
+            method_str += create_java_interface("Integer", f'update{className}SetNullBy{upperKey}', ThisObject.param(config, False))
         return method_str
 
 
@@ -342,25 +350,28 @@ class CreateMethodSelect:
         lowClassName = StringUtil.first_char_lower_case(config["className"])
         className = config["className"]
         remark = config["remark"]
-        upperKey = StringUtil.first_char_upper_case(config["key"]["attr"])
-        key = config["key"]["attr"]
-        keyType = config["key"]["type"]
+        key = None
+        if "key" in config:
+            upperKey = StringUtil.first_char_upper_case(config["key"]["attr"])
+            key = config["key"]["attr"]
+            keyType = config["key"]["type"]
         method_str = ""
 
         # 主键查
-        method_str += create_annotation(f'根据{key}查询{remark}', f"{remark}对象", f'{key} {remark}的{key}')
-        method_str += create_java_interface(className, f'select{className}By{upperKey}', f'{keyType} {key}')
-        # 多主键查
-        method_str += create_annotation(f'根据{key}列表查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表')
-        method_str += create_java_interface(f'List<{className}>', f'select{className}In{upperKey}', f'List<{keyType}> list')
-        # 多主键查，且携带条件
-        method_str += create_annotation(f'根据{key}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表', ThisObject.annotation(config), FuzzySearch.annotation(config))
-        method_str += create_java_interface(
-            f'List<{className}>', f'select{className}In{upperKey}AndWhere',
-            f'@Param("list") List<{keyType}> list',
-            ThisObject.param(config),
-            FuzzySearch.param(config)
-        )
+        if key:
+            method_str += create_annotation(f'根据{key}查询{remark}', f"{remark}对象", f'{key} {remark}的{key}')
+            method_str += create_java_interface(className, f'select{className}By{upperKey}', f'{keyType} {key}')
+            # 多主键查
+            method_str += create_annotation(f'根据{key}列表查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表')
+            method_str += create_java_interface(f'List<{className}>', f'select{className}In{upperKey}', f'List<{keyType}> list')
+            # 多主键查，且携带条件
+            method_str += create_annotation(f'根据{key}列表和其他条件查询{remark}', f"{remark}对象列表", f'list {remark}的{key}列表', ThisObject.annotation(config), FuzzySearch.annotation(config))
+            method_str += create_java_interface(
+                f'List<{className}>', f'select{className}In{upperKey}AndWhere',
+                f'@Param("list") List<{keyType}> list',
+                ThisObject.param(config),
+                FuzzySearch.param(config)
+            )
 
         # 多字段单查
         method_str += create_annotation(f'只查询一个{remark}', f"{remark}对象", ThisObject.annotation(config), f'index 获取的下标值', FuzzySearch.annotation(config))

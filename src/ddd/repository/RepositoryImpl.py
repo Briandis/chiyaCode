@@ -74,9 +74,14 @@ class CreateFile:
 
         code.add_import(config.package)
         code.add_function(CreateMethodDefaultAPI.insert(config))
-        code.add_function(CreateMethodDefaultAPI.delete(config))
-        code.add_function(CreateMethodDefaultAPI.update(config))
-        code.add_function(CreateMethodDefaultAPI.get(config))
+        if config.key:
+            code.add_function(CreateMethodDefaultAPI.delete(config))
+            code.add_function(CreateMethodDefaultAPI.update(config))
+            code.add_function(CreateMethodDefaultAPI.get(config))
+        else:
+            code.add_function(CreateMethodDefaultAPI.delete_not_key(config))
+
+        code.add_function(CreateMethodDefaultAPI.get_one(config))
         code.add_function(CreateMethodDefaultAPI.lists(config))
 
         return code.create()
@@ -130,6 +135,27 @@ class CreateMethodDefaultAPI:
         return function
 
     @staticmethod
+    def delete_not_key(config: CodeConfig):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute("boolean", "b", "true:删除成功/false:删除失败"),
+            f'{config.createConfig.methodName.get(1)}{config.className}',
+            f'删除{config.remark},{config.low_name()}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        function.add_mate(f'@Override')
+
+        class Body(JavaCode.FunctionBody):
+            def function_body(self, parameter: list[Attribute]):
+                self.line(f'boolean b = false;')
+                self.line(f'b = {config.module.mapperInterface.low_name()}.delete{config.className}By{config.key.upper_name()}({parameter[0].name}{FuzzySearch.param(config)}) > 0;')
+                self.line_todo("需要手动删除缓存")
+                self.line(f'return b;')
+
+        function.add_body(Body())
+        return function
+
+    @staticmethod
     def update(config: CodeConfig):
         function = JavaCode.Function(
             "public",
@@ -169,6 +195,26 @@ class CreateMethodDefaultAPI:
                 else:
                     self.line(f'{config.className} {config.low_name()} = {config.module.mapperInterface.low_name()}.select{config.className}By{config.key.upper_name()}({parameter[0].name});')
                 self.line(f'return {config.low_name()};')
+
+        function.add_body(Body())
+        return function
+
+    @staticmethod
+    def get_one(config: CodeConfig):
+        function = JavaCode.Function(
+            "public",
+            JavaCode.Attribute(config.className, config.className, f'获取到的{config.remark}对象'),
+            f'{config.createConfig.methodName.get(3)}One{config.className}',
+            f'查询一个{config.remark}',
+            JavaCode.Attribute(config.className, config.low_name(), f'{config.remark}'),
+        )
+        function.add_mate(f'@Override')
+
+        class Body(JavaCode.FunctionBody):
+            def function_body(self, parameter: list[Attribute]):
+
+                self.line(f'{config.className} db{config.className()} = {config.module.mapperInterface.low_name()}.selectOne{config.className}({parameter[0].name},{FuzzySearch.param(config)});')
+                self.line(f'return db{config.className()};')
 
         function.add_body(Body())
         return function

@@ -285,11 +285,13 @@ class Delete:
         :param code:源码
         :param config: 配置
         """
-        code.add_function(Delete.delete_by_id(config))
-        code.add_function(Delete.delete_in_id(config))
-        code.add_function(Delete.delete_by_id_and_where(config))
+        if config.key:
+            code.add_function(Delete.delete_by_id(config))
+            code.add_function(Delete.delete_in_id(config))
+            code.add_function(Delete.delete_by_id_and_where(config))
         code.add_function(Delete.delete(config))
-        code.add_function(Delete.false_delete(config))
+        if config.key:
+            code.add_function(Delete.false_delete(config))
 
     @staticmethod
     def delete_by_id(config: CodeConfig):
@@ -335,7 +337,7 @@ class Delete:
             "",
             JavaCode.Attribute("Integer", "i", "受影响行数"),
             f'delete{config.className}',
-            f'根据条件真删{config.key.attr}',
+            f'根据条件真删{config.remark}',
             ThisObject.attribute(config),
             FuzzySearch.attribute(config)
         )
@@ -368,11 +370,15 @@ class Update:
         :param code:源码
         :param config: 配置
         """
-        code.add_function(Update.update_by_id(config))
-        code.add_function(Update.update_by_id_and_where(config))
-        code.add_function(Update.update_by_not_repeat_where(config))
+        if config.key:
+            code.add_function(Update.update_by_id(config))
+            code.add_function(Update.update_by_id_and_where(config))
+            code.add_function(Update.update_by_not_repeat_where(config))
+        else:
+            code.add_function(Update.update_by_not_repeat_where_not_key(config))
         code.add_function(Update.update(config))
-        code.add_function(Update.update_set_null_by_id(config))
+        if config.key:
+            code.add_function(Update.update_set_null_by_id(config))
 
     @staticmethod
     def update_by_id(config: CodeConfig):
@@ -393,6 +399,18 @@ class Update:
             JavaCode.Attribute("Integer", "i", "受影响行数"),
             f'update{config.className}ByNotRepeatWhere',
             f'根据{config.key.attr}和查询条件不满足的情况下更新{config.remark}。说明：查询的记录不存在则更新',
+            SaveObject.attribute(config),
+            ConditionObject.attribute(config)
+        )
+        function.is_interface = True
+        return function
+    @staticmethod
+    def update_by_not_repeat_where_not_key(config: CodeConfig):
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute("Integer", "i", "受影响行数"),
+            f'update{config.className}ByNotRepeatWhere',
+            f'根据查询条件不满足的情况下更新{config.remark}。说明：查询的记录不存在则更新',
             SaveObject.attribute(config),
             ConditionObject.attribute(config)
         )
@@ -451,9 +469,10 @@ class Select:
         :param code:源码
         :param config: 配置
         """
-        code.add_function(Select.select_by_id(config))
-        code.add_function(Select.select_in_id(config))
-        code.add_function(Select.select_in_id_and_where(config))
+        if config.key:
+            code.add_function(Select.select_by_id(config))
+            code.add_function(Select.select_in_id(config))
+            code.add_function(Select.select_in_id_and_where(config))
         code.add_function(Select.select_one(config))
         code.add_function(Select.select(config))
         code.add_function(Select.count(config))
