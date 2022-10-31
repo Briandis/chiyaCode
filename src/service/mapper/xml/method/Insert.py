@@ -1,4 +1,5 @@
 from src.service.mapper.xml.method.Block import CreateXmlBlock
+from src.service.mapper.xml.method.configBlock import DatabaseNameConfig
 from src.util import util
 
 
@@ -30,7 +31,7 @@ class CreateMethodInsert:
             data = f'{tag}<insert id="insert{className}" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
         else:
             data = f'{tag}<insert id="insert{className}">\n'
-        data += f'{tag * 2}INSERT INTO {tableName} (\n'
+        data += f'{tag * 2}INSERT INTO {DatabaseNameConfig.get_database_name(config)}{tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3)
         data += f'{tag * 2}</trim>\n'
@@ -66,7 +67,7 @@ class CreateMethodInsert:
             data = f'{tag}<insert id="insert{className}List" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
         else:
             data = f'{tag}<insert id="insert{className}List">\n'
-        data += f'{tag * 2}INSERT INTO {tableName} (\n'
+        data += f'{tag * 2}INSERT INTO {DatabaseNameConfig.get_database_name(config)}{tableName} (\n'
         data += f'{tag * 3}'
 
         for attr in attrs:
@@ -111,7 +112,7 @@ class CreateMethodInsert:
             data = f'{tag}<insert id="insertOrUpdate{className}ByUnique" useGeneratedKeys="true" keyProperty="{key}" keyColumn="{keyFiled}">\n'
         else:
             data = f'{tag}<insert id="insertOrUpdate{className}ByUnique">\n'
-        data += f'{tag * 2}INSERT INTO {tableName} (\n'
+        data += f'{tag * 2}INSERT INTO {DatabaseNameConfig.get_database_name(config)}{tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3)
         data += f'{tag * 2}</trim>\n'
@@ -150,7 +151,7 @@ class CreateMethodInsert:
         data = f'{tag}<insert id="insertOrUpdate{className}ByWhere">\n'
         data += f'{tag * 2}<selectKey keyProperty="condition{className}.{key}" keyColumn="{keyFiled}" resultType="int" order="BEFORE">\n'
         data += f'{tag * 3}SELECT IFNULL ((\n'
-        data += f'{tag * 4}SELECT {keyFiled} FROM {tableName}\n'
+        data += f'{tag * 4}SELECT {keyFiled} FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 4}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 5, f'condition{className}', False)
         data += f'{tag * 4}</where>\n'
@@ -158,7 +159,7 @@ class CreateMethodInsert:
         data += f'{tag * 2}</selectKey>\n'
 
         data += f'{tag * 2}<if test="condition{className}.{key}==null">\n'
-        data += f'{tag * 3}INSERT INTO {tableName} (\n'
+        data += f'{tag * 3}INSERT INTO {DatabaseNameConfig.get_database_name(config)}{tableName} (\n'
         data += f'{tag * 3}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 4, f'save{className}')
         data += f'{tag * 3}</trim>\n'
@@ -169,7 +170,7 @@ class CreateMethodInsert:
         data += f'{tag * 2}</if>\n'
 
         data += f'{tag * 2}<if test="condition{className}.{key}!=null">\n'
-        data += f'{tag * 3}UPDATE {tableName}\n'
+        data += f'{tag * 3}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 3}<set>\n'
         data += CreateXmlBlock.if_mod_3(config, 4, f'save{className}')
         data += f'{tag * 3}</set>\n'
@@ -202,7 +203,7 @@ class CreateMethodInsert:
             data = f'{tag}<insert id="insert{className}ByExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
         else:
             data = f'{tag}<insert id="insert{className}ByExistWhere">\n'
-        data += f'{tag * 2}INSERT INTO {tableName} (\n'
+        data += f'{tag * 2}INSERT INTO {DatabaseNameConfig.get_database_name(config)}{tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3, f'save{className}')
         data += f'{tag * 2}</trim>\n'
@@ -212,9 +213,9 @@ class CreateMethodInsert:
         data += f"{tag * 2}</trim>\n"
         data += f'{tag * 2}FROM DUAL WHERE EXISTS (\n'
         if "key" in config:
-            data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+            data += f'{tag * 3}SELECT {keyFiled} FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         else:
-            data += f'{tag * 3}SELECT * FROM {tableName}\n'
+            data += f'{tag * 3}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 3}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 4, f'condition{className}', False)
         data += f'{tag * 3}</where>\n'
@@ -246,7 +247,7 @@ class CreateMethodInsert:
             data = f'{tag}<insert id="insert{className}ByNotExistWhere" useGeneratedKeys="true" keyProperty="save{className}.{key}" keyColumn="{keyFiled}">\n'
         else:
             data = f'{tag}<insert id="insert{className}ByNotExistWhere">\n'
-        data += f'{tag * 2}INSERT INTO {tableName} (\n'
+        data += f'{tag * 2}INSERT INTO {DatabaseNameConfig.get_database_name(config)}{tableName} (\n'
         data += f'{tag * 2}<trim prefix="" suffixOverrides=",">\n'
         data += CreateXmlBlock.if_mod_1(attrs, 3, f'save{className}')
         data += f'{tag * 2}</trim>\n'
@@ -256,9 +257,9 @@ class CreateMethodInsert:
         data += f"{tag * 2}</trim>\n"
         data += f'{tag * 2}FROM DUAL WHERE NOT EXISTS (\n'
         if "key" in config:
-            data += f'{tag * 3}SELECT {keyFiled} FROM {tableName}\n'
+            data += f'{tag * 3}SELECT {keyFiled} FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         else:
-            data += f'{tag * 3}SELECT * FROM {tableName}\n'
+            data += f'{tag * 3}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 3}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 4, f'condition{className}', False)
         data += f'{tag * 3}</where>\n'

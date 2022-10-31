@@ -1,6 +1,7 @@
 from src.constant.ProtocolConstant import JsonKey
 from src.service.mapper.xml.method.Block import CreateXmlBlock
 from src.service.mapper.xml.method.Select import CreateMethodSelect
+from src.service.mapper.xml.method.configBlock import DatabaseNameConfig
 from src.util import StringUtil, util
 
 
@@ -72,9 +73,9 @@ class CreateMethodSelectXToX:
                 data += f'{tag * 2}SELECT {select_filed}FROM {tableName} , {objTableName}{table_alias}\n'
                 data += f'{tag * 2}<where>\n'
                 if one_to_x == JsonKey.oneToOne:
-                    data += f'{tag * 3}{tableName}.{objForeignKey} = {objTableName}.{objKeyFiled}\n'
+                    data += f'{tag * 3}{DatabaseNameConfig.get_database_name(config)}{tableName}.{objForeignKey} = {DatabaseNameConfig.get_database_name(config)}{objTableName}.{objKeyFiled}\n'
                 if one_to_x == JsonKey.oneToMany:
-                    data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
+                    data += f'{tag * 3}{DatabaseNameConfig.get_database_name(config)}{tableName}.{keyFiled} = {DatabaseNameConfig.get_database_name(config)}{objTableName}.{objForeignKey}\n'
 
                 data += CreateXmlBlock.where_mod_1(config, 3, lowClassName, False)
                 data += CreateXmlBlock.where_mod_1(obj, 3, lowObjClassName, False)
@@ -135,12 +136,12 @@ class CreateMethodSelectXToX:
                 data = f'{tag}<select id="countFind{className}{ONE_TO_X}{objClassName}{join}" resultType="int">\n'
                 # 内联形式
                 table_alias = util.if_return(objTableName == tableName, f' AS {objTableName}1', "")
-                data += f'{tag * 2}SELECT COUNT(*) FROM {tableName} , {objTableName}{table_alias}\n'
+                data += f'{tag * 2}SELECT COUNT(*) FROM {DatabaseNameConfig.get_database_name(config)}{tableName} , {DatabaseNameConfig.get_database_name(config)}{objTableName}{table_alias}\n'
                 data += f'{tag * 2}<where>\n'
                 if one_to_x == JsonKey.oneToOne:
-                    data += f'{tag * 3}{tableName}.{objForeignKey} = {objTableName}.{objKeyFiled}\n'
+                    data += f'{tag * 3}{DatabaseNameConfig.get_database_name(config)}{tableName}.{objForeignKey} = {DatabaseNameConfig.get_database_name(config)}{objTableName}.{objKeyFiled}\n'
                 if one_to_x == JsonKey.oneToMany:
-                    data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
+                    data += f'{tag * 3}{DatabaseNameConfig.get_database_name(config)}{tableName}.{keyFiled} = {DatabaseNameConfig.get_database_name(config)}{objTableName}.{objForeignKey}\n'
 
                 data += CreateXmlBlock.where_mod_1(config, 3, lowClassName, False)
                 data += CreateXmlBlock.where_mod_1(obj, 3, lowObjClassName, False)
@@ -207,7 +208,7 @@ class CreateMethodSelectXToX:
                 else:
                     select_filed_left = select_filed_right = "* "
 
-                left = f'{tag * 3}SELECT {select_filed_left}FROM {tableName}\n'
+                left = f'{tag * 3}SELECT {select_filed_left}FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
                 left += f'{tag * 3}<where>\n'
                 left += CreateXmlBlock.where_mod_1(config, 4, lowClassName, False)
                 left += f'{tag * 3}</where>\n'
@@ -215,7 +216,7 @@ class CreateMethodSelectXToX:
 
                 table_alias = util.if_return(objTableName == tableName, f' AS {objTableName}1', "")
 
-                right = f'{tag * 3}SELECT {select_filed_right}FROM {objTableName}{table_alias}\n'
+                right = f'{tag * 3}SELECT {select_filed_right}FROM {DatabaseNameConfig.get_database_name(config)}{objTableName}{table_alias}\n'
                 right += f'{tag * 3}<where>\n'
                 right += CreateXmlBlock.where_mod_1(obj, 4, lowObjClassName, False)
                 right += f'{tag * 3}</where>\n'
@@ -284,7 +285,7 @@ class CreateMethodSelectXToX:
                 else:
                     select_filed_left = select_filed_right = "* "
 
-                left = f'{tag * 3}SELECT {select_filed_left}FROM {tableName}\n'
+                left = f'{tag * 3}SELECT {select_filed_left}FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
                 left += f'{tag * 3}<where>\n'
                 left += CreateXmlBlock.where_mod_1(config, 4, lowClassName, False)
                 left += f'{tag * 3}</where>\n'
@@ -292,7 +293,7 @@ class CreateMethodSelectXToX:
 
                 table_alias = util.if_return(objTableName == tableName, f' AS {objTableName}1', "")
 
-                right = f'{tag * 3}SELECT {select_filed_right}FROM {objTableName}{table_alias}\n'
+                right = f'{tag * 3}SELECT {select_filed_right}FROM {DatabaseNameConfig.get_database_name(config)}{objTableName}{table_alias}\n'
                 right += f'{tag * 3}<where>\n'
                 right += CreateXmlBlock.where_mod_1(obj, 4, lowObjClassName, False)
                 right += f'{tag * 3}</where>\n'
@@ -353,9 +354,9 @@ class CreateMethodSelectXToX:
                 data += f'{tag * 2}<where>\n'
 
                 if one_to_x == JsonKey.oneToOne:
-                    data += f'{tag * 3}{tableName}.{objForeignKey} = {objTableName}.{objKeyFiled}\n'
+                    data += f'{tag * 3}{DatabaseNameConfig.get_database_name(config)}{tableName}.{objForeignKey} = {DatabaseNameConfig.get_database_name(config)}{objTableName}.{objKeyFiled}\n'
                 if one_to_x == JsonKey.oneToMany:
-                    data += f'{tag * 3}{tableName}.{keyFiled} = {objTableName}.{objForeignKey}\n'
+                    data += f'{tag * 3}{DatabaseNameConfig.get_database_name(config)}{tableName}.{keyFiled} = {DatabaseNameConfig.get_database_name(config)}{objTableName}.{objForeignKey}\n'
 
                 data += CreateXmlBlock.where_mod_1(config, 3, lowClassName, False)
                 data += CreateXmlBlock.where_mod_1(obj, 3, lowObjClassName, False)
@@ -415,7 +416,7 @@ class CreateMethodSelectXToX:
                 # 外联
                 data = f'{tag}<select id="countQuery{className}{ONE_TO_X}{obj["className"]}{join}" resultType="int">\n'
 
-                left = f'{tag * 3}SELECT {select_filed_left} FROM {tableName}\n'
+                left = f'{tag * 3}SELECT {select_filed_left} FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
                 left += f'{tag * 3}<where>\n'
                 left += CreateXmlBlock.where_mod_1(config, 4, lowClassName, False)
                 left += f'{tag * 3}</where>\n'
@@ -423,7 +424,7 @@ class CreateMethodSelectXToX:
 
                 table_alias = util.if_return(objTableName == tableName, f' AS {objTableName}1', "")
 
-                right = f'{tag * 3}SELECT {select_filed_right} FROM {objTableName}{table_alias}\n'
+                right = f'{tag * 3}SELECT {select_filed_right} FROM {DatabaseNameConfig.get_database_name(config)}{objTableName}{table_alias}\n'
                 right += f'{tag * 3}<where>\n'
                 right += CreateXmlBlock.where_mod_1(obj, 4, lowObjClassName, False)
                 right += f'{tag * 3}</where>\n'
@@ -518,12 +519,12 @@ class CreateMethodSelectXToX:
                     select_filed_join = "* "
 
                 data = f'{tag}<select id="{select_type}{className}ManyToManyLink{obj["to"]["className"]}On{objClassName}{manny_table}" resultMap="{resultMapName}{className}ManyToMany{objClassName}">\n'
-                subquery = f'{tag * 3}select {select_filed_main}from {config["tableName"]}\n'
+                subquery = f'{tag * 3}SELECT {select_filed_main}FROM {DatabaseNameConfig.get_database_name(config)}{config["tableName"]}\n'
                 subquery += f'{tag * 3}<where>\n'
                 subquery += CreateXmlBlock.where_mod_1(config, 4)
                 subquery += f'{tag * 3}</where>\n'
                 subquery += f'{tag * 3}<if test="page!=null">\n'
-                subquery += f'{tag * 4}limit #{{page.start}},#{{page.count}}\n'
+                subquery += f'{tag * 4}Limit #{{page.count}} OFFSET #{{page.start}}\n'
                 subquery += f'{tag * 3}</if>\n'
 
                 temp_sql = ""
@@ -533,13 +534,13 @@ class CreateMethodSelectXToX:
                     temp_sql2 = "1"
 
                 if inline:
-                    data += f'{tag * 2}select {select_filed_join}from (\n{subquery}{tag * 2}) AS temp_{tableName},{obj["to"]["tableName"]},{objTableName}{temp_sql}\n'
+                    data += f'{tag * 2}select {select_filed_join}from (\n{subquery}{tag * 2}) AS temp_{tableName},{DatabaseNameConfig.get_database_name(config)}{obj["to"]["tableName"]},{DatabaseNameConfig.get_database_name(config)}{objTableName}{temp_sql}\n'
                     data += f'{tag * 2}where temp_{tableName}.{keyFiled} = {obj["to"]["tableName"]}.{obj["to"][JsonKey.foreignKey]}\n'
                     data += f'{tag * 2}AND {obj["to"]["tableName"]}.{objForeignKey} = {objTableName}{temp_sql2}.{objKeyFiled}\n'
                 else:
-                    data += f'{tag * 2}select {select_filed_join}from (\n{subquery}{tag * 2}) AS temp_{tableName} LEFT JOIN {obj["to"]["tableName"]}\n'
-                    data += f'{tag * 2}ON temp_{tableName}.{keyFiled} = {obj["to"]["tableName"]}.{obj["to"][JsonKey.foreignKey]}\n'
-                    data += f'{tag * 2}LEFT JOIN {objTableName}{temp_sql} On {obj["to"]["tableName"]}.{objForeignKey} = {objTableName}{temp_sql2}.{objKeyFiled}\n'
+                    data += f'{tag * 2}select {select_filed_join}from (\n{subquery}{tag * 2}) AS temp_{tableName} LEFT JOIN {DatabaseNameConfig.get_database_name(config)}{obj["to"]["tableName"]}\n'
+                    data += f'{tag * 2}ON temp_{tableName}.{keyFiled} = {DatabaseNameConfig.get_database_name(config)}{obj["to"]["tableName"]}.{obj["to"][JsonKey.foreignKey]}\n'
+                    data += f'{tag * 2}LEFT JOIN {DatabaseNameConfig.get_database_name(config)}{objTableName}{temp_sql} On {DatabaseNameConfig.get_database_name(config)}{obj["to"]["tableName"]}.{objForeignKey} = {DatabaseNameConfig.get_database_name(config)}{objTableName}{temp_sql2}.{objKeyFiled}\n'
                 data += CreateXmlBlock.splicing_sql(config)
                 data += f'{tag}</select>\n'
                 method_str += data + '\n'
@@ -572,7 +573,7 @@ class CreateMethodSelectXToX:
                         continue
                     res_type = CreateMethodSelect.getResult(config)
                     data += f'{tag}<select id="select{className}In{StringUtil.first_char_upper_case(attr[JsonKey.attr.attr])}AndWhere" {res_type}>\n'
-                    data += f'{tag * 2}SELECT * FROM {tableName}\n'
+                    data += f'{tag * 2}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
                     data += f'{tag * 2}<where>\n'
                     data += f'{tag * 3}{obj[JsonKey.foreignKey]} IN\n'
                     data += f'{tag * 3}<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{{item}}</foreach>\n'

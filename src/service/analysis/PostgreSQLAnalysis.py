@@ -15,28 +15,39 @@ class PostgreSQLAnalysis:
         :return:
         """
         self.curses.execute(f"""
-        SELECT
-            pg_class.relname AS 表名,
-            CAST ( obj_description ( relfilenode, 'pg_class' ) AS VARCHAR ) AS 名称,
-            pg_attribute.attname AS 字段,
-            pg_description.description AS 字段备注,
-            pg_type.typname AS 列类型,
-            EXISTS ( SELECT * FROM pg_constraint WHERE pg_constraint.conrelid = pg_class.oid AND pg_constraint.contype = 'p' 	AND pg_attribute.attnum = pg_constraint.conkey [ 1 ]) AS 主键 
-        FROM
-            pg_class,
-            pg_attribute,
-            pg_type,
-            pg_description 
-        WHERE
-            pg_attribute.attnum > 0 
-            AND pg_attribute.attrelid = pg_class.oid 
-            AND pg_attribute.atttypid = pg_type.oid 
-            AND pg_description.objoid = pg_attribute.attrelid 
-            AND pg_description.objsubid = pg_attribute.attnum 
-            AND pg_class.relname IN ( SELECT tablename FROM pg_tables WHERE schemaname = '{self.database}' AND POSITION ( '_2' IN tablename ) = 0 ) 
-        ORDER BY
-            pg_class.relname,
-            pg_attribute.attnum
+SELECT
+	relname AS 表名,
+	CAST ( obj_description ( relfilenode, 'pg_class' ) AS VARCHAR ) AS 名称,
+	attr.* 
+FROM
+	pg_class,
+	(
+	SELECT
+		attrelid,
+		attname AS 字段,
+		description AS 字段备注,
+		typname AS 列类型,
+		EXISTS (
+		SELECT
+			* 
+		FROM
+			pg_constraint 
+		WHERE
+			pg_constraint.conrelid = attrelid 
+			AND pg_constraint.contype = 'p' 
+			AND pg_attribute.attnum = pg_constraint.conkey [ 1 ] 
+		) AS 主键 
+	FROM
+		pg_attribute
+		LEFT JOIN pg_description ON attrelid = objoid 
+		AND attnum = objsubid
+		LEFT JOIN pg_type ON atttypid = pg_type.oid 
+	) AS attr 
+WHERE
+	relname IN ( SELECT tablename FROM pg_tables WHERE schemaname = '{self.database}') 
+	AND attrelid = oid 
+ORDER BY
+	relname
         """)
 
         self.conn.commit()

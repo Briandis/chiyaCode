@@ -1,7 +1,7 @@
 from src.constant.PublicConstant import Constant
 from src.structure.CreateConfig import FileType
-from src.util import StringUtil
 from src.util import JavaBaseObject
+from src.util.chiyaUtil import StringUtil
 
 
 def information_block(path, className, package):
@@ -79,9 +79,10 @@ class ConditionalAssembly:
             ConditionalAssembly.set_model_value(bean, l)
             return
 
-        if StringUtil.eq_not_case(model, "model"):
+        if StringUtil.eq(model, "model", True):
             # 表模块化
-            suffix = table_name.replace("_", "").lower()
+
+            suffix = StringUtil.replace_keyword(table_name, "_", "").lower()
             l = [suffix, suffix,  # 抽象实体、实体
                  suffix, suffix,  # 业务层、业务实现层
                  suffix, suffix,  # 抽象javaMapper、javaMapper
@@ -91,9 +92,9 @@ class ConditionalAssembly:
                  suffix, suffix,  # 仓库层、仓库层实现
                  suffix, suffix,  # 缓存层
                  ]
-        elif StringUtil.eq_not_case(model, "superModel"):
+        elif StringUtil.eq(model, "superModel", True):
             # 表多级模块化
-            suffix = table_name.replace("_", ".").lower()
+            suffix = StringUtil.replace_keyword(table_name, "_", ".").lower()
             l = [suffix, suffix,  # 抽象实体、实体
                  suffix, suffix,  # 业务层、业务实现层
                  suffix, suffix,  # 抽象javaMapper、javaMapper
@@ -103,9 +104,9 @@ class ConditionalAssembly:
                  suffix, suffix,  # 仓库层、仓库层实现
                  suffix, suffix,  # 缓存层
                  ]
-        elif StringUtil.eq_not_case(model, "XMLModel"):
+        elif StringUtil.eq(model, "XMLModel", True):
             # 表模块化,XML独立
-            suffix = table_name.replace("_", "").lower()
+            suffix = StringUtil.replace_keyword(table_name, "_", "").lower()
             l = [suffix, suffix,  # 抽象实体、实体
                  suffix, suffix,  # 业务层、业务实现层
                  suffix, suffix,  # 抽象javaMapper、javaMapper
@@ -115,9 +116,9 @@ class ConditionalAssembly:
                  suffix, suffix,  # 仓库层、仓库层实现
                  suffix, suffix,  # 缓存层
                  ]
-        elif StringUtil.eq_not_case(model, "superXMLModel"):
+        elif StringUtil.eq(model, "superXMLModel", True):
             # 表多级模块化，XML独立
-            suffix = table_name.replace("_", ".").lower()
+            suffix = StringUtil.replace_keyword(table_name, "_", ".").lower()
             l = [suffix, suffix, suffix, suffix, suffix, suffix, "xml", "xml", suffix]
             l = [suffix, suffix,  # 抽象实体、实体
                  suffix, suffix,  # 业务层、业务实现层
@@ -128,9 +129,9 @@ class ConditionalAssembly:
                  suffix, suffix,  # 仓库层、仓库层实现
                  suffix, suffix,  # 缓存层
                  ]
-        elif StringUtil.eq_not_case(model, "mvcSuperModel"):
+        elif StringUtil.eq(model, "mvcSuperModel", True):
             # 表多级模块化，MVC模式
-            suffix = table_name.replace("_", ".").lower()
+            suffix = StringUtil.replace_keyword(table_name, "_", ".").lower()
             l = [
                 f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
                 f'{suffix}.service', f'{suffix}.service.impl',  # 业务层、业务实现层
@@ -141,9 +142,9 @@ class ConditionalAssembly:
                 f'{suffix}.repository', f'{suffix}.repository.impl',  # 仓库层、仓库层实现
                 f'{suffix}.repository.cache'  # 缓存层
             ]
-        elif StringUtil.eq_not_case(model, "mvcSuperXMLModel"):
+        elif StringUtil.eq(model, "mvcSuperXMLModel", True):
             # 表多级模块化，MVC模式，XML独立
-            suffix = table_name.replace("_", ".").lower()
+            suffix = StringUtil.replace_keyword(table_name, "_", ".").lower()
             l = [
                 f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
                 f'{suffix}.service', f'{suffix}.service.impl',  # 业务层、业务实现层
@@ -154,9 +155,9 @@ class ConditionalAssembly:
                 f'{suffix}.repository', f'{suffix}.repository.impl',  # 仓库层、仓库层实现
                 f'{suffix}.repository.cache'  # 缓存层
             ]
-        elif StringUtil.eq_not_case(model, "ddd"):
+        elif StringUtil.eq(model, "ddd", True):
             # 领域驱动设计
-            suffix = table_name.replace("_", ".").lower()
+            suffix = StringUtil.replace_keyword(table_name, "_", ".").lower()
             l = [
                 f'{suffix}.entity', f'{suffix}.entity',  # 抽象实体、实体
                 f'{suffix}.service', f'{suffix}.service',  # 业务层、业务实现层
@@ -304,7 +305,15 @@ class ConditionalAssembly:
                 "fieldAlias": "chiya",
                 "resultMapName": "result"
             },
-
+            "chiyaSecurity": {
+                "enable": True
+            },
+            "repositoryUseCache": {
+                "enable": True
+            },
+            "databaseName": {
+                "enable": False
+            }
         }
         bean["entityClone"] = {
             "key": {},
@@ -384,3 +393,11 @@ class ConditionalAssembly:
                     tables[table]["config"]["falseDelete"]["updateKey"] = attr["filed"]
             tables[table]["config"]["falseDelete"]["enable"] = deleteKey
             tables[table]["config"]["falseDelete"]["isUpdate"] = updateKey
+
+            if "chiyaSecurity" in config:
+                tables[table]["config"]["chiyaSecurity"]["enable"] = config.get("chiyaSecurity")
+            if "repositoryUseCache" in config:
+                tables[table]["config"]["repositoryUseCache"]["enable"] = config.get("repositoryUseCache")
+            if "databaseName" in config:
+                tables[table]["config"]["databaseName"]["enable"] = True
+                tables[table]["config"]["databaseName"]["value"] = config.get("databaseName")

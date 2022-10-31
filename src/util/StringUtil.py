@@ -226,7 +226,7 @@ def list_not_null(lists):
 
 def string_join(joiner, *args):
     """
-    对字符串进行凭借
+    对字符串进行拼接
     :param joiner: 拼接符
     :param args: 多个参数
     :return: 字符串返回值

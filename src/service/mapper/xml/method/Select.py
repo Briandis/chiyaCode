@@ -1,4 +1,5 @@
 from src.service.mapper.xml.method.Block import CreateXmlBlock
+from src.service.mapper.xml.method.configBlock import DatabaseNameConfig
 from src.util import StringUtil
 
 
@@ -38,7 +39,7 @@ class CreateMethodSelect:
         res_type = CreateMethodSelect.getResult(config)
 
         data = f'{tag}<select id="select{className}By{upperKey}" {res_type}>\n'
-        data += f'{tag * 2}SELECT * FROM {tableName} WHERE {keyFiled} = #{{{key}}}\n'
+        data += f'{tag * 2}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName} WHERE {keyFiled} = #{{{key}}}\n'
         data += f'{tag}</select>\n\n'
         return data
 
@@ -60,7 +61,7 @@ class CreateMethodSelect:
         tag = "\t"
         res_type = CreateMethodSelect.getResult(config)
         data = f'{tag}<select id="select{className}In{upperKey}" {res_type}>\n'
-        data += f'{tag * 2}SELECT * FROM {tableName} WHERE {keyFiled} IN \n'
+        data += f'{tag * 2}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName} WHERE {keyFiled} IN \n'
         data += f'{tag * 3}<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{{item}}</foreach>\n'
         data += f'{tag}</select>\n\n'
         return data
@@ -85,7 +86,7 @@ class CreateMethodSelect:
         tag = "\t"
         res_type = CreateMethodSelect.getResult(config)
         data = f'{tag}<select id="select{className}In{upperKey}AndWhere" {res_type}>\n'
-        data += f'{tag * 2}SELECT * FROM {tableName}\n'
+        data += f'{tag * 2}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += f'{tag * 3}{keyFiled} IN\n'
         data += f'{tag * 3}<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{{item}}</foreach>\n'
@@ -108,11 +109,11 @@ class CreateMethodSelect:
         tag = "\t"
         res_type = CreateMethodSelect.getResult(config)
         data = f'{tag}<select id="selectOne{className}" {res_type}>\n'
-        data += f'{tag * 2}SELECT * FROM {tableName}\n'
+        data += f'{tag * 2}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
         data += f'{tag * 2}</where>\n'
-        data += f'{tag * 2}limit #{{index}},1\n'
+        data += f'{tag * 2}LIMIT 1 OFFSET #{{index}}\n'
         data += f'{tag}</select>\n\n'
         return data
 
@@ -131,7 +132,7 @@ class CreateMethodSelect:
         res_type = CreateMethodSelect.getResult(config)
 
         data = f'{tag}<select id="select{className}" {res_type}>\n'
-        data += f'{tag * 2}SELECT * FROM {tableName}\n'
+        data += f'{tag * 2}SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
         data += f'{tag * 2}</where>\n'
@@ -154,7 +155,7 @@ class CreateMethodSelect:
         tag = "\t"
 
         data = f'{tag}<select id="count{className}" resultType="int">\n'
-        data += f'{tag * 2}SELECT COUNT(*) FROM {tableName}\n'
+        data += f'{tag * 2}SELECT COUNT(*) FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += CreateXmlBlock.where_mod_1(config, 3, lowClassName)
         data += f'{tag * 2}</where>\n'

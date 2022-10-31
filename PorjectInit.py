@@ -3,6 +3,6 @@
 """
 from src.project import createProject
 
-root = "com.test"
+root = "com.example.demo"
 
 createProject.init(root)

@@ -148,7 +148,7 @@ class CreateMethodDefaultAPI:
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
                 self.line(f'boolean b = false;')
-                self.line(f'b = {config.module.mapperInterface.low_name()}.delete{config.className}By{config.key.upper_name()}({parameter[0].name}{FuzzySearch.param(config)}) > 0;')
+                self.line(f'b = {config.module.mapperInterface.low_name()}.delete{config.className}({parameter[0].name}{FuzzySearch.param(config)}) > 0;')
                 self.line_todo("需要手动删除缓存")
                 self.line(f'return b;')
 
@@ -213,8 +213,8 @@ class CreateMethodDefaultAPI:
         class Body(JavaCode.FunctionBody):
             def function_body(self, parameter: list[Attribute]):
 
-                self.line(f'{config.className} db{config.className()} = {config.module.mapperInterface.low_name()}.selectOne{config.className}({parameter[0].name},{FuzzySearch.param(config)});')
-                self.line(f'return db{config.className()};')
+                self.line(f'{config.className} db{config.className} = {config.module.mapperInterface.low_name()}.selectOne{config.className}({parameter[0].name}, 0{FuzzySearch.param(config)});')
+                self.line(f'return db{config.className};')
 
         function.add_body(Body())
         return function

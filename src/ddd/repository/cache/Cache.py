@@ -33,11 +33,12 @@ class CreateFile:
                 "chiya.web.redis.BaseRedisService",
             ).add_mate("@Autowired")
         )
-        code.add_function(FunctionCreate.get_key(config))
-        code.add_function(FunctionCreate.set_value(config))
-        code.add_function(FunctionCreate.get_value(config))
-        code.add_function(FunctionCreate.load_and_get(config))
-        code.add_function(FunctionCreate.remove(config))
+        if config.key:
+            code.add_function(FunctionCreate.get_key(config))
+            code.add_function(FunctionCreate.set_value(config))
+            code.add_function(FunctionCreate.get_value(config))
+            code.add_function(FunctionCreate.load_and_get(config))
+            code.add_function(FunctionCreate.remove(config))
 
         return code.create()
 

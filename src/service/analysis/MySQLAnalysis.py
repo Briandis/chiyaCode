@@ -197,8 +197,8 @@ class StructureAnalysis:
                     continue
                 attr.append(attribute)
                 # attr[attribute[JsonKey.attr.filed]] = attribute
-            if JsonKey.key.self not in bean:
-                raise Exception(f'{table["TABLE_NAME"]}表缺少主键！！！')
+            # if JsonKey.key.self not in bean:
+            #     raise Exception(f'{table["TABLE_NAME"]}表缺少主键！！！')
                 # bean[JsonKey.key.self] = {
                 #     JsonKey.attr.filed: None,
                 #     JsonKey.attr.attr: None,

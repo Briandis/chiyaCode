@@ -275,6 +275,16 @@ class RepositoryUseCache(BaseConfig):
     """
     仓库层实现中，是否使用缓存
     """
+
+    def __init__(self):
+        super().__init__()
+
+
+class DatabaseName(BaseConfig):
+    """
+    查询的语句中，指定统一的数据库名
+    """
+
     def __init__(self):
         super().__init__()
 
@@ -317,3 +327,5 @@ class CreateConfig:
         self.chiyaSecurity = ChiyaSecurity()
         # 仓库层实现，是否使用缓存
         self.repositoryUseCache = RepositoryUseCache()
+        # 在xml中所有的表操作加入数据库名
+        self.databaseName = DatabaseName()

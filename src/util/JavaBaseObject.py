@@ -57,7 +57,8 @@ class MySQLObjectDict:
         "int2": Constant.INTEGER,
         "int4": Constant.INTEGER,
         "int8": Constant.LONG,
-
+        "timestamptz": Constant.DATE,
+        "numeric": Constant.DOUBLE
     }
 
 

@@ -157,7 +157,7 @@ class CreateXmlBlock:
         tag = "\t" * indent
         data = ""
         data += f'{tag}<if test="{page}!=null">\n'
-        data += f'{tag}\tlimit #{{{page}.start}} , #{{{page}.count}}\n'
+        data += f'{tag}\tLIMIT #{{{page}.count}} OFFSET #{{{page}.start}}\n'
         data += f'{tag}</if>\n'
         return data
 

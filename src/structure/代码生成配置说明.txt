@@ -172,6 +172,11 @@
     "repositoryUseCache":{
       "name":"repositoryUseCache",         仓库层的实现，是否使用缓存
       "enable":true
+    },
+    "databaseName":{
+      "name":"databaseName",         所有的表操作加入数据库名称
+      "enable":true,
+      "value":""
     }
   },
   "entityClone": {                      如果是实体克隆，则赋值的配置

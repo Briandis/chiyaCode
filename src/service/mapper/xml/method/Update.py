@@ -1,4 +1,5 @@
 from src.service.mapper.xml.method.Block import CreateXmlBlock
+from src.service.mapper.xml.method.configBlock import DatabaseNameConfig
 from src.util import StringUtil
 
 
@@ -24,7 +25,7 @@ class CreateMethodUpdate:
 
         tag = "\t"
         data = f'{tag}<update id="update{className}By{upperKey}">\n'
-        data += f'{tag * 2}UPDATE {tableName}\n'
+        data += f'{tag * 2}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<set>\n'
         data += CreateXmlBlock.if_mod_3(config, 3)
         data += f'{tag * 2}</set>\n'
@@ -48,7 +49,7 @@ class CreateMethodUpdate:
 
         tag = "\t"
         data = f'{tag}<update id="update{className}ByNotRepeatWhere">\n'
-        data += f'{tag * 2}UPDATE {tableName}\n'
+        data += f'{tag * 2}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<set>\n'
         data += CreateXmlBlock.if_mod_3(config, 3, f'save{className}')
         data += f'{tag * 2}</set>\n'
@@ -64,9 +65,9 @@ class CreateMethodUpdate:
         data += f'{tag * 2}<if test="condition{className}!=null and ({temp_str})">\n'
         data += f'{tag * 3}AND NOT EXISTS (\n'
         if key:
-            data += f'{tag * 4}SELECT {keyFiled} FROM (SELECT * FROM {tableName} ) AS t \n'
+            data += f'{tag * 4}SELECT {keyFiled} FROM (SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName} ) AS t \n'
         else:
-            data += f'{tag * 4}SELECT * FROM (SELECT * FROM {tableName} ) AS t \n'
+            data += f'{tag * 4}SELECT * FROM (SELECT * FROM {DatabaseNameConfig.get_database_name(config)}{tableName} ) AS t \n'
         data += f'{tag * 4}<where>\n'
         data += CreateXmlBlock.where_mod_2(config, 5, f'condition{className}', False, "t")
         data += f'{tag * 4}</where>\n'
@@ -92,7 +93,7 @@ class CreateMethodUpdate:
 
         tag = "\t"
         data = f'{tag}<update id="update{className}By{upperKey}AndWhere">\n'
-        data += f'{tag * 2}UPDATE {tableName}\n'
+        data += f'{tag * 2}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<set>\n'
         data += CreateXmlBlock.if_mod_3(config, 3, f'save{className}')
         data += f'{tag * 2}</set>\n'
@@ -119,7 +120,7 @@ class CreateMethodUpdate:
 
         tag = "\t"
         data = f'{tag}<update id="update{className}">\n'
-        data += f'{tag * 2}UPDATE {tableName}\n'
+        data += f'{tag * 2}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<set>\n'
         data += CreateXmlBlock.if_mod_3(config, 3, f'save{className}')
         data += f'{tag * 2}</set>\n'
@@ -149,7 +150,7 @@ class CreateMethodUpdate:
 
         tag = "\t"
         data = f'{tag}<update id="update{className}SetNullBy{upperKey}">\n'
-        data += f'{tag * 2}UPDATE {tableName}\n'
+        data += f'{tag * 2}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<set>\n'
         data += CreateXmlBlock.if_is_null(config, 3)
         data += f'{tag * 2}</set>\n'

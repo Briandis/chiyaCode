@@ -1,4 +1,5 @@
 from src.service.mapper.xml.method.Block import CreateXmlBlock
+from src.service.mapper.xml.method.configBlock import DatabaseNameConfig
 from src.util import StringUtil
 
 
@@ -24,7 +25,7 @@ class CreateMethodDelete:
 
         tag = "\t"
         data = f'{tag}<delete id="delete{className}By{upperKey}">\n'
-        data += f'{tag * 2}DELETE FROM {tableName} WHERE {keyFiled} = #{{{key}}}\n'
+        data += f'{tag * 2}DELETE FROM {DatabaseNameConfig.get_database_name(config)}{tableName} WHERE {keyFiled} = #{{{key}}}\n'
         data += f'{tag}</delete>\n\n'
         return data
 
@@ -45,7 +46,7 @@ class CreateMethodDelete:
 
         tag = "\t"
         data = f'{tag}<delete id="delete{className}In{upperKey}">\n'
-        data += f'{tag * 2}DELETE FROM {tableName} WHERE {keyFiled} IN\n'
+        data += f'{tag * 2}DELETE FROM {DatabaseNameConfig.get_database_name(config)}{tableName} WHERE {keyFiled} IN\n'
         data += f'{tag * 3}<foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{{item}}</foreach>\n'
         data += f'{tag}</delete>\n\n'
         return data
@@ -68,7 +69,7 @@ class CreateMethodDelete:
 
         tag = "\t"
         data = f'{tag}<delete id="delete{className}By{upperKey}AndWhere">\n'
-        data += f'{tag * 2}DELETE FROM {tableName}\n'
+        data += f'{tag * 2}DELETE FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += f'{tag * 3}{keyFiled} = #{{{key}}}\n'
         data += CreateXmlBlock.where_mod_2(config, 3, lowClassName)
@@ -89,7 +90,7 @@ class CreateMethodDelete:
 
         tag = "\t"
         data = f'{tag}<delete id="delete{className}">\n'
-        data += f'{tag * 2}DELETE FROM {tableName}\n'
+        data += f'{tag * 2}DELETE FROM {DatabaseNameConfig.get_database_name(config)}{tableName}\n'
         data += f'{tag * 2}<where>\n'
         data += f'{CreateXmlBlock.where_mod_2(config, 3, lowClassName)}'
         data += f'{tag * 2}</where>\n'
@@ -119,7 +120,7 @@ class CreateMethodDelete:
             updateTime = f', {updateTime} = NOW() '
         tag = "\t"
         data = f'{tag}<update id="falseDelete{className}By{upperKey}">\n'
-        data += f'{tag * 2}UPDATE {tableName} SET {deleteKey} = {deleteValue} {updateTime}WHERE {keyFiled} = #{{{key}}}\n'
+        data += f'{tag * 2}UPDATE {DatabaseNameConfig.get_database_name(config)}{tableName} SET {deleteKey} = {deleteValue} {updateTime}WHERE {keyFiled} = #{{{key}}}\n'
         data += f'{tag}</update>\n\n'
         return data
 

@@ -58,7 +58,7 @@ class Generate:
             save_file(config.module.controller.path, config.module.controller.className, "java", string)
 
         # RPC接入层
-        if self.check_create(FileType.controller, config):
+        if self.check_create(FileType.api, config):
             string = Api.CreateFile.create(config)
             save_file(config.module.api.path, config.module.api.className, "java", string)
 

@@ -39,7 +39,7 @@ class FieldMap:
         """
         field_map = {}
         if config.key:
-            field_map[config.key.attr]: config.key
+            field_map[config.key.attr] = config.key
         for attr in config.attr:
             field_map[attr.attr] = attr
 
