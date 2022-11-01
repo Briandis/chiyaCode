@@ -31,7 +31,7 @@ class BaseConfig:
         :param enable: 改配置默认是否启用
         """
         # 配置名称
-        self.name = None
+        # self.name = None
         # 配置是否启用
         self.enable = enable
         # 传入的值
@@ -57,7 +57,7 @@ class FuzzySearch(BaseConfig):
     def __init__(self):
         super().__init__()
         # 模糊搜索的字段，与属性中的值一致
-        self.data = [str]
+        self.data: [str] = None
         # 默认的值，在value无效时使用
         self.default = "keyWord"
 
@@ -286,7 +286,7 @@ class DatabaseName(BaseConfig):
     """
 
     def __init__(self):
-        super().__init__()
+        super().__init__(False)
 
 
 class CreateConfig:

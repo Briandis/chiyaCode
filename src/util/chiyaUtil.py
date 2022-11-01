@@ -1,3 +1,6 @@
+import json
+
+
 class KeyWord:
     """
     关键字
@@ -278,3 +281,78 @@ class CollectionUtil:
             data[key] = []
         data[key].append(value)
         return data
+
+
+class JsonUtil:
+    """
+    JSON工具库
+    """
+
+    @staticmethod
+    def get_base_type(obj: object) -> int:
+        """
+        获取基础数据类型
+        :param obj: 对象
+        :return: 0:null,1:boolean,2:int,3:float,4:string,-1:other
+        """
+        if obj is None:
+            return 0
+        obj_type = type(obj)
+        if obj_type == bool:
+            return 1
+        if obj_type == int:
+            return 2
+        if obj_type == float:
+            return 3
+        if obj_type == str:
+            return 4
+        return -1
+
+    @staticmethod
+    def new_dict(obj: dict) -> dict:
+        """
+        根据字典，生成新的字典，会自动迭代
+        :param obj: 字典对象
+        :return: 新的字典
+        """
+        object_dict = {}
+        for key, value in obj.items():
+            if JsonUtil.get_base_type(value) > -1:
+                object_dict[key] = value
+            else:
+                object_dict[key] = JsonUtil.convert_object(value)
+        return object_dict
+
+    @staticmethod
+    def convert_object(obj):
+        """
+        迭代对象解析成json
+        :param obj: 对象
+        :return: 可识别的字典或列表
+        """
+        if obj is None:
+            return None
+        # 如果是基础类型，则直接返回
+        if JsonUtil.get_base_type(obj) > -1:
+            return obj
+        # 如果是列表，则迭代
+        if type(obj) == list:
+            object_list = []
+            for item in obj:
+                object_list.append(JsonUtil.convert_object(item))
+            return object_list
+        object_dict = {}
+        # 如果是字典，则直接迭代
+        if type(obj) == dict:
+            return JsonUtil.new_dict(obj)
+        else:
+            return JsonUtil.new_dict(obj.__dict__)
+
+    @staticmethod
+    def to_json(obj):
+        """
+        将对象转换成JSON
+        :param obj: 对象
+        :return: JSON字符串
+        """
+        return json.dumps(JsonUtil.convert_object(obj))
