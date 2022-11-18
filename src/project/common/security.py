@@ -100,7 +100,11 @@ public class Security implements HandlerInterceptor {
 	public static void logParameter(HttpServletRequest request) {
 		JSONObject jsonObject = new JSONObject();
 		// 遍历参数并获取
-		request.getParameterMap().forEach((key, value) -> jsonObject.put(key, value[0]));
+		request.getParameterMap().forEach((key, value) -> {
+			// 空参数处理，此处解决?id=&name=  这样的请求没有参数问题
+			if (StringUtil.isNullOrZero(value[0])) { value[0] = null; }
+			jsonObject.put(key, value[0]);
+		});
 		String contentType = request.getContentType();
 		// 如果是上传文件的情况
 		String info = "";
