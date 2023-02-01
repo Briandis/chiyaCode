@@ -42,6 +42,8 @@ class Column:
         self.EXTRA = None
         # 字段备注
         self.COLUMN_COMMENT = None
+        # 字段数据类型
+        self.COLUMN_TYPE = None
 
     def __str__(self):
         return str(self.__dict__)
@@ -199,12 +201,12 @@ class StructureAnalysis:
                 # attr[attribute[JsonKey.attr.filed]] = attribute
             # if JsonKey.key.self not in bean:
             #     raise Exception(f'{table["TABLE_NAME"]}表缺少主键！！！')
-                # bean[JsonKey.key.self] = {
-                #     JsonKey.attr.filed: None,
-                #     JsonKey.attr.attr: None,
-                #     JsonKey.attr.remark: None,
-                #     JsonKey.attr.type:None,
-                # }
+            # bean[JsonKey.key.self] = {
+            #     JsonKey.attr.filed: None,
+            #     JsonKey.attr.attr: None,
+            #     JsonKey.attr.remark: None,
+            #     JsonKey.attr.type:None,
+            # }
             bean[JsonKey.attr.self] = attr
             javabean[bean[JsonKey.tableName]] = bean
         return javabean
