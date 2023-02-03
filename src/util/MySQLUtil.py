@@ -8,7 +8,7 @@ class MySql:
         self.conn = pymysql.connect(host=host, user=name, password=password, database=database, port=port)
         self.cursor_type = cursor
 
-    def execute_select(self, sql_string: str, obj_class) -> list:
+    def execute_select(self, sql_string: str, obj_class=None) -> list:
         """
         执行查询语句并返回对象
         :param sql_string:
@@ -19,7 +19,10 @@ class MySql:
         cursor.execute(sql_string)
         lists = []
         for i in cursor.fetchall():
-            lists.append(self.__create_object(i, obj_class))
+            if obj_class is None:
+                lists.append(i)
+            else:
+                lists.append(self.__create_object(i, obj_class))
         cursor.close()
         return lists
 
