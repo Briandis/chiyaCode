@@ -31,6 +31,8 @@ public class BodyReaderFilter implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+	    // 如果报错，请更换为JakartaRequestFilter，SpringBoot3.0中已经更换了java的命名空间
+        // import chiya.web.request.jakarta.JakartaRequestFilter;
 		RequestFilter.doFilter(servletRequest, servletResponse, filterChain);
 	}
 
