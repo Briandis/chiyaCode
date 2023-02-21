@@ -1,0 +1,148 @@
+{
+  "baseInfo":{      基础信息
+      "tableName": "game",                           表名称
+      "databaseType": "MySQL",                       数据库类型
+      "foreignKey":  "xxxx",                         多表中充当外键
+      "key": {                                       指代本表中的唯一标识字段
+        "field": "game_id",                             在数据库中的字段名称
+        "attr": "id",                                   在java中的属性名称
+        "remark": "主键",                                在java中，该属性上的文档注释
+        "type": "Integer"                               在java中，该字段的数据类型
+      },
+      "attr": [                                      指代非主键的其他数据,用数组存储
+        {                                               结构和key中相同
+          "field": "game_create_time",                  在数据库中的字段名称
+          "attr": "createTime",                         在java中的属性名称
+          "remark": "创建时间",                           在java中，该属性上的文档注释
+          "type": "Date"                                在java中，该字段的数据类型
+        },
+      ],
+      "oneToOne": [                        一对一配置，里面大体配置相同
+        {
+          省略相同配置
+          "foreignKey": "game_media_game_id"        需要关联的字段
+        }
+      ],
+      "oneToMany": [                        一对多配置，里面大体配置相同
+        {
+          省略相同配置
+          "foreignKey": "game_media_game_id"        在该关系中，多的一方中，持有自身唯一标识的字段
+        }
+      ],
+      "manyToMany": [                        多对多配置，里面大体配置相同
+        to:{}                                中间关联的表
+        many:{                               多的乙方
+          省略相同配置
+          "foreignKey": "game_media_game_id"
+        }
+      ]
+
+  }
+  "module":{
+      "entity": {                                        实体类
+        "path": "chiya.web.test.module.User.entity",     所在路径             用于构造路径文件夹
+        "className": "User",                             类名
+        "remark": "用户"                                  备注
+      }
+      "baseEntity":             {  ... 同上 }     抽象实体类                特殊
+      "serviceInterface":       {  ... 同上 }     业务层接口配置
+      "serviceImplements":      {  ... 同上 }     业务层实现类配置
+      "baseMapperInterface":    {  ... 同上 }     自动生成的mapper接口配置
+      "mapperInterface":        {  ... 同上 }     用户的mapper接口配置
+      "baseMapperXml":          {  ... 同上 }     自动生成的xml配置          特殊
+      "mapperXml":              {  ... 同上 }     用户生成的xml配置          特殊
+      "controller":             {  ... 同上 }     控制层配置
+  },
+  "config": {                       高级配置
+    "fuzzySearch": {                  模糊搜索配置
+      "enable": true,                   是否启用，默认是，如果无模糊搜索字段则不会生成摸搜索代码
+      "value": "keyWord",               作为mapper和xml中，用户传入的模糊搜索的变量名
+      "default": "keyWord",             默认配置装配的模糊搜索变量名
+      "data": [                         要搜索的字段
+        "game_name"                         字段，需要在attr中出现
+      ]
+    },
+    "resultMap": {                     resultMap替换resultType
+      "enable": true                     是否启用，默认是
+    },
+    "restful": {                       restful风格API
+      "enable": true                     是否启用，默认是
+    },
+    "splicingSQL": {                   sql语句预留
+      "enable": true,                    是否启用，默认是
+      "value": "splicingSQL",            在mapper和xml中使用的变量名称
+      "default": "splicingSQL"           默认的变量名称
+    },
+    "extraAPI": {                      额外的API
+      "enable": true,                    是否启用，默认是
+      "value": "admin",                  将增加的api名称前置
+      "default": "admin"                 增加默认api名称前缀的值
+    },
+    "defaultAPI": {                    默认的api
+      "enable": true                      是否生成，默认是，如果不生成，又没有额外api，则会生成空文件
+    },
+    "toJsonString": {                  是否在实体中生成toString方法
+      "enable": true,                     是否启用，默认是
+      "isFastJson": true                  是否启用fastJson替换默认toString方法，默认是
+    },
+    "chain": {                         实体生成链式操作方法
+      "enable": true                      是否启用，默认是
+    },
+    "entityClone": {                   本配置是基于某个实体进行的克隆
+      "enable": false                     是否启用，默认否      如果启用将会把本配置当作衍生类
+    },
+    "methodName": {                                 默认生成的接口前缀
+      "enable": true,                                   是否启用，默认是
+      "value": "add,delete,update,getOne,list",         值，可以是列表，或者逗号分割，分别对应添加，删除，修改，获取一个，获取多个
+      "default": "add,delete,update,getOne,list"        默认的配置名称
+    },
+    "createFile": {                       该配置要生成的文件
+      "enable": true,                       是否启用，默认是
+      "value": [                            生成的文件，只有其中存在，才生成
+        "Controller",                           控制层
+        "Service",                              业务层接口
+        "ServiceImpl",                          业务层实现
+        "JavaMapper",                           java的mapper
+        "JavaBaseMapper",                       java自动生成的mapper
+        "XmlMapper",                            xml
+        "XmlBaseMapper",                        自动生成的xml
+        "Entity",                               用户的可以修改的实体
+        "EntityBase"                            自动生成的实体
+      ],
+      "default": [                              默认的信息
+        "EntityBase",
+        "Entity",
+        "Service",
+        "ServiceImpl",
+        "JavaBaseMapper",
+        "JavaMapper",
+        "XmlBaseMapper",
+        "XmlMapper",
+        "Controller"
+      ]
+    },
+    "notCreateFile": {                      不生成的文件
+      "enable": true,                       是否启用，默认是
+      "value": [],                          如果出现在其中，则不生成
+      "default": []
+    },
+    "xmlConfig": {                          xml中字段别名配置
+      "fieldAlias": "chiya",                    自动默认使用的别名前置
+      "resultMapName": "result"                 默认使用的resultmap的前缀名称
+    },
+    "chiyaSecurity":{
+      "name":"chiyaSecurity",           接口权限
+      "enable":true
+    },
+    "repositoryUseCache":{
+      "name":"repositoryUseCache",         仓库层的实现，是否使用缓存
+      "enable":true
+    },
+    "databaseName":{
+      "name":"databaseName",         所有的表操作加入数据库名称
+      "enable":true,
+      "value":""
+    }
+  },
+
+}
