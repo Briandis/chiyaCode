@@ -2,7 +2,7 @@ import json
 import os
 import time
 from datetime import datetime, date
-from typing import List
+from typing import List, Dict
 
 import pymysql
 from _decimal import Decimal
@@ -20,6 +20,50 @@ class DateTimeJson(json.JSONEncoder):
             return f'{obj}'
         else:
             return json.JSONEncoder.default(self, obj)
+
+
+class DifferenceTable:
+
+    def __init__(self, list_new=None, list_update=None, list_delete=None):
+        """
+        差异化数据
+        :param list_new: 新增的
+        :param list_update: 修改的
+        :param list_delete: 删除的
+        """
+        if list_delete is None:
+            list_delete = []
+        if list_update is None:
+            list_update = []
+        if list_new is None:
+            list_new = []
+        self.list_new = list_new
+        """ 新增的 """
+        self.list_update = list_update
+        """ 修改的 """
+        self.list_delete = list_delete
+        """ 删除的 """
+
+    def new(self, data: dict):
+        """
+        添加新增的数据
+        :param data:数据
+        """
+        self.list_new.append(data)
+
+    def update(self, data: dict):
+        """
+        新增修改的数据
+        :param data:数据
+        """
+        self.list_update.append(data)
+
+    def delete(self, data: dict):
+        """
+        新增删除的数据
+        :param data:数据
+        """
+        self.list_delete.append(data)
 
 
 class TableField:
@@ -183,32 +227,84 @@ class MySql:
                     file.write(json.dumps(table_data, indent=2, ensure_ascii=False, cls=DateTimeJson))
 
 
+class IndexDict:
+
+    def __init__(self):
+        """
+        多重索引字典
+        """
+        self.data = {}
+
+    def put(self, scope, key, value):
+        """
+        添加数据
+        :param scope:域
+        :param key: 键
+        :param value: 值
+        :return:
+        """
+        if scope not in self.data:
+            self.data[scope] = {}
+        self.data[scope][key] = value
+
+    def get(self, scope, key):
+        """
+        根据域获取值
+        :param scope:域
+        :param key: 值
+        """
+        if scope in self.data:
+            return self.data[scope].get(key)
+        return None
+
+    def any_scope_get(self, key):
+        """
+        从任意域中获取
+        :param key:键
+        """
+        for scope, data in self.data.items():
+            if key in data:
+                return scope, data[key]
+        return None, None
+
+
 class TableMap:
     """
     表映射关系
     """
 
     def __init__(self):
-        self.table = {}
-        self.field = {}
-
-    def set_table(self, left_table, right_table=None):
-        if right_table is None:
-            self.table[left_table] = left_table
-        else:
-            self.table[left_table] = right_table
-            self.table[right_table] = left_table
-
-    def set_field(self, left_field, right_field=None):
-        self.field[left_field] = right_field
+        self.leftName = None
+        """ 左表名 """
+        self.leftMap = {}
+        """ 左表映射字段 """
+        self.rightName = None
+        """ 右表名 """
+        self.rightMap = {}
+        """ 右表映射字段 """
 
     @staticmethod
     def create_table(left_table_name: str, right_table_name: str, field_dict: dict):
+        """
+        构建映射关系
+        :param left_table_name:左表名
+        :param right_table_name: 右表名
+        :param field_dict: 映射关系
+        """
         table_map = TableMap()
-        table_map.set_table(left_table_name, right_table_name)
+        table_map.leftName = left_table_name
+        table_map.rightName = right_table_name
         for left_field, right_field in field_dict.items():
-            table_map.set_field(left_field, right_field)
+            table_map.leftMap[left_field] = right_field
+            table_map.rightMap[right_field] = left_field
         return table_map
+
+    def turn_over(self):
+        """
+        左右翻转
+        """
+        self.leftName, self.rightName = self.rightName, self.leftName
+        self.leftMap, self.rightMap = self.rightMap, self.leftMap
 
 
 class FieldMap:
@@ -216,22 +312,89 @@ class FieldMap:
     字段映射关系
     """
 
-    def __init__(self):
-        self.tableLeftName = None
+    def __init__(self, who_is_left):
+        """
+        字段映射关系
+        :param who_is_left:那张是左表
+        """
+        self.leftName = None
         """ 左表名称 """
-        self.tableLeftMap = {}
+        self.leftMap = {}
         """ 左表映射字段 """
-        self.tableLeftKey = set()
+        self.leftKey = set()
         """ 左表主键 """
 
-        self.tableRightName = None
+        self.rightName = None
         """ 右表名称 """
-        self.tableRightMap = {}
+        self.rightMap = {}
         """ 右表映射字段 """
-        self.tableRightKey = set()
+        self.rightKey = set()
         """ 右表主键 """
-        self.key = {}
-        """ 主键映射 """
+        self.rightToLeftKey = {}
+        """ 右表到左表主键映射 """
+
+        self.base_table_name = who_is_left
+        """ 基准表 """
+
+    @staticmethod
+    def __init_table(left_map, right_map, key, left_key, right_key, table_filed: TableInfo, table_map: TableMap = None):
+        """
+        初始化表
+        :param left_map: 左表字段
+        :param right_map: 右表字段
+        :param key: 主键
+        :param left_key:左表主键
+        :param right_key: 右表主键
+        :param table_filed: 表字段
+        :param table_map: 表映射关系
+        """
+        if table_map is None:
+            table_map = TableMap()
+        key_set = set()
+        # 初始化映射关系，根据表结构初始化
+        for field in table_filed.field:
+            field_name = field.name.lower()
+            left_map[field_name] = field_name
+            right_map[field_name] = field_name
+            if field.key:
+                key[field_name] = field_name
+                key_set.add(field_name)
+                left_key.add(field_name)
+                right_key.add(field_name)
+
+        # 根据字段映射关系进行剔除
+        for field_key, field_value in table_map.leftMap.items():
+            left_name = field_key.lower()
+            right_name = field_value.lower()
+            left_map[left_name] = right_name
+            # 是主键就双向装配，右表剔除之前初始化的主键名称
+            if left_name in key_set:
+                key[left_name] = right_name
+                key[right_name] = left_name
+                right_key.remove(left_name)
+                right_key.add(right_name)
+            # 删除初始化左表于右表的映射
+            if left_name in right_map:
+                del right_map[left_name]
+            right_map[right_name] = left_name
+
+    def _left_init(self, table_filed: TableInfo, table_map: TableMap = None):
+        """
+        键值对是左表的初始化
+        :param table_filed: 表字段
+        :param table_map:表映射
+        :return:
+        """
+        self.__init_table(self.leftMap, self.rightMap, self.rightToLeftKey, self.leftKey, self.rightKey, table_filed, table_map)
+
+    def _right_init(self, table_filed: TableInfo, table_map: TableMap = None):
+        """
+        键值对是左表的初始化
+        :param table_filed: 表字段
+        :param table_map:表映射
+        :return:
+        """
+        self.__init_table(self.rightMap, self.leftMap, self.rightToLeftKey, self.rightKey, self.leftKey, table_filed, table_map)
 
     def init_table_map(self, table_filed: TableInfo, table_map: TableMap = None):
         """
@@ -239,29 +402,10 @@ class FieldMap:
         :param table_filed: 映射字段
         :param table_map:映射关系
         """
-        if table_map is None:
-            table_map = TableMap()
-        key_set = set()
-        for field in table_filed.field:
-            self.tableLeftMap[field.name.lower()] = field.name.lower()
-            self.tableRightMap[field.name.lower()] = field.name.lower()
-            if field.key:
-                key_set.add(field.name.lower())
-                self.key[field.name.lower()] = field.name.lower()
-                self.tableLeftKey.add(field.name.lower())
-                self.tableRightKey.add(field.name.lower())
-
-        for field_key, field_value in table_map.field.items():
-            self.tableLeftMap[field_key.lower()] = field_value.lower()
-            if field_key.lower() in key_set:
-                self.key[field_key.lower()] = field_value.lower()
-                self.key[field_value.lower()] = field_key.lower()
-                self.tableRightKey.add(field_value.lower())
-                self.tableRightKey.remove(field_key.lower())
-
-            if field_key.lower() in self.tableRightMap:
-                del self.tableRightMap[field_key.lower()]
-            self.tableRightMap[field_value.lower()] = field_key.lower()
+        if table_filed.name == self.base_table_name:
+            self._left_init(table_filed, table_map)
+        else:
+            self._right_init(table_filed, table_map)
 
     def line_to_key(self, line_dict, line_index, is_left=True):
         """
@@ -273,11 +417,12 @@ class FieldMap:
         """
         line_str = ""
         if is_left:
-            for line_key in self.tableLeftKey:
-                line_str += f'| {line_dict[line_key]} |'
+            for line_key in self.leftKey:
+                line_str += f'<{line_dict[line_key]}>'
         else:
-            for line_key in self.tableLeftKey:
-                line_str += f'| {line_dict[self.key[line_key]]} |'
+            for line_key in self.leftKey:
+                # 需要根据左表的主键遍历，以保证获取顺序相同
+                line_str += f'<{line_dict[self.rightToLeftKey[line_key]]}>'
         if line_str == "":
             line_str = line_index
         return line_str
@@ -307,7 +452,7 @@ class FieldMap:
         different_data = []
         different_flag = True
         for left_field, left_value in left_dict.items():
-            right_field = self.tableLeftMap[left_field]
+            right_field = self.leftMap[left_field]
             right_value = right_dict[right_field]
             if right_value != left_value:
                 different_flag = False
@@ -322,48 +467,40 @@ class FieldMap:
         :return: 字符串
         """
         line_str = ""
-        table_key = self.tableRightKey
+        table_key = self.rightKey
         if is_left:
-            table_key = self.tableLeftKey
+            table_key = self.leftKey
         for key in table_key:
             line_str += f'{key} : {data_line[key]},'
         return line_str
 
-    def compare_data(self, data_left, data_right):
+    def get_difference_data(self, data_left, data_right) -> DifferenceTable:
         """
         比较两个数据不同之处
         :param data_left:左表的数据
         :param data_right: 右表的数据
-        :return: 错误信息
+        :return: 差异数据
         """
-        error_list = []
-        left_len = len(data_left)
-        right_len = len(data_right)
-        if left_len != right_len:
-            error_list.append(f"双方数据行数不同，左行数：{left_len},右行数:{right_len}")
+        difference_table = DifferenceTable()
 
         left_dict = self.list_to_dict(data_left)
         right_dict = self.list_to_dict(data_right, False)
-
+        # 基于左表对比右表
         for left_key, left_value in left_dict.items():
             right_value = right_dict.get(left_key)
             if right_value is not None:
                 result, error_field = self.compare_line(left_value, right_value)
                 if result is False:
-                    error_list.append(f'左表与右表数据不同，左表主键\t{self.get_key_data(left_value)}\t 不同的字段{error_field}')
+                    difference_table.update(right_value)
             else:
-                error_list.append(f'左表构成的主键在右表不存在，构成的主键信息\t{self.get_key_data(left_value)}')
+                difference_table.delete(left_value)
 
         for right_key, right_value in right_dict.items():
             left_value = left_dict.get(right_key)
-            if left_value is not None:
-                result, error_field = self.compare_line(left_value, right_value)
-                if result is False:
-                    error_list.append(f'右表与左表数据不同，右表主键\t{self.get_key_data(right_value, False)}\t 不同的字段{error_field}')
-            else:
-                error_list.append(f'右表构成的主键在左表不存在，构成的主键信息\t{self.get_key_data(right_value, False)}')
+            if left_value is None:
+                difference_table.new(right_value)
 
-        return error_list
+        return difference_table
 
 
 class NodeDatabase:
@@ -402,7 +539,7 @@ class NodeDatabase:
         """
         读取文件中的数据
         :param table_name: 表名称
-        :return: 文件中的列表
+        :return: (表数据列表，表结构)
         """
         table_data = []
         for path in self.table.get(table_name):
@@ -413,36 +550,43 @@ class NodeDatabase:
 
     def get_table(self) -> (str, list, TableInfo):
         """
-        迭代获取吧表信息
+        迭代获取表信息
         :return: 表名称，表数据，结构
         """
         for table_name, table_data in self.table.items():
             yield table_name, *self.load_data(table_name)
 
-    def compared_table(self, table_name, node_info, table_map: TableMap = None):
+    def difference_data(self, table_name, right_node_info, table_map: TableMap = None):
         """
-        比较两表
+        保存前后差异数据
         :param table_name:表名称
-        :param node_info: 另一节点
+        :param right_node_info:另一个节点
         :param table_map:映射关系
-        :return: 自身
+        :return:NodeDatabase 存储信息
         """
-        node_data_1, table_info_1 = self.load_data(table_name)
+        left_table_data, left_table_info = None, None
+        table_map_obj = FieldMap(table_name)
 
-        if table_map is None:
-            if table_name not in node_info.table:
-                return [f'{table_name}该表另一方不存']
-            node_data_2, table_info_2 = node_info.load_data(table_name)
-        else:
-            if table_map.table.get(table_name) not in node_info.table:
-                return [f'{table_map.table.get(table_name)}该表另一方不存']
-            node_data_2, table_info_2 = node_info.load_data(table_map.table.get(table_name))
-        table_map_obj = FieldMap()
-        table_map_obj.init_table_map(table_info_1, table_map)
-        result = table_map_obj.compare_data(node_data_1, node_data_2)
-        if len(result) > 0:
-            result.insert(0, f'{table_name}存在不一致行为')
-        return result
+        if table_name in self.table:
+            left_table_data, left_table_info = self.load_data(table_name)
+            table_map_obj.init_table_map(left_table_info, table_map)
+
+        right_table_name = table_name
+        if table_map is not None:
+            right_table_name = table_map.rightName
+        if right_table_name not in right_node_info.table:
+            if left_table_data is None:
+                raise ValueError(f'{table_name}表在双方节点中均不存在！！！')
+            # 如果右表不存在与左表，说明删除
+            return DifferenceTable(list_delete=left_table_data)
+
+        right_table_data, right_table_info = right_node_info.load_data(right_table_name)
+        if left_table_data is None:
+            # 左表不存在，但右表存在，则是新增
+            return DifferenceTable(list_new=right_table_data)
+
+        difference = table_map_obj.get_difference_data(left_table_data, right_table_data)
+        return difference
 
 
 class JsonDatabase:
@@ -462,9 +606,9 @@ class JsonDatabase:
             if os.path.isdir(os.path.join(root_path, node_dir)):
                 self.node_tag[node_dir] = NodeDatabase(os.path.join(root_path, node_dir))
 
-    def compared_node(self, tag_1, tag_2):
+    def difference_node(self, tag_1, tag_2):
         """
-        对比两个节点
+        对比两个节点差异
         :param tag_1:节点1
         :param tag_2:节点2
         :return:对比信息
@@ -472,14 +616,19 @@ class JsonDatabase:
         left_tag = self.node_tag.get(tag_1)
         right_tag = self.node_tag.get(tag_2)
         if left_tag is None or right_tag is None:
-            return [f'{tag_1},{tag_2} 这些节点中其中一个不存在']
+            raise ValueError(f'{tag_1}或{tag_2}其中一个或多个不存在')
 
-        error_list = []
+        difference: Dict[str, DifferenceTable] = {}
+        # 基于左侧对比右侧，得到删除的表
         for left_table_name, left_data_list in left_tag.table.items():
-            error_list.extend(left_tag.compared_table(left_table_name, right_tag))
-        return error_list
+            difference[left_table_name] = left_tag.difference_data(left_table_name, right_tag)
+        # 基于右侧对比左侧，得到新增的表
+        for right_table_name, right_data_list in right_tag.table.items():
+            if right_table_name not in left_tag.table:
+                difference[right_table_name] = left_tag.difference_data(right_table_name, right_tag)
+        return difference
 
-    def compared_database(self, tag_1: str, database_2, tag_2: str, table_map_all: dict):
+    def difference_database(self, tag_1: str, database_2, tag_2: str, table_map_all: Dict[str, TableMap]):
         """
         对比两个库
         :param tag_1:要对比的版本
@@ -491,8 +640,51 @@ class JsonDatabase:
         left_tag = self.node_tag.get(tag_1)
         right_tag = database_2.node_tag.get(tag_2)
         if left_tag is None or right_tag is None:
-            return [f'{tag_1},{tag_2} 这些节点中其中一个不存在']
-        error_list = []
+            raise ValueError(f'{tag_1}或{tag_2}其中一个或多个不存在')
+
+        index_dict = IndexDict()
+        for table_name, table_map in table_map_all.items():
+            index_dict.put("left", table_map.leftName, table_map)
+            index_dict.put("right", table_map.rightName, table_map)
+
+        difference: Dict[str, DifferenceTable] = {}
+        right_difference = set()
+        # 基于左侧对比右侧，得到删除的表
         for left_table_name, left_data_list in left_tag.table.items():
-            error_list.extend(left_tag.compared_table(left_table_name, right_tag, table_map_all.get(left_table_name)))
-        return error_list
+            scope, table_map = index_dict.any_scope_get(left_table_name)
+            right_table_name = table_map.leftName
+            if table_map is not None:
+                right_difference.add(right_table_name)
+                if scope == "right":
+                    table_map.turn_over()
+                # 等待翻转后再赋值
+                right_table_name = table_map.rightName
+            difference[right_table_name] = left_tag.difference_data(left_table_name, right_tag, table_map)
+        # 根据右表映射左表
+        for right_table_name, right_data_list in right_tag.table.items():
+            scope, table_map = index_dict.any_scope_get(right_table_name)
+            left_table_name = right_table_name
+            if table_map is not None:
+                left_table_name = table_map.leftName
+            difference[right_table_name] = left_tag.difference_data(left_table_name, right_tag, table_map)
+        return difference
+
+    def save_difference(self, difference: Dict[str, DifferenceTable], save_tag_name):
+        """
+        保存差异
+        :param difference: 差异集
+        :param save_tag_name: 保存的标签名称
+        """
+        save_path = OSUtil.is_not_dir_create(os.getcwd(), self.database)
+        save_path = OSUtil.is_not_dir_create(save_path, save_tag_name)
+        data_path = OSUtil.is_not_dir_create(save_path, "data")
+        OSUtil.is_not_dir_create(save_path, "structure")
+
+        for table_name, data in difference.items():
+            all_data = []
+            all_data.extend(data.list_new)
+            all_data.extend(data.list_update)
+            all_data.extend(data.list_delete)
+            file_name = f'{table_name}.{0}-{len(all_data)}.txt'
+            with open(os.path.join(data_path, file_name), "w", encoding="utf-8") as file:
+                file.write(json.dumps(all_data, indent=2, ensure_ascii=False, cls=DateTimeJson))
