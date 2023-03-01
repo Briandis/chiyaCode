@@ -2,6 +2,55 @@ import re
 from typing import List, Dict
 
 
+class VariableSystem:
+
+    def __init__(self):
+        """
+        变量系统
+        """
+        self.data = {}
+        """ 变量 """
+        self.variable_set_stack = []
+        """ 变量赋值栈 """
+        self.variable_get_stack = []
+        """ 变量获取栈 """
+
+    def set_variable(self, *data):
+        """
+        定义 变量
+        :param data:变量信息
+        """
+        if len(data) > 1:
+            self.set(data[0], data[1])
+        if len(data) == 1:
+            self.variable_set_stack.append(data[0])
+
+    def get_variable(self, *data):
+        """
+        获取变量
+        :param data: 获取变量
+        """
+        if len(data) > 0:
+            self.variable_get_stack.append(data)
+
+    def set(self, name, value):
+        """
+        设置变量
+        :param name:名称
+        :param value: 值
+        """
+        self.data[name] = value
+
+    def get(self, name):
+        """
+        获取var对象
+        :param name:变量名称
+        """
+        if name not in self.data:
+            raise KeyError(f'{name}尚未定义')
+        return self.data[name]
+
+
 class Command:
 
     def __init__(self, function, param: tuple | None, source_code: str | None, line: int, param_index: tuple | list | None):
@@ -24,20 +73,45 @@ class Command:
         self.param_index = param_index
         """ 参数映射位置 """
 
-    def execute(self):
+    def execute(self, variable_system: VariableSystem):
         """
-        执行
+        执行命令
+        :param variable_system:变量系统
         """
+        # 定义返回操作
+        call_set = None
+        if len(variable_system.variable_set_stack) > 0 and self.function != variable_system.get_variable:
+            set_data = variable_system.variable_set_stack.pop()
+
+            def call_set(data):
+                variable_system.set(set_data[0], data)
+        # 有参数的情况下
         if self.param is not None:
             if self.param_index is None:
-                self.function(*self.param)
+                param = [*self.param]
             else:
-                new_param = []
+                param = []
+                # 参数转换
                 for index in self.param_index:
-                    new_param.append(self.param[index - 1])
-                self.function(*new_param)
+                    param.append(self.param[index - 1])
+            # 从变量栈中获取值，并且对参数进替换，只有在该执行方法不同的情况下
+            if self.function != variable_system.get_variable and self.function != variable_system.set_variable:
+                while len(variable_system.variable_get_stack) > 0:
+                    index = len(variable_system.variable_get_stack) - 1
+                    var = variable_system.variable_get_stack.pop()
+                    if len(var) > 1:
+                        index = int(var[1]) - 1
+                    param[index] = variable_system.get(var[0])
+            # 执行
+            result = self.function(*param)
+            if call_set is not None:
+                # 将返回结果赋予变量
+                call_set(result)
+
         else:
-            self.function()
+            result = self.function()
+            if call_set is not None:
+                call_set(result)
 
 
 class CommandFunction:
@@ -53,6 +127,7 @@ class CommandFunction:
         self.command = command
         """ 指令 """
         self.old_command = old_command
+        """ 映射前指令 """
         self.param_index = parameter_index
         """ 参数所映射的下标 """
         self.function = function
@@ -74,8 +149,12 @@ class ScriptKeyword:
         """ 单行注释符号 """
         self.note_multiple = []
         """ 多行注释符号 """
-        # self.variable = []
-        # """ 变量声明 """
+        self.set_variable = []
+        """ 变量声明 """
+        self.get_variable = []
+        """ 变量获取 """
+        self.function_variable = []
+        """ 方法变量 """
 
 
 class CommandBlock:
@@ -107,7 +186,7 @@ class CommandBlock:
         """
         获取指令
         :param index:下标
-        :return: 
+        :return:
         """
         return self.command_list[index]
 
@@ -281,45 +360,6 @@ class RuntimeStack:
         self.stack.clear()
         self.root.program_counter = 0
         self.stack.append(self.root)
-
-
-class Variable:
-
-    def __init__(self, name, value, variable_type, scope):
-        self.name = name
-        """ 变量名称 """
-        self.value = value
-        """ 变量值 """
-        self.variable_type = variable_type
-        """ 变量 """
-        self.scope = scope
-        """ 变量作用域 """
-
-
-class VariableSystem:
-
-    def __init__(self):
-        """
-        变量系统
-        """
-        self.data: Dict[str, Variable] = {}
-
-    def set_variable(self, name, value):
-        """
-        设置变量
-        :param name:名称
-        :param value: 值
-        """
-        self.data[name] = value
-
-    def get_variable(self, name) -> Variable:
-        """
-        获取var对象
-        :param name:变量名称
-        """
-        if name not in self.data:
-            raise KeyError(f'{name}尚未定义')
-        return self.data[name]
 
 
 class CompileFlag:
@@ -536,13 +576,21 @@ class CodeScript:
         """
         self._collection_add(self.script_keyword.note_multiple, data)
 
-    # def register_variable(self, *data):
-    #     """
-    #     注册单行注释
-    #     :param data:调用命令
-    #     """
-    #     self._check_placeholder(data, 1)
-    #     self._collection_add(self.script_keyword.variable, data)
+    def register_set_variable(self, *data):
+        """
+        注册声明变量
+        :param data:调用命令
+        """
+        self._check_placeholder(data, 1)
+        self._collection_add(self.script_keyword.set_variable, data)
+
+    def register_get_variable(self, *data):
+        """
+        注册获取变量
+        :param data:调用命令
+        """
+        self._check_placeholder(data, 1)
+        self._collection_add(self.script_keyword.get_variable, data)
 
     def register_command(self, commands, function):
         """
@@ -580,11 +628,20 @@ class CodeScript:
         if self._compile_flag.is_note_multiple:
             return True
 
-        # # 变量声明
-        # command = self._find_command(script_line, self.script_keyword.code_start)
-        # if command is not None:
-        #     self.variable.set_variable(self._command_param(command, script_line)[0], None)
-        #     return True
+        # 变量声明
+        command = self._find_command(script_line, self.script_keyword.set_variable)
+        if command is not None:
+            # 把要赋值的变量传入栈中
+            # commands, param_index = self._command_replace(command)
+            module_code.append(Command(self.variable.set_variable, self._command_param(command, script_line), script_line, line, None))
+            return True
+
+        # 变量获取
+        command = self._find_command(script_line, self.script_keyword.get_variable)
+        if command is not None:
+            # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
+            module_code.append(Command(self.variable.get_variable, self._command_param(command, script_line), script_line, line, None))
+            return True
 
         # 代码起始位置
         command = self._find_command(script_line, self.script_keyword.code_start)
@@ -662,7 +719,7 @@ class CodeScript:
                     continue
                 if need_logger:
                     logger.append(f'{runtime_module.name}:\t{runtime_module.program_counter}\t{command.source_code}')
-                command.execute()
+                command.execute(self.variable)
         except:
             stack_info = self.runtime_stack.get_stack_info()
             msg = ""
