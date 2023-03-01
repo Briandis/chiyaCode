@@ -652,7 +652,7 @@ class JsonDatabase:
         # 基于左侧对比右侧，得到删除的表
         for left_table_name, left_data_list in left_tag.table.items():
             scope, table_map = index_dict.any_scope_get(left_table_name)
-            right_table_name = table_map.leftName
+            right_table_name = left_table_name
             if table_map is not None:
                 right_difference.add(right_table_name)
                 if scope == "right":
