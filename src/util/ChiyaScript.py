@@ -538,7 +538,10 @@ class CodeScript:
             return None
         command = match[0]
         if len(match) > 1:
-            match.sort()
+            for i in range(len(match)):
+                for j in range(i, len(match)):
+                    if len(match[i]) > len(match[j]):
+                        match[i], match[j] = match[j], match[i]
             command = match[-1]
         return command
 
