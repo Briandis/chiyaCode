@@ -1,5 +1,20 @@
 import re
+import uuid
 from typing import List, Dict
+
+
+class Variable:
+    def __init__(self):
+        """
+        变量
+        """
+        self.user = {}
+        """ 用户变量空间 """
+        self.system = {}
+        """ 系统匿名空间 """
+
+    def __str__(self):
+        return self.user.__str__()
 
 
 class VariableSystem:
@@ -8,47 +23,133 @@ class VariableSystem:
         """
         变量系统
         """
-        self.data = {}
+        self.variable: List[Variable] = []
         """ 变量 """
         self.variable_set_stack = []
         """ 变量赋值栈 """
         self.variable_get_stack = []
         """ 变量获取栈 """
 
-    def set_variable(self, *data):
+    def set_system_variable(self, is_global: bool, key, value=None):
         """
-        定义 变量
+        存储变量
+        :param is_global:是否是全局变量
+        :param key: 变量名称
+        :param value: 值
+        """
+        if len(self.variable) == 0:
+            self.variable.append(Variable())
+        stack_frame = 0 if is_global else -1
+        self.variable[stack_frame].system[key] = value
+
+    def set_variable(self, is_global: bool, key, value=None):
+        """
+        存储变量
+        :param is_global:是否是全局变量
+        :param key: 变量名称
+        :param value: 值
+        """
+        if len(self.variable) == 0:
+            self.variable.append(Variable())
+        stack_frame = 0 if is_global else -1
+        self.variable[stack_frame].user[key] = value
+
+    def set_global_variable(self, *data):
+        """
+        设置全局变量
         :param data:变量信息
         """
         if len(data) > 1:
-            self.set(data[0], data[1])
+            self.set_variable(True, data[0], data[1])
         if len(data) == 1:
-            self.variable_set_stack.append(data[0])
+            self.variable_set_stack.append((True, data[0]))
 
-    def get_variable(self, *data):
+    def load_local_variable(self, data: dict):
         """
-        获取变量
+        加载局部变量
+        :param data: 字典树
+        """
+        for field, value in data.items():
+            self.set_variable(False, field, value)
+
+    def set_local_variable(self, *data):
+        """
+        设置局部变量
+        :param data:变量信息
+        """
+        if len(data) > 1:
+            self.set_variable(False, data[0], data[1])
+        if len(data) == 1:
+            self.variable_set_stack.append((False, data[0]))
+
+    def get_global_variable(self, *data):
+        """
+        获取全局变量
         :param data: 获取变量
         """
         if len(data) > 0:
-            self.variable_get_stack.append(data)
+            self.variable_get_stack.append((True, data))
 
-    def set(self, name, value):
+    def get_local_variable(self, *data):
         """
-        设置变量
-        :param name:名称
-        :param value: 值
+        获取局部变量
+        :param data: 获取变量
         """
-        self.data[name] = value
+        if len(data) > 0:
+            self.variable_get_stack.append((False, data))
 
-    def get(self, name):
+    def get(self, name, is_global=False):
         """
         获取var对象
         :param name:变量名称
+        :param is_global:是否是全局变量
         """
-        if name not in self.data:
-            raise KeyError(f'{name}尚未定义')
-        return self.data[name]
+        if is_global:
+            if len(self.variable) > 0:
+                if name in self.variable[0].user:
+                    return self.variable[0].user[name]
+        else:
+            for stack_variable in self.variable[::-1]:
+                if name in stack_variable.user:
+                    return stack_variable.user[name]
+        raise KeyError(f'尚未定义变量{name}')
+
+    def check_not_self_function(self, function):
+        """
+        检查是否为自身的方法
+        :param function:方法
+        :return True：不是，false:是
+        """
+        return function not in [self.get_global_variable, self.get_local_variable, self.set_global_variable, self.set_local_variable]
+
+    def get_pop(self, function, param):
+        """
+        获取栈的出栈
+        :param function:当前执行的方法
+        :param param:参数
+        """
+        if len(self.variable_get_stack) > 0 and self.check_not_self_function(function):
+            while len(self.variable_get_stack) > 0:
+                index = len(self.variable_get_stack) - 1
+                is_global, data = self.variable_get_stack.pop()
+                if len(data) > 1:
+                    index = int(data[1]) - 1
+                param[index] = self.get(data[0], is_global)
+
+    def call_set(self, function):
+        """
+        执行方法后设置值
+        :param function:方法
+        :return: 回调
+        """
+        if len(self.variable_set_stack) > 0 and self.check_not_self_function(function):
+            stack_variable, set_data = self.variable_set_stack.pop()
+
+            def call(data):
+                self.set_variable(stack_variable, set_data, data)
+
+            return call
+        return None
 
 
 class Command:
@@ -79,14 +180,11 @@ class Command:
         :param variable_system:变量系统
         """
         # 定义返回操作
-        call_set = None
-        if len(variable_system.variable_set_stack) > 0 and self.function != variable_system.get_variable:
-            set_data = variable_system.variable_set_stack.pop()
-
-            def call_set(data):
-                variable_system.set(set_data[0], data)
+        call_set = variable_system.call_set(self.function)
         # 有参数的情况下
-        if self.param is not None:
+        if self.param is None:
+            result = self.function()
+        else:
             if self.param_index is None:
                 param = [*self.param]
             else:
@@ -95,23 +193,12 @@ class Command:
                 for index in self.param_index:
                     param.append(self.param[index - 1])
             # 从变量栈中获取值，并且对参数进替换，只有在该执行方法不同的情况下
-            if self.function != variable_system.get_variable and self.function != variable_system.set_variable:
-                while len(variable_system.variable_get_stack) > 0:
-                    index = len(variable_system.variable_get_stack) - 1
-                    var = variable_system.variable_get_stack.pop()
-                    if len(var) > 1:
-                        index = int(var[1]) - 1
-                    param[index] = variable_system.get(var[0])
+            variable_system.get_pop(self.function, param)
             # 执行
             result = self.function(*param)
-            if call_set is not None:
-                # 将返回结果赋予变量
-                call_set(result)
 
-        else:
-            result = self.function()
-            if call_set is not None:
-                call_set(result)
+        if call_set is not None:
+            call_set(result)
 
 
 class CommandFunction:
@@ -149,12 +236,22 @@ class ScriptKeyword:
         """ 单行注释符号 """
         self.note_multiple = []
         """ 多行注释符号 """
-        self.set_variable = []
-        """ 变量声明 """
-        self.get_variable = []
-        """ 变量获取 """
-        self.function_variable = []
-        """ 方法变量 """
+        self.set_global_variable = []
+        """ 全局变量声明 """
+        self.get_global_variable = []
+        """ 全局变量获取 """
+        self.set_local_variable = []
+        """ 局部变量声明 """
+        self.get_local_variable = []
+        """ 局部变量获取 """
+        self.load_local_variable = []
+        """ 加载局部变量 """
+        self.if_block = []
+        """ 分支控制 """
+        self.else_block = []
+        """ 否则处理块 """
+        self.end_if = []
+        """ 结束分支块 """
 
 
 class CommandBlock:
@@ -261,6 +358,13 @@ class RuntimeModule:
         self.command_block = command_block
         """ 当前指令模块 """
 
+    def goto(self, program_counter):
+        """
+        指令跳转至
+        :param program_counter:跳转的指令
+        """
+        self.program_counter = program_counter
+
     def last_command(self) -> Command | None:
         """
         上一条指令
@@ -361,6 +465,13 @@ class RuntimeStack:
         self.root.program_counter = 0
         self.stack.append(self.root)
 
+    def goto(self, program_counter):
+        """
+        当前模块跳转至下一个指令
+        :param program_counter:跳转的指令
+        """
+        self.now_runtime_module().goto(program_counter)
+
 
 class CompileFlag:
     def __init__(self):
@@ -369,6 +480,8 @@ class CompileFlag:
         """
         self.is_note_multiple = False
         """ 是多行注释 """
+        self.if_block_stack = []
+        """ 分支快栈 """
 
 
 class CodeScript:
@@ -379,6 +492,9 @@ class CodeScript:
         """
         self.command_map: Dict[str, CommandFunction] = {}
         """ 指令 """
+        self.system_command: Dict[str, CommandFunction] = {}
+        """ 系统指令 """
+
         self._placeholder = "\\{(\\d*?)\\}"
         """ 占位符 """
         self.script_keyword = ScriptKeyword()
@@ -457,13 +573,18 @@ class CodeScript:
         :param module_name:模块名称
         """
         module_code = self._load_module(module_name)
+        # 运行栈添加信息
         self.runtime_stack.append(RuntimeModule(module_name, module_code))
+        # 变量栈添加信息
+        self.variable.variable.append(Variable())
 
     def _return_call_module(self):
         """
         模块调用结束
         """
         self.runtime_stack.pop()
+        # 变量栈出栈
+        self.variable.variable.pop()
 
     @staticmethod
     def _character_escape(command, need_escape=None):
@@ -576,21 +697,86 @@ class CodeScript:
         """
         self._collection_add(self.script_keyword.note_multiple, data)
 
-    def register_set_variable(self, *data):
+    def register_load_local_variable(self, commands, function):
         """
-        注册声明变量
-        :param data:调用命令
+        注册加载局部变量
+        :param commands:调用命令
+        :param function:映射的方法
         """
-        self._check_placeholder(data, 1)
-        self._collection_add(self.script_keyword.set_variable, data)
+        self._check_placeholder(commands, 1)
+        self._collection_add(self.script_keyword.load_local_variable, commands)
+        # 同时注册指令
+        self.register_system_command(commands, function)
 
-    def register_get_variable(self, *data):
+    def register_set_local_variable(self, *data):
         """
-        注册获取变量
+        注册局部变量定义
         :param data:调用命令
         """
         self._check_placeholder(data, 1)
-        self._collection_add(self.script_keyword.get_variable, data)
+        self._collection_add(self.script_keyword.set_local_variable, data)
+
+    def register_get_local_variable(self, *data):
+        """
+        注册获取局部变量
+        :param data:调用命令
+        """
+        self._check_placeholder(data, 1)
+        self._collection_add(self.script_keyword.get_local_variable, data)
+
+    def register_set_global_variable(self, *data):
+        """
+        注册全局变量定义
+        :param data:调用命令
+        """
+        self._check_placeholder(data, 1)
+        self._collection_add(self.script_keyword.set_global_variable, data)
+
+    def register_get_global_variable(self, *data):
+        """
+        注册获取全局变量
+        :param data:调用命令
+        """
+        self._check_placeholder(data, 1)
+        self._collection_add(self.script_keyword.get_global_variable, data)
+
+    def register_if_block(self, commands, function):
+        """
+        注册分支判断逻辑
+        :param commands:调用命令
+        :param function:执行的判断方法
+        """
+        self._check_placeholder(commands, 1)
+        self._collection_add(self.script_keyword.if_block, commands)
+        # 同时注册指令
+        self.register_system_command(commands, function)
+
+    def register_else_block(self, commands):
+        """
+        注册分支判断逻辑
+        :param commands:调用命令
+        """
+        self._collection_add(self.script_keyword.else_block, commands)
+
+    def register_end_if_block(self, commands):
+        """
+        注册分支判断逻辑
+        :param commands:调用命令
+        """
+        self._collection_add(self.script_keyword.end_if, commands)
+
+    def register_system_command(self, commands, function):
+        """
+        注册系统指令
+        :param commands:
+        :param function:
+        :return:
+        """
+        if isinstance(commands, str):
+            commands = (commands,)
+        for item in commands:
+            command, param_index = self._command_replace(item)
+            self.system_command[command] = CommandFunction(command, item, function, param_index)
 
     def register_command(self, commands, function):
         """
@@ -628,21 +814,89 @@ class CodeScript:
         if self._compile_flag.is_note_multiple:
             return True
 
-        # 变量声明
-        command = self._find_command(script_line, self.script_keyword.set_variable)
+        # 分支块
+        command = self._find_command(script_line, self.script_keyword.if_block)
+        if command is not None:
+            param = (None, *self._command_param(command, script_line))
+            flag_name = uuid.uuid4().__str__()
+            jump_end = {"var": flag_name, "end": -1}
+            self._compile_flag.if_block_stack.append(jump_end)
+
+            def if_block(*data):
+                self.variable.set_system_variable(False, flag_name, jump_end)
+                result = self.system_command[command].function(*data)
+                if not result:
+                    if "else" in jump_end:
+                        self.runtime_stack.goto(jump_end["else"])
+                    else:
+                        self.runtime_stack.goto(jump_end["end"])
+
+            module_code.append(Command(if_block, param, script_line, line, None))
+            return True
+
+        # 否则分支快
+        command = self._find_command(script_line, self.script_keyword.else_block)
+        if command is not None:
+            if len(self._compile_flag.if_block_stack) == 0:
+                raise ValueError(f"缺少条件语句块！！！{line} {script_line}")
+            jump_end = self._compile_flag.if_block_stack[-1]
+            # 标记否则的位置
+            jump_end["else"] = len(module_code.command_list) + 1
+
+            def jump():
+                self.runtime_stack.goto(jump_end["end"])
+
+            # 在if条件内的区域设置跳转到结束的标记
+            module_code.append(Command(jump, None, script_line, line, None))
+            jump_end["end"] = len(module_code.command_list)
+            return True
+
+        # 结束分支块
+        command = self._find_command(script_line, self.script_keyword.end_if)
+        if command is not None:
+            if len(self._compile_flag.if_block_stack) == 0:
+                return False
+            jump_end = self._compile_flag.if_block_stack.pop()
+            jump_end["end"] = len(module_code.command_list)
+            return True
+
+        # 局部变量加载
+        command = self._find_command(script_line, self.script_keyword.load_local_variable)
+        if command is not None:
+            # 调用获取
+            def run_load_data(*data):
+                init_data = self.system_command[command].function(data)
+                self.variable.load_local_variable(init_data)
+
+            # 加载
+            module_code.append(Command(run_load_data, self._command_param(command, script_line), script_line, line, None))
+            return True
+
+        # 局部变量声明
+        command = self._find_command(script_line, self.script_keyword.set_local_variable)
         if command is not None:
             # 把要赋值的变量传入栈中
-            # commands, param_index = self._command_replace(command)
-            module_code.append(Command(self.variable.set_variable, self._command_param(command, script_line), script_line, line, None))
+            module_code.append(Command(self.variable.set_local_variable, self._command_param(command, script_line), script_line, line, None))
+            return True
+        # 全局变量声明
+        command = self._find_command(script_line, self.script_keyword.set_global_variable)
+        if command is not None:
+            # 把要赋值的变量传入栈中
+            module_code.append(Command(self.variable.set_global_variable, self._command_param(command, script_line), script_line, line, None))
             return True
 
-        # 变量获取
-        command = self._find_command(script_line, self.script_keyword.get_variable)
+        # 局部变量获取
+        command = self._find_command(script_line, self.script_keyword.get_local_variable)
         if command is not None:
             # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
-            module_code.append(Command(self.variable.get_variable, self._command_param(command, script_line), script_line, line, None))
+            module_code.append(Command(self.variable.get_local_variable, self._command_param(command, script_line), script_line, line, None))
             return True
-
+        # 全局变量获取
+        command = self._find_command(script_line, self.script_keyword.get_global_variable)
+        if command is not None:
+            # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
+            module_code.append(Command(self.variable.get_global_variable, self._command_param(command, script_line), script_line, line, None))
+            return True
         # 代码起始位置
         command = self._find_command(script_line, self.script_keyword.code_start)
         if command is not None:
@@ -655,6 +909,8 @@ class CodeScript:
             module_info = self.compile_stack.pop()
             module_info.command_list.append(Command(self._return_call_module, None, script_line, line, None))
             self.script_module[module_info.name] = module_info
+            if len(self._compile_flag.if_block_stack) != 0:
+                raise ValueError(f'第{line}行，{script_line}，缺少条件结束标志！！！')
             return True
 
         # 如果调用脚本
@@ -697,6 +953,8 @@ class CodeScript:
             module_info = self.compile_stack.pop()
             module_info.append(Command(self._return_call_module, None, None, line, None))
             self.script_module[module_info.name] = module_info
+            if len(self._compile_flag.if_block_stack) != 0:
+                raise ValueError("模块中缺少条件结束标志，在主模块中！！！")
 
     def execute(self, need_logger=False, need_reset=True):
         """
@@ -758,8 +1016,10 @@ class CodeScript:
         log = []
         for name in module_name:
             self.runtime_stack.stack.clear()
-            # 需要在主方法结束的最后添加要直接执行的代码
+            # 初始化变量栈
+            self.variable.variable.append(Variable())
 
+            # 需要在主方法结束的最后添加要直接执行的代码
             command_block = CommandBlock(self.runtime_stack.root.name)
             command_block.command_list.extend(self.runtime_stack.root.command_block.command_list)
             command_block.append(Command(self._call_module, self.compile_stack.get_call_name(name), "SYSTEM_CALL", -1, None))
