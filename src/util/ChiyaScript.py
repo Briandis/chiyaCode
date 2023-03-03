@@ -193,7 +193,7 @@ class VariableSystem:
 
 class Command:
 
-    def __init__(self, function, param: tuple | None, source_code: str | None, line: int, param_index: tuple | list | None):
+    def __init__(self, function, param: list | tuple | None, source_code: str | None, line: int, param_index: tuple | list | None):
         """
         指令
         :param function: 映射的方法
@@ -297,6 +297,13 @@ class ScriptKeyword:
         """ 方法返回的参数 """
         self.function_get_return = []
         """ 获取方法返回 """
+
+        self.loop_start = []
+        """ 循环开始 """
+        self.loop_end = []
+        """ 循环结束 """
+        self.jump_loop = []
+        """ 跳出循环 """
 
 
 class CommandBlock:
@@ -527,6 +534,8 @@ class CompileFlag:
         """ 是多行注释 """
         self.if_block_stack = []
         """ 分支快栈 """
+        self.loop_block_stack = []
+        """ 循环分支块 """
 
 
 class CodeScript:
@@ -711,6 +720,31 @@ class CodeScript:
             if len(find_count) < count:
                 raise ValueError(f'注册的指令【{item}】至少需要【{count}】个占位符')
 
+    def register_loop_start(self, commands, function):
+        """
+        定义循环开始命令
+        :param commands:命令
+        :param function:循环函数
+        """
+        self._check_placeholder(commands, 1)
+        self._collection_add(self.script_keyword.loop_start, commands)
+        # 同时注册指令
+        self.register_system_command(commands, function)
+
+    def register_loop_end(self, *commands):
+        """
+        定义循环结束命令
+        :param commands:命令
+        """
+        self._collection_add(self.script_keyword.loop_end, commands)
+
+    def register_jump_loop(self, *commands):
+        """
+        定义跳出循环命令
+        :param commands:命令
+        """
+        self._collection_add(self.script_keyword.jump_loop, commands)
+
     def register_start_block(self, *block_start):
         """
         定义代码块开始
@@ -891,6 +925,61 @@ class CodeScript:
         if self._compile_flag.is_note_multiple:
             return True
 
+        # 循环开始
+        command = self._find_command(script_line, self.script_keyword.loop_start)
+        if command is not None:
+            # 第一个参数为迭代对象，第二个为变量
+            param = [None, *self._command_param(command, script_line)]
+            flag_name = uuid.uuid4().__str__()
+            jump_end = {"var": flag_name, "start": len(module_code.command_list), "end": -1, "loop_index": 0}
+            self._compile_flag.loop_block_stack.append(jump_end)
+
+            def loop_switch(*data):
+                param[0] = data[0]
+                self.variable.set_system_variable(False, flag_name, jump_end)
+                loop_flag, item = self.system_command[command].function(data[0], jump_end["loop_index"])
+                jump_end["loop_index"] += 1
+                # 拿到循环条件
+                if loop_flag:
+                    self.variable.set_variable(False, param[1], item)
+                    jump_end["loop"] = loop_flag
+                else:
+                    self.runtime_stack.goto(jump_end["end"])
+                    jump_end["loop_index"] = 0
+
+            module_code.append(Command(loop_switch, param, script_line, line, None))
+            return True
+
+        # 跳出循环
+        command = self._find_command(script_line, self.script_keyword.jump_loop)
+        if command is not None:
+            if len(self._compile_flag.loop_block_stack) == 0:
+                raise ValueError(f"缺少条件语句块！！！{line} {script_line}")
+            jump_end = self._compile_flag.loop_block_stack[-1]
+
+            def jump_start():
+                # 回到开始的地方
+                self.runtime_stack.goto(jump_end["start"])
+
+            module_code.append(Command(jump_start, None, script_line, line, None))
+            return True
+
+        # 结束循环
+        command = self._find_command(script_line, self.script_keyword.loop_end)
+
+        if command is not None:
+
+            if len(self._compile_flag.loop_block_stack) == 0:
+                return False
+            jump_end = self._compile_flag.loop_block_stack.pop()
+            jump_end["end"] = len(module_code.command_list) + 1
+
+            def loop_switch(*data):
+                if jump_end["loop"]:
+                    self.runtime_stack.goto(jump_end["start"])
+
+            module_code.append(Command(loop_switch, None, script_line, line, None))
+            return True
         # 分支块
         command = self._find_command(script_line, self.script_keyword.if_block)
         if command is not None:
@@ -1155,6 +1244,14 @@ class ChiyaScript:
         return a
 
     @staticmethod
+    def _loop(list_data, loop_index):
+        if isinstance(list_data, int):
+            return True, None
+        if loop_index < len(list_data):
+            return True, list_data[loop_index]
+        return False, None
+
+    @staticmethod
     def _init_script():
         script = CodeScript()
 
@@ -1170,6 +1267,10 @@ class ChiyaScript:
         script.register_if_block(["if{}"], ChiyaScript._if)
         script.register_else_block("else")
         script.register_end_if_block("end if")
+
+        script.register_loop_start(["loop {}"], ChiyaScript._loop)
+        script.register_loop_end("end loop")
+        script.register_jump_loop("jump")
 
         script.register_set_local_variable("@var {}", "@var {}={}")
         script.register_get_local_variable("@get {}", "@get {}->{}")
