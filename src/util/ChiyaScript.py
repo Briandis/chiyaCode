@@ -1173,7 +1173,7 @@ class ChiyaScript:
         script.register_get_local_variable("@get {}", "@get {}->{}")
 
         script.register_set_global_variable("@push {}", "@push {}={}")
-        script.register_get_global_variable("@pull {}", "@pull {} to {}")
+        script.register_get_global_variable("@pull {}", "@pull {}->{}")
 
         script.register_note_line("//{}", "#{}")
         script.register_note_multiple("/*{}", "/*", "*/")
