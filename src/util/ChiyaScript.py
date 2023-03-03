@@ -164,7 +164,10 @@ class VariableSystem:
         if "param" not in self.variable[-1].system:
             raise ValueError(f"调用方法缺少参数{param}")
         function_param = self.variable[-1].system["param"]
-        self.set_variable(False, param, function_param[0])
+        data = None
+        if len(function_param) > 0:
+            data = function_param.pop()
+        self.set_variable(False, param, data)
 
     def function_return(self, param):
         """
@@ -624,8 +627,7 @@ class CodeScript:
         # 变量栈添加信息
         variable = Variable()
         if param is not None:
-            variable.system["param"] = param
-
+            variable.system["param"] = list(param)
         self.variable.variable.append(variable)
 
     def _return_call_module(self):
@@ -1145,7 +1147,7 @@ class ChiyaScript:
 
     @staticmethod
     def _if_equal(a, *b):
-        print(a,b)
+        print(a, b)
         return a == b[0]
 
     @staticmethod
