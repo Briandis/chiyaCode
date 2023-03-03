@@ -134,6 +134,11 @@ class VariableSystem:
                 is_global, data = self.variable_get_stack.pop()
                 if len(data) > 1:
                     index = int(data[1]) - 1
+
+                if len(param) <= index:
+                    # 如果参数少，扩增参数
+                    for i in range(index - len(param) + 1):
+                        param.append(None)
                 param[index] = self.get(data[0], is_global)
 
     def call_set(self, function):
@@ -150,6 +155,37 @@ class VariableSystem:
 
             return call
         return None
+
+    def function_set_param(self, param):
+        """
+        接收方法参数至局部变量
+        :param param:参数
+        """
+        if "param" not in self.variable[-1].system:
+            raise ValueError(f"调用方法缺少参数{param}")
+        function_param = self.variable[-1].system["param"]
+        self.set_variable(False, param, function_param[0])
+
+    def function_return(self, param):
+        """
+        方法返回
+        :param param:参数
+        """
+        if len(self.variable) > 1:
+            if "return" not in self.variable[-2].system:
+                self.variable[-2].system["return"] = []
+            self.variable[-2].system["return"].append(self.get(param))
+
+    def function_get_return(self, param):
+        """
+        获取方法返回
+        :param param:参数
+        """
+        if "return" not in self.variable[-1].system:
+            raise ValueError(f"方法没有接收到返回值{param}")
+        if len(self.variable) > 1:
+            data = self.variable[-1].system["return"].pop()
+            self.set_variable(False, param, data)
 
 
 class Command:
@@ -252,6 +288,12 @@ class ScriptKeyword:
         """ 否则处理块 """
         self.end_if = []
         """ 结束分支块 """
+        self.function_param = []
+        """ 方法声明接收参数 """
+        self.function_return = []
+        """ 方法返回的参数 """
+        self.function_get_return = []
+        """ 获取方法返回 """
 
 
 class CommandBlock:
@@ -570,16 +612,21 @@ class CodeScript:
             raise ImportError(f'{module_name}模块在脚本中不存在')
         return module_code
 
-    def _call_module(self, module_name: str):
+    def _call_module(self, module_name: str, *param):
         """
         调用并执行某个模块
         :param module_name:模块名称
+        :param param:参数
         """
         module_code = self._load_module(module_name)
         # 运行栈添加信息
         self.runtime_stack.append(RuntimeModule(module_name, module_code))
         # 变量栈添加信息
-        self.variable.variable.append(Variable())
+        variable = Variable()
+        if param is not None:
+            variable.system["param"] = param
+
+        self.variable.variable.append(variable)
 
     def _return_call_module(self):
         """
@@ -754,6 +801,31 @@ class CodeScript:
         # 同时注册指令
         self.register_system_command(commands, function)
 
+    def register_function_param(self, commands):
+        """
+        注册方法接收参数
+        :param commands:调用命令
+        """
+        self._check_placeholder(commands, 1)
+        self._collection_add(self.script_keyword.function_param, commands)
+        # 同时注册指令
+
+    def register_function_return(self, commands):
+        """
+        注册方法返回参数
+        :param commands:调用命令
+        """
+        self._check_placeholder(commands, 1)
+        self._collection_add(self.script_keyword.function_return, commands)
+
+    def register_function_get_return(self, commands):
+        """
+        注册获取方法返回参数
+        :param commands:调用命令
+        """
+        self._check_placeholder(commands, 1)
+        self._collection_add(self.script_keyword.function_get_return, commands)
+
     def register_else_block(self, commands):
         """
         注册分支判断逻辑
@@ -900,6 +972,28 @@ class CodeScript:
             # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
             module_code.append(Command(self.variable.get_global_variable, self._command_param(command, script_line), script_line, line, None))
             return True
+
+        # 方法参数获取
+        command = self._find_command(script_line, self.script_keyword.function_param)
+        if command is not None:
+            # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
+            module_code.append(Command(self.variable.function_set_param, self._command_param(command, script_line), script_line, line, None))
+            return True
+
+        # 方法参数返回
+        command = self._find_command(script_line, self.script_keyword.function_return)
+        if command is not None:
+            # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
+            module_code.append(Command(self.variable.function_return, self._command_param(command, script_line), script_line, line, None))
+            return True
+
+        # 获取方法返回参数
+        command = self._find_command(script_line, self.script_keyword.function_get_return)
+        if command is not None:
+            # 把要获取的变量传入栈中，传入原始元组，因为该指令可能存在坐标
+            module_code.append(Command(self.variable.function_get_return, self._command_param(command, script_line), script_line, line, None))
+            return True
+
         # 代码起始位置
         command = self._find_command(script_line, self.script_keyword.code_start)
         if command is not None:
@@ -919,10 +1013,13 @@ class CodeScript:
         # 如果调用脚本
         command = self._find_command(script_line, self.script_keyword.call_script)
         if command is not None:
-            call_module = self._command_param(command, script_line)[0]
+            call_module = self._command_param(command, script_line)
             # 此处装配调用模块和前缀
-            call_module = self.compile_stack.get_call_name(call_module)
-            module_code.append(Command(self._call_module, call_module, script_line, line, None))
+            module_name = self.compile_stack.get_call_name(call_module[0])
+            module_param = [module_name[0]]
+            if len(call_module) > 1:
+                module_param.extend(call_module[1:])
+            module_code.append(Command(self._call_module, tuple(module_param), script_line, line, None))
             return True
         return False
 
@@ -1042,3 +1139,77 @@ class CodeScript:
     def show_command(self):
         for command in self.command_map.values():
             print(f'指令:{command.old_command}\t参数映射关系：{command.param_index}')
+
+
+class ChiyaScript:
+
+    @staticmethod
+    def _if_equal(a, *b):
+        print(a,b)
+        return a == b[0]
+
+    @staticmethod
+    def _if(*a):
+        return a
+
+    @staticmethod
+    def _init_script():
+        script = CodeScript()
+
+        script.register_start_block("module {}", "模块 {}")
+        script.register_end_block("end", "结束")
+        script.register_invoke("call {}", "invoke {}", "run {}", "调用 {}")
+
+        script.register_function_param("@param {}")
+        script.register_function_return("@return {}")
+        script.register_function_get_return("@result {}")
+
+        script.register_if_block(["if=={}", "if {}=={}"], ChiyaScript._if_equal)
+        script.register_if_block(["if{}"], ChiyaScript._if)
+        script.register_else_block("else")
+        script.register_end_if_block("end if")
+
+        script.register_set_local_variable("@var {}", "@var {}={}")
+        script.register_get_local_variable("@get {}", "@get {}->{}")
+
+        script.register_set_global_variable("@push {}", "@push {}={}")
+        script.register_get_global_variable("@pull {}", "@pull {} to {}")
+
+        script.register_note_line("//{}", "#{}")
+        script.register_note_multiple("/*{}", "/*", "*/")
+        script.register_command(["print{}"], print)
+        return script
+
+    def __init__(self):
+        self.script = self._init_script()
+
+    def analyze(self, script: str):
+        """
+        解析脚本
+        :param script: 脚本
+        """
+        self.script.analyze(script)
+
+    def execute(self, need_logger=False, need_reset=True):
+        """
+        :param need_logger:需要记录日志
+        :param need_reset:是需要重新加载
+        执行指令
+        """
+        return self.script.execute(need_logger, need_reset)
+
+    def analyze_and_execute(self, text: str):
+        """
+        执行脚本
+        :param text: 脚本
+        """
+        self.script.analyze(text)
+        self.script.execute()
+
+    def execute_module(self, module_name, need_logger=False):
+        """
+        直接执行某个模块
+        :param module_name:模块名称
+        :param need_logger:需要记录日志
+        """
+        return self.script.execute_module(module_name, need_logger)
