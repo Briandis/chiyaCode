@@ -1,6 +1,33 @@
 import re
 import uuid
-from typing import List, Dict
+from typing import List, Dict, Tuple
+
+
+class LoggerUtil:
+
+    @staticmethod
+    def padding(list_data, padding_count=None, padding=" "):
+        """
+        填充字符串
+        :param list_data:字符串列表
+        :param padding_count: 填充的数量
+        :param padding: 填充字符
+        :return: 字符
+        """
+        if padding_count is None:
+            padding_count = []
+        result = ""
+        index = 0
+        for string in list_data:
+            string = f'{string}'
+            size = 0
+            if len(padding_count) > index:
+                size = padding_count[index] - len(string)
+                if size < 0:
+                    size = 0
+            result += string + padding * size
+            index += 1
+        return result
 
 
 class Variable:
@@ -213,15 +240,19 @@ class Command:
         self.param_index = param_index
         """ 参数映射位置 """
 
-    def execute(self, variable_system: VariableSystem):
+    def execute(self, variable_system: VariableSystem, logger=None):
         """
         执行命令
         :param variable_system:变量系统
+        :param logger:日志
         """
+        if logger is None:
+            logger = []
         # 定义返回操作
         call_set = variable_system.call_set(self.function)
         # 有参数的情况下
         if self.param is None:
+            logger.append(None)
             result = self.function()
         else:
             if self.param_index is None:
@@ -233,10 +264,12 @@ class Command:
                     param.append(self.param[index - 1])
             # 从变量栈中获取值，并且对参数进替换，只有在该执行方法不同的情况下
             variable_system.get_pop(self.function, param)
+            logger.append(param)
             # 执行
             result = self.function(*param)
 
         if call_set is not None:
+            logger.append(result)
             call_set(result)
 
 
@@ -488,7 +521,7 @@ class RuntimeStack:
         """
         return self.stack[-1]
 
-    def next(self) -> (Command, RuntimeModule):
+    def next(self) -> Tuple[Command, RuntimeModule]:
         """
         获取吓一跳命令，回自动出栈
         :return:
@@ -506,7 +539,8 @@ class RuntimeStack:
         """
         script_stack = []
         for runtime_module in self.stack:
-            script_stack.append(f'\t{runtime_module.name} : {runtime_module.last_command().source_code} line:{runtime_module.program_counter - 1}')
+            error_data = [runtime_module.name, runtime_module.program_counter - 1, runtime_module.last_command().source_code, ]
+            script_stack.append(LoggerUtil.padding(error_data, [18, 8]))
         return script_stack
 
     def reset(self):
@@ -942,6 +976,8 @@ class CodeScript:
                 # 拿到循环条件
                 if loop_flag:
                     self.variable.set_variable(False, param[1], item)
+                    if len(data) > 2:
+                        self.variable.set_variable(False, param[2], jump_end["loop_index"] - 1)
                     jump_end["loop"] = loop_flag
                 else:
                     self.runtime_stack.goto(jump_end["end"])
@@ -1147,16 +1183,19 @@ class CodeScript:
             if len(self._compile_flag.if_block_stack) != 0:
                 raise ValueError("模块中缺少条件结束标志，在主模块中！！！")
 
-    def execute(self, need_logger=False, need_reset=True):
+    def execute(self, need_logger=False, need_reset=True, logger=None):
         """
         :param need_logger:需要记录日志
         :param need_reset:是需要重新加载
+        :param logger:日志
         执行指令
         """
+        if logger is None:
+            logger = []
         if need_reset:
             self.runtime_stack.reset()
         command = None
-        logger = []
+        runtime_module = None
         try:
             while True:
                 # 运行栈为空，则程序结束
@@ -1166,15 +1205,18 @@ class CodeScript:
                 command, runtime_module = self.runtime_stack.next()
                 if command is None:
                     continue
+                line_logger = [runtime_module.name, runtime_module.program_counter, command.source_code]
                 if need_logger:
-                    logger.append(f'{runtime_module.name}:\t{runtime_module.program_counter}\t{command.source_code}')
-                command.execute(self.variable)
-        except:
+                    logger.append(line_logger)
+                command.execute(self.variable, line_logger)
+        except Exception as exception:
+            logger.append([runtime_module.name, runtime_module.program_counter, command.source_code, "执行脚本出错", exception])
             stack_info = self.runtime_stack.get_stack_info()
             msg = ""
             for info in stack_info:
-                msg += info + "\n"
-            raise RuntimeError(f"脚本执行出错！！！line: {command.line}\tparam: {command.param}\t{command.source_code}\n{msg}")
+                msg += f'\t{info}\n'
+            error_list = ["执行脚本出错！！！", runtime_module.name, command.line, command.source_code, exception, "\n", msg]
+            raise RuntimeError(LoggerUtil.padding(error_list, [13, 22, 8, 22, 35]))
         return logger
 
     def analyze_and_execute(self, text: str):
@@ -1206,25 +1248,31 @@ class CodeScript:
             module_name = (module_name,)
         log = []
         for name in module_name:
-            self.runtime_stack.stack.clear()
-            # 初始化变量栈
-            self.variable.variable.append(Variable())
+            try:
+                self.runtime_stack.stack.clear()
+                # 初始化变量栈
+                self.variable.variable.append(Variable())
 
-            # 需要在主方法结束的最后添加要直接执行的代码
-            command_block = CommandBlock(self.runtime_stack.root.name)
-            command_block.command_list.extend(self.runtime_stack.root.command_block.command_list)
-            command_block.append(Command(self._call_module, self.compile_stack.get_call_name(name), "SYSTEM_CALL", -1, None))
+                # 需要在主方法结束的最后添加要直接执行的代码
+                command_block = CommandBlock(self.runtime_stack.root.name)
+                command_block.command_list.extend(self.runtime_stack.root.command_block.command_list)
+                command_block.append(Command(self._call_module, self.compile_stack.get_call_name(name), "SYSTEM_CALL", -1, None))
 
-            runtime_module = RuntimeModule(self.runtime_stack.root.name, command_block)
-            self.runtime_stack.append(runtime_module)
+                runtime_module = RuntimeModule(self.runtime_stack.root.name, command_block)
+                self.runtime_stack.append(runtime_module)
 
-            if need_logger:
-                log.append(f'{name}模块开始直接执行')
-            module_log = self.execute(need_logger, False)
-            if need_logger:
-                for item in module_log:
-                    log.append('\t' + item)
-                log.append(f'{name}模块执行完毕\n')
+                if need_logger:
+                    log.append([name, 0, "模块开始运行"])
+                self.execute(need_logger, False, log)
+                if need_logger:
+                    log.append([name, 0, "模块执行完毕"])
+            except Exception as exception:
+                print(exception)
+                if need_logger:
+                    log.append([name, -1, "因为异常终止"])
+            finally:
+                if need_logger:
+                    log.append(())
         return log
 
     def show_command(self):
@@ -1246,7 +1294,7 @@ class ChiyaScript:
     @staticmethod
     def _loop(list_data, loop_index):
         if isinstance(list_data, int):
-            return True, None
+            return list_data > loop_index, loop_index
         if loop_index < len(list_data):
             return True, list_data[loop_index]
         return False, None
@@ -1268,7 +1316,7 @@ class ChiyaScript:
         script.register_else_block("else")
         script.register_end_if_block("end if")
 
-        script.register_loop_start(["loop {}"], ChiyaScript._loop)
+        script.register_loop_start(["loop {}", "loop {} {}", "loop {},{}"], ChiyaScript._loop)
         script.register_loop_end("end loop")
         script.register_jump_loop("jump")
 
@@ -1316,3 +1364,9 @@ class ChiyaScript:
         :param need_logger:需要记录日志
         """
         return self.script.execute_module(module_name, need_logger)
+
+    @staticmethod
+    def show_log(logger: list):
+        padding = [20, 8, 22, 35, 20, 20]
+        for log in logger:
+            print(LoggerUtil.padding(log, padding))
