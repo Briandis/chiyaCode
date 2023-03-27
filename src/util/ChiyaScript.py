@@ -337,6 +337,8 @@ class ScriptKeyword:
         """ 循环结束 """
         self.jump_loop = []
         """ 跳出循环 """
+        self.loop_break = []
+        """ 终止循环 """
 
 
 class CommandBlock:
@@ -779,6 +781,13 @@ class CodeScript:
         """
         self._collection_add(self.script_keyword.jump_loop, commands)
 
+    def register_loop_break(self, *commands):
+        """
+        定义终止循环命令
+        :param commands:命令
+        """
+        self._collection_add(self.script_keyword.loop_break, commands)
+
     def register_start_block(self, *block_start):
         """
         定义代码块开始
@@ -999,12 +1008,23 @@ class CodeScript:
 
             module_code.append(Command(jump_start, None, script_line, line, None))
             return True
+        # 终止循环
+        command = self._find_command(script_line, self.script_keyword.jump_loop)
+        if command is not None:
+            if len(self._compile_flag.loop_block_stack) == 0:
+                raise ValueError(f"缺少条件语句块！！！{line} {script_line}")
+            jump_end = self._compile_flag.loop_block_stack[-1]
 
+            def loop_end():
+                # 终止
+                self.runtime_stack.goto(jump_end["end"])
+                jump_end["loop_index"] = 0
+
+            module_code.append(Command(loop_end, None, script_line, line, None))
+            return True
         # 结束循环
         command = self._find_command(script_line, self.script_keyword.loop_end)
-
         if command is not None:
-
             if len(self._compile_flag.loop_block_stack) == 0:
                 return False
             jump_end = self._compile_flag.loop_block_stack.pop()
@@ -1318,7 +1338,8 @@ class ChiyaScript:
 
         script.register_loop_start(["loop {}", "loop {} {}", "loop {},{}"], ChiyaScript._loop)
         script.register_loop_end("end loop")
-        script.register_jump_loop("jump")
+        script.register_jump_loop("next")
+        script.register_loop_break("break")
 
         script.register_set_local_variable("@var {}", "@var {}={}")
         script.register_get_local_variable("@get {}", "@get {}->{}")
