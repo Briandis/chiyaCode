@@ -24,16 +24,16 @@ from src.util.chiyaUtil import OSUtil
 class CodeTemplate:
 
     @staticmethod
-    def analyze_template_flow(codeConfig: CodeConfig):
+    def analyze_template_flow(code_config: CodeConfig):
         """
         解析代码流
-        :param codeConfig: 代码配置
+        :param code_config: 代码配置
         :return: 代码流
         """
-        if codeConfig.createConfig.codeTemplateFlow.value is not None:
-            code_list = codeConfig.createConfig.codeTemplateFlow.value.split("->")
+        if code_config.createConfig.codeTemplateFlow.value is not None:
+            code_list = code_config.createConfig.codeTemplateFlow.value.split("->")
         else:
-            return codeConfig.createConfig.codeTemplateFlow.default
+            return code_config.createConfig.codeTemplateFlow.default
         for i in range(len(code_list)):
             code_list[i] = code_list[i].replace(" ", "")
         # 得到有效排序集
@@ -47,27 +47,27 @@ class CodeTemplate:
         return code_flow
 
     @staticmethod
-    def get_template(template_type: str, next_type: str, codeConfig: CodeConfig):
+    def get_template(template_type: str, next_type: str, code_config: CodeConfig):
         if template_type == "controller":
-            return ControllerJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_service(codeConfig))
+            return ControllerJavaCode.create(code_config, JavaCode.DefaultAttribute.get_service(code_config))
 
         if template_type == "service":
             if next_type == "domain":
-                return ServiceImplJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_domain(codeConfig), BaseApi.BaseAPIImpl)
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_domain(code_config), BaseApi.BaseAPIImpl)
             if next_type == "repository":
-                return ServiceImplJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_repository(codeConfig), BaseApi.BaseAPIImpl)
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl)
             if next_type == "mapper":
-                return ServiceImplJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_mapper(codeConfig), BaseApi.BaseRepository)
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository)
 
         if template_type == "domain":
             if next_type == "repository":
-                return DomainImplJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_repository(codeConfig), BaseApi.BaseAPIImpl)
+                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl)
             if next_type == "mapper":
-                return DomainImplJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_mapper(codeConfig), BaseApi.BaseRepository)
+                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository)
 
         if template_type == "repository":
             if next_type == "mapper":
-                return RepositoryImplJavaCode.create(codeConfig, JavaCode.DefaultAttribute.get_mapper(codeConfig), BaseApi.BaseRepository)
+                return RepositoryImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository)
 
 
 class Generate:
