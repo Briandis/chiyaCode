@@ -23,23 +23,25 @@ def set_module(module, a, b, c, ):
     module.remark = c
 
 
+package_name = "chiya.test"
+
 codeConfig = CodeConfig()
 
-set_module(codeConfig.module.entity, "chiya.test.user.entity", "TestUser", "测试类")
-set_module(codeConfig.module.baseEntity, "chiya.test.user.entity", "BaseTestUser", "测试类")
-set_module(codeConfig.module.controller, "chiya.test.user.controller", "TestUserController", "测试类")
-set_module(codeConfig.module.serviceInterface, "chiya.test.user.service", "TestUserService", "测试类")
-set_module(codeConfig.module.serviceImplements, "chiya.test.user.service.impl", "TestUserServiceImpl", "测试类")
-set_module(codeConfig.module.mapperInterface, "chiya.test.user.mapper", "TestUserMapper", "测试类")
-set_module(codeConfig.module.baseMapperInterface, "chiya.test.user.mapper", "BaseTestUserMapper", "测试类")
-set_module(codeConfig.module.domain, "chiya.test.user.domain", "TestUserDomain", "测试类")
-set_module(codeConfig.module.domainImpl, "chiya.test.user.domain.impl", "TestUserDomainImpl", "测试类")
-set_module(codeConfig.module.repository, "chiya.test.user.repository", "TestUserRepository", "测试类")
-set_module(codeConfig.module.repositoryImpl, "chiya.test.user.repository.impl", "TestUserRepositoryImpl", "测试类")
-set_module(codeConfig.module.cache, "chiya.test.user.cache", "TestUserCache", "测试类")
-set_module(codeConfig.module.api, "chiya.test.user.controller", "TestUserApi", "测试类RPC")
-set_module(codeConfig.module.mapperXml, "chiya.test.user.mapper", "TestUserMapper", "测试类")
-set_module(codeConfig.module.baseMapperXml, "chiya.test.user.mapper", "BaseTestUserMapper", "测试类")
+set_module(codeConfig.module.entity, package_name + "user.entity", "TestUser", "测试类")
+set_module(codeConfig.module.baseEntity, package_name + "user.entity", "BaseTestUser", "测试类")
+set_module(codeConfig.module.controller, package_name + "user.controller", "TestUserController", "测试类")
+set_module(codeConfig.module.serviceInterface, package_name + "user.service", "TestUserService", "测试类")
+set_module(codeConfig.module.serviceImplements, package_name + "user.service", "TestUserServiceImpl", "测试类")
+set_module(codeConfig.module.mapperInterface, package_name + "user.mapper", "TestUserMapper", "测试类")
+set_module(codeConfig.module.baseMapperInterface, package_name + "user.mapper", "BaseTestUserMapper", "测试类")
+set_module(codeConfig.module.domain, package_name + "user.domain", "TestUserDomain", "测试类")
+set_module(codeConfig.module.domainImpl, package_name + "user.domain", "TestUserDomainImpl", "测试类")
+set_module(codeConfig.module.repository, package_name + "user.repository", "TestUserRepository", "测试类")
+set_module(codeConfig.module.repositoryImpl, package_name + "user.repository", "TestUserRepositoryImpl", "测试类")
+set_module(codeConfig.module.cache, package_name + "user.cache", "TestUserCache", "测试类")
+set_module(codeConfig.module.api, package_name + "user.controller", "TestUserApi", "测试类RPC")
+set_module(codeConfig.module.mapperXml, package_name + "user.mapper", "TestUserMapper", "测试类")
+set_module(codeConfig.module.baseMapperXml, package_name + "user.mapper", "BaseTestUserMapper", "测试类")
 field = Field()
 field.attr = "id"
 field.type = "Integer"
@@ -63,6 +65,7 @@ new_config = CodeConfig.get_code_config(json.loads(config_json))
 
 codeConfig.baseInfo.oneToOne.append(new_config)
 codeConfig.baseInfo.oneToMany.append(new_config)
+
 MultiTableParsing.parsing(codeConfig)
 print()
 
