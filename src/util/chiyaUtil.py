@@ -492,17 +492,18 @@ class OSUtil:
         return path
 
     @staticmethod
-    def create_dir(packet_name: str) -> str:
+    def create_package(packet_name: str, root_path=os.getcwd()) -> str:
         """
         创建文件夹
         :param packet_name:java的模块路径
+        :param root_path:传教的根目录
         :return:
         """
         lists = packet_name.split(".")
-        path = os.getcwd()
+        path = root_path
 
         path = OSUtil.is_not_dir_create(path, "data")
-        path = OSUtil.is_not_dir_create(path, "src")
+        # path = OSUtil.is_not_dir_create(path, "src")
         for i in lists:
             path = os.path.join(path, i)
             if not os.path.exists(path):
@@ -519,7 +520,7 @@ class OSUtil:
         :param data: 存储的字符数据
         :return:
         """
-        path = OSUtil.create_dir(path)
+        path = OSUtil.create_package(path)
         if "." not in suffix:
             suffix = "." + suffix
         with open(os.path.join(path, file_name + suffix), "w", encoding="utf-8") as file:
