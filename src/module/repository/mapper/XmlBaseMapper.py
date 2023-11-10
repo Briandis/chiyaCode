@@ -1054,7 +1054,7 @@ class SelectManyToManyBlock:
     @staticmethod
     def __find_select(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, middle_config: CodeConfig, many_config: CodeConfig):
         """
-        内联一对一查询
+        内联多对多查询
         :param xml_mapper: xml块
         :param code_config:配置
         :param middle_config: 中间配置

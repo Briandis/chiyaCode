@@ -1,3 +1,5 @@
+from typing import List
+
 from src.util.chiyaUtil import StringUtil
 
 
@@ -46,12 +48,10 @@ class BaseConfig:
         初始化类
         :param enable: 改配置默认是否启用
         """
-        # 配置名称
-        # self.name = None
-        # 配置是否启用
         self.enable = enable
-        # 传入的值
+        """ 配置是否启用 """
         self.value = None
+        """ 传入的值 """
 
     def set_field(self, d: dict):
         """
@@ -81,10 +81,10 @@ class FuzzySearch(BaseConfig):
 
     def __init__(self):
         super().__init__()
-        # 模糊搜索的字段，与属性中的值一致
-        self.data: [str] = None
-        # 默认的值，在value无效时使用
+        self.data: List[str] = []
+        """ 模糊搜索的字段，与字段中的值一致 """
         self.default = "keyWord"
+        """ 默认的值，在value无效时使用 """
 
 
 # resultMap替换resultType
@@ -115,8 +115,8 @@ class SplicingSQL(BaseConfig):
 
     def __init__(self):
         super().__init__()
-        # 默认的值，在value无效时使用
         self.default = "splicingSQL"
+        """ 默认的值，在value无效时使用 """
 
 
 # 额外的web-API
@@ -127,8 +127,8 @@ class ExtraAPI(BaseConfig):
 
     def __init__(self):
         super().__init__(False)
-        # 默认的值，在value无效时使用
         self.default = "admin"
+        """ 默认的值，在value无效时使用 """
 
 
 # 默认的web-api
@@ -149,8 +149,8 @@ class ToJsonString(BaseConfig):
 
     def __init__(self):
         super().__init__()
-        # 默认使用FAST JSON
         self.isFastJson = True
+        """ 默认使用FAST JSON """
 
 
 # 实体生成链式操作方法
@@ -183,8 +183,8 @@ class MethodName(BaseConfig):
     def __init__(self):
         # 默认为不启用
         super().__init__(False)
-        # 默认的值，在value无效时使用
         self.default = "add,delete,update,getOne,list"
+        """ 默认的值，在value无效时使用 """
 
     def get(self, index: int):
         """
@@ -215,7 +215,6 @@ class CreateFile(BaseConfig):
     def __init__(self):
         # 默认为不启用
         super().__init__(False)
-        # 默认的值，在value无效时使用
         self.default = [
             FileType.entityBase,  # 抽象基础实体
             FileType.entity,  # 实体
@@ -233,6 +232,7 @@ class CreateFile(BaseConfig):
             FileType.repository,  # 仓库接口
             FileType.repositoryImpl,  # 仓库实现
         ]
+        """ 默认的值，在value无效时使用 """
 
 
 # 不生成的文件
@@ -244,8 +244,8 @@ class NotCreateFile(BaseConfig):
     def __init__(self):
         # 默认为不启用
         super().__init__(False)
-        # 默认的值，在value无效时使用
-        self.default = []
+        self.default: List[str] = []
+        """ 默认的值，在value无效时使用 """
 
 
 # xml中字段别名配置
@@ -257,12 +257,12 @@ class XmlConfig(BaseConfig):
     def __init__(self):
         # 默认为不启用
         super().__init__(False)
-        # 默认的值，在value无效时使用
-        self.default = []
-        # 字段别名
+        self.default: List[str] = []
+        """ 默认的值，在value无效时使用 """
         self.fieldAlias = "chiya"
-        # 响应类型别名
+        """ 字段别名 """
         self.resultMapName = "result"
+        """ 响应类型别名 """
 
 
 # 控制层中，是否使用权限
@@ -302,13 +302,13 @@ class CodeTemplateFlow(BaseConfig):
 
     def __init__(self):
         super().__init__()
-        # 默认的模板流，基于DDD
         self.default = {
             "controller": "service",
             "service": "domain",
             "domain": "repository",
             "repository": "mapper"
         }
+        """ 默认的模板流，基于DDD """
 
 
 class CreateConfig:

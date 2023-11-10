@@ -30,10 +30,16 @@ class CodeTemplate:
         :param code_config: 代码配置
         :return: 代码流
         """
-        if code_config.createConfig.codeTemplateFlow.value is not None:
-            code_list = code_config.createConfig.codeTemplateFlow.value.split("->")
-        else:
+        code_list = []
+        if code_config.createConfig.codeTemplateFlow.value:
+            if type(code_config.createConfig.codeTemplateFlow.value) == dict:
+                return code_config.createConfig.codeTemplateFlow.value
+            if type(code_config.createConfig.codeTemplateFlow.value) == str:
+                # 描述的语法形式为controller->service->domain->repository->mapper
+                code_list = code_config.createConfig.codeTemplateFlow.value.split("->")
+        if code_list:
             return code_config.createConfig.codeTemplateFlow.default
+
         for i in range(len(code_list)):
             code_list[i] = code_list[i].replace(" ", "")
         # 得到有效排序集
@@ -100,83 +106,91 @@ class Generate:
         for code_config in self.config:
             self.parsing(code_config)
 
-    def parsing(self, codeConfig: CodeConfig):
+    def parsing(self, code_config: CodeConfig):
 
-        code_flow = CodeTemplate.analyze_template_flow(codeConfig)
+        code_flow = CodeTemplate.analyze_template_flow(code_config)
         # 生成控制层
-        if self.check_create(FileType.controller, codeConfig):
-            string = CodeTemplate.get_template("controller", code_flow.get("controller"), codeConfig)
-            OSUtil.save_file(codeConfig.module.controller.path, codeConfig.module.controller.className, "java", string)
-
+        if self.check_create(FileType.controller, code_config):
+            string = CodeTemplate.get_template("controller", code_flow.get("controller"), code_config)
+            if string:
+                OSUtil.save_file(code_config.module.controller.path, code_config.module.controller.className, "java", string)
+            else:
+                print(f"{code_config.baseInfo.tableName}的controller层不在codeFlow的配置中，却在试图生成")
         # RPC接入层
-        if self.check_create(FileType.api, codeConfig):
-            string = Api.APIJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.api.path, codeConfig.module.api.className, "java", string)
+        if self.check_create(FileType.api, code_config):
+            string = Api.APIJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.api.path, code_config.module.api.className, "java", string)
 
         # 业务接口层
-        if self.check_create(FileType.service, codeConfig):
-            string = Service.ServiceJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.serviceInterface.path, codeConfig.module.serviceInterface.className, "java", string)
+        if self.check_create(FileType.service, code_config):
+            string = Service.ServiceJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.serviceInterface.path, code_config.module.serviceInterface.className, "java", string)
 
         # 业务接口实现
-        if self.check_create(FileType.serviceImpl, codeConfig):
-            string = CodeTemplate.get_template("service", code_flow.get("service"), codeConfig)
-            OSUtil.save_file(codeConfig.module.serviceImplements.path, codeConfig.module.serviceImplements.className, "java", string)
+        if self.check_create(FileType.serviceImpl, code_config):
+            string = CodeTemplate.get_template("service", code_flow.get("service"), code_config)
+            OSUtil.save_file(code_config.module.serviceImplements.path, code_config.module.serviceImplements.className, "java", string)
 
         # 领域层接口
-        if self.check_create(FileType.domain, codeConfig):
-            string = Domain.DomainJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.domain.path, codeConfig.module.domain.className, "java", string)
+        if self.check_create(FileType.domain, code_config):
+            string = Domain.DomainJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.domain.path, code_config.module.domain.className, "java", string)
 
         # 领域层接口实现
-        if self.check_create(FileType.domainImpl, codeConfig):
-            string = CodeTemplate.get_template("domain", code_flow.get("domain"), codeConfig)
-            OSUtil.save_file(codeConfig.module.domainImpl.path, codeConfig.module.domainImpl.className, "java", string)
+        if self.check_create(FileType.domainImpl, code_config):
+            string = CodeTemplate.get_template("domain", code_flow.get("domain"), code_config)
+            if string:
+                OSUtil.save_file(code_config.module.domainImpl.path, code_config.module.domainImpl.className, "java", string)
+            else:
+                print(f"{code_config.baseInfo.tableName}的domain层不在codeFlow的配置中，却在试图生成")
 
         # 仓库层接口
-        if self.check_create(FileType.repository, codeConfig):
-            string = Repository.RepositoryJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.repository.path, codeConfig.module.repository.className, "java", string)
+        if self.check_create(FileType.repository, code_config):
+            string = Repository.RepositoryJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.repository.path, code_config.module.repository.className, "java", string)
 
         # 仓库层接口实现
-        if self.check_create(FileType.repositoryImpl, codeConfig):
-            string = CodeTemplate.get_template("repository", code_flow.get("repository"), codeConfig)
-            OSUtil.save_file(codeConfig.module.repositoryImpl.path, codeConfig.module.repositoryImpl.className, "java", string)
+        if self.check_create(FileType.repositoryImpl, code_config):
+            string = CodeTemplate.get_template("repository", code_flow.get("repository"), code_config)
+            if string:
+                OSUtil.save_file(code_config.module.repositoryImpl.path, code_config.module.repositoryImpl.className, "java", string)
+            else:
+                print(f"{code_config.baseInfo.tableName}的repository层不在codeFlow的配置中，却在试图生成")
 
         # mapper层接口
-        if self.check_create(FileType.javaMapper, codeConfig):
-            string = JavaMapper.MapperJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.mapperInterface.path, codeConfig.module.mapperInterface.className, "java", string)
+        if self.check_create(FileType.javaMapper, code_config):
+            string = JavaMapper.MapperJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.mapperInterface.path, code_config.module.mapperInterface.className, "java", string)
 
         # 抽象mapper层接口
-        if self.check_create(FileType.javaBaseMapper, codeConfig):
-            string = JavaBaseMapper.BaseMapperJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.baseMapperInterface.path, codeConfig.module.baseMapperInterface.className, "java", string)
+        if self.check_create(FileType.javaBaseMapper, code_config):
+            string = JavaBaseMapper.BaseMapperJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.baseMapperInterface.path, code_config.module.baseMapperInterface.className, "java", string)
 
         # cache层接口
-        if self.check_create(FileType.cache, codeConfig):
-            string = Cache.CacheJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.cache.path, codeConfig.module.cache.className, "java", string)
+        if self.check_create(FileType.cache, code_config):
+            string = Cache.CacheJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.cache.path, code_config.module.cache.className, "java", string)
 
         # 实体
-        if self.check_create(FileType.entity, codeConfig):
-            string = Entity.EntityJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.entity.path, codeConfig.module.entity.className, "java", string)
+        if self.check_create(FileType.entity, code_config):
+            string = Entity.EntityJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.entity.path, code_config.module.entity.className, "java", string)
 
         # 抽象实体
-        if self.check_create(FileType.entityBase, codeConfig):
-            string = BaseEntity.BaseEntityJavaCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.baseEntity.path, codeConfig.module.baseEntity.className, "java", string)
+        if self.check_create(FileType.entityBase, code_config):
+            string = BaseEntity.BaseEntityJavaCode.create(code_config)
+            OSUtil.save_file(code_config.module.baseEntity.path, code_config.module.baseEntity.className, "java", string)
 
         # 生成Mapper.xml文件
-        if self.check_create(FileType.xmlMapper, codeConfig):
-            string = XmlMapperCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.mapperXml.path, codeConfig.module.mapperXml.className, "xml", string)
+        if self.check_create(FileType.xmlMapper, code_config):
+            string = XmlMapperCode.create(code_config)
+            OSUtil.save_file(code_config.module.mapperXml.path, code_config.module.mapperXml.className, "xml", string)
 
         # 生成自动生成的XML文件
-        if self.check_create(FileType.xmlBaseMapper, codeConfig):
-            string = XmlBaseMapperCode.create(codeConfig)
-            OSUtil.save_file(codeConfig.module.baseMapperXml.path, codeConfig.module.baseMapperXml.className, "xml", string)
+        if self.check_create(FileType.xmlBaseMapper, code_config):
+            string = XmlBaseMapperCode.create(code_config)
+            OSUtil.save_file(code_config.module.baseMapperXml.path, code_config.module.baseMapperXml.className, "xml", string)
 
     @staticmethod
     def check_create(create_type: str, config: CodeConfig):

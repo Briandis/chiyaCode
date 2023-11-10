@@ -7,8 +7,8 @@ from src.controller.API import *
 from src.httpServer.Server import Server
 
 if __name__ == '__main__':
-    print("默认端口11451")
-    port = 11451
+    port = 14514
+    print(f"默认端口{port}")
     ip = ""
     print("开始将本启动器下的html设为web文件夹~~~")
     path = os.path.join(os.getcwd(), "html")

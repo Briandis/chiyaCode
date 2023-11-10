@@ -1,3 +1,5 @@
+from typing import List
+
 from src.java.BaseModuleConfig import CreateConfig
 from src.util.chiyaUtil import StringUtil, ObjectUtil
 
@@ -61,10 +63,10 @@ class ModuleInfo:
     模块信息
     """
 
-    def __init__(self, path: str = None, className: str = None, remark: str = None):
+    def __init__(self, path: str = None, class_name: str = None, remark: str = None):
         self.path = path
         """ 所在路径 """
-        self.className = className
+        self.className = class_name
         """ 类型名称 """
         self.remark = remark
         """ 备注 """
@@ -89,6 +91,17 @@ class ModuleInfo:
         :return:全路径
         """
         return self.path + "." + self.className
+
+    def set_module(self, module_path, module_class_name, module_remark):
+        """
+        设置模块信息
+        @param module_path:类路径
+        @param module_class_name:类名
+        @param module_remark:类备注
+        """
+        self.path = module_path
+        self.className = module_class_name
+        self.remark = module_remark
 
 
 class ModuleConfig:
@@ -130,6 +143,19 @@ class ModuleConfig:
         self.cache = ModuleInfo()
         """ 缓存层 """
 
+    @staticmethod
+    def set_module(module: ModuleInfo, module_path, module_class_name, module_remark):
+        """
+        设置模块信息
+        @param module：模块
+        @param module_path:类路径
+        @param module_class_name:类名
+        @param module_remark:类备注
+        """
+        module.path = module_path
+        module.className = module_class_name
+        module.remark = module_remark
+
 
 class ManyToMany:
     """
@@ -138,9 +164,9 @@ class ManyToMany:
 
     def __init__(self):
         # 中间表
-        self.to: CodeConfig = None
+        self.to: CodeConfig | None = None
         # 另一方多的
-        self.many: CodeConfig = None
+        self.many: CodeConfig | None = None
 
     @staticmethod
     def get_many_to_many(config: dict):
@@ -161,23 +187,23 @@ class BaseInfo:
     """
 
     def __init__(self):
-        self.tableName: str = None
+        self.tableName: str | None = None
         """ 表名称 """
-        self.databaseType: str = None
+        self.databaseType: str | None = None
         """ 数据库类型 """
-        self.key: Field = None
+        self.key: Field | None = None
         """ 主键信息 """
-        self.attr: [Field] = []
+        self.attr: List[Field] = []
         """ 其他字段 """
-        self.oneToOne: [CodeConfig] = []
+        self.oneToOne: List[CodeConfig] = []
         """ 一对一的配置 """
-        self.oneToMany: [CodeConfig] = []
+        self.oneToMany: List[CodeConfig] = []
         """ 一对多的配置 """
-        self.manyToMany: [ManyToMany] = []
+        self.manyToMany: List[ManyToMany] = []
         """ 多对多 """
-        self.foreignKey = None
+        self.foreignKey: str | None = None
         """ 在多表关系中，充当的外键 """
-        self.aliasTable: str = None
+        self.aliasTable: str | None = None
         """ 表的别名 """
 
     def init(self, config: dict):
@@ -228,6 +254,16 @@ class BaseInfo:
             return self.tableName
         return self.aliasTable
 
+    def check_key_in_attr(self, key: str):
+        """
+        检查key是否在属性列表中
+        :param key:属性
+        """
+        for attr in self.attr:
+            if StringUtil.is_string_tail(attr.field, key):
+                return True
+        return False
+
 
 class CodeConfig:
     """
@@ -253,15 +289,14 @@ class CodeConfig:
         code_config = CodeConfig()
         # 基础数据处理
         code_config.baseInfo.init(config.get("baseInfo"))
-
         # 模块处理
         if "module" in config:
             for module in config["module"]:
                 ObjectUtil.object_set_attr(code_config.module.__getattribute__(module), config["module"][module])
         # 生成配置处理
-        if "config" in config:
-            for key in config["config"]:
-                ObjectUtil.object_set_attr(code_config.createConfig.__getattribute__(key), config["config"][key])
+        if "createConfig" in config:
+            for key in config["createConfig"]:
+                ObjectUtil.object_set_attr(code_config.createConfig.__getattribute__(key), config["createConfig"][key])
         MultiTableParsing.parsing(code_config)
         return code_config
 
