@@ -37,19 +37,25 @@ class ThisObject:
     """
 
     @staticmethod
-    def attribute(config: CodeConfig, not_param=False):
+    def attribute(config: CodeConfig, not_param=False, other_config: CodeConfig = None):
         """
         方法参数 @Param("User") User user,
         :param config: 配置
         :param not_param :不需要@Param
+        :param other_config:另一方配置，用于校验是否要生成另一个名字
         :return: None|方法参数字符串
         """
-        attr_type = f'@Param("{config.module.entity.low_name()}") {config.module.entity.className}'
+        suffix = ""
+        if other_config and other_config.module.entity.low_name() == config.module.entity.low_name():
+            # 同名模块，需要添加下标区分
+            suffix = "1"
+
+        attr_type = f'@Param("{config.module.entity.low_name()}{suffix}") {config.module.entity.className}'
         if not_param:
             attr_type = config.module.entity.className
         return JavaCode.Attribute(
             attr_type,
-            f'{config.module.entity.low_name()}',
+            f'{config.module.entity.low_name()}{suffix}',
             f'{config.module.entity.remark}对象'
         )
 
@@ -637,7 +643,7 @@ class SelectOneToOne:
             MapperApi.SelectOneToOne.find_one_to_one(config, another),
             MapperApiNote.SelectOneToOne.find_one_to_one(config),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.attribute(),
             FuzzySearch.attribute(config),
             FuzzySearch.attribute(another, "1"),
@@ -655,7 +661,7 @@ class SelectOneToOne:
             MapperApi.SelectOneToOne.count_find_one_to_one(config, another),
             MapperApiNote.SelectOneToOne.count_find_one_to_one(config),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             FuzzySearch.attribute(config),
             FuzzySearch.attribute(another, "1"),
         )
@@ -671,7 +677,7 @@ class SelectOneToOne:
             MapperApi.SelectOneToOne.link_one_to_one(another),
             MapperApiNote.SelectOneToOne.link_one_to_one(config, another),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.attribute(),
             FuzzySearch.attribute(config),
             FuzzySearch.attribute(another, "1"),
@@ -689,7 +695,7 @@ class SelectOneToOne:
             MapperApi.SelectOneToOne.query_one_to_one(config, another),
             MapperApiNote.SelectOneToOne.query_one_to_one(config),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.attribute(),
             Page.attribute("1"),
             FuzzySearch.attribute(config),
@@ -708,7 +714,7 @@ class SelectOneToOne:
             MapperApi.SelectOneToOne.count_query_one_to_one(config, another),
             MapperApiNote.SelectOneToOne.count_query_one_to_one(config),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.attribute(),
             Page.attribute("1"),
             FuzzySearch.attribute(config),
@@ -750,7 +756,7 @@ class SelectOneToMany:
             MapperApi.SelectOneToMany.find_one_to_many(config, another),
             MapperApiNote.SelectOneToMany.find_one_to_many(another),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.param("onePage", config.module.entity.remark),
             Page.param("manyPage", another.module.entity.remark),
             FuzzySearch.attribute(config),
@@ -769,7 +775,7 @@ class SelectOneToMany:
             MapperApi.SelectOneToMany.count_find_one_to_many(config, another),
             MapperApiNote.SelectOneToMany.count_find_one_to_many(config),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.param("onePage", config.module.entity.remark),
             Page.param("manyPage", another.module.entity.remark),
             FuzzySearch.attribute(config),
@@ -787,7 +793,7 @@ class SelectOneToMany:
             MapperApi.SelectOneToMany.link_one_to_many(another),
             MapperApiNote.SelectOneToMany.link_one_to_many(config, another),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.param("onePage", config.module.entity.remark),
             Page.param("manyPage", another.module.entity.remark),
             FuzzySearch.attribute(config),
@@ -806,7 +812,7 @@ class SelectOneToMany:
             MapperApi.SelectOneToMany.query_one_to_many(config, another),
             MapperApiNote.SelectOneToMany.query_one_to_many(another),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.param("onePage", config.module.entity.remark),
             Page.param("manyPage", another.module.entity.remark),
             FuzzySearch.attribute(config),
@@ -825,7 +831,7 @@ class SelectOneToMany:
             MapperApi.SelectOneToMany.count_query_one_to_many(config, another),
             MapperApiNote.SelectOneToMany.count_query_one_to_many(another),
             ThisObject.attribute(config),
-            ThisObject.attribute(another),
+            ThisObject.attribute(another, other_config=config),
             Page.param("onePage", config.module.entity.remark),
             Page.param("manyPage", another.module.entity.remark),
             FuzzySearch.attribute(config),
@@ -914,6 +920,9 @@ class SelectForeignKey:
             if i.field == another.baseInfo.foreignKey:
                 attr = i
         if attr is None:
+            return
+        # 如果与自身重复，则不查询
+        if config.module.entity.low_name() == another.module.entity.low_name():
             return
 
             # 内联多对多查询

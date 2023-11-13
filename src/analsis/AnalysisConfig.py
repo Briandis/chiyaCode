@@ -68,6 +68,8 @@ class AnalysisConfig:
         """ 将生成的代码添加至module子包下 """
         self.fast_json_to_string = True
         """ 使用fastJSON进行序列化 """
+        self.use_cache = False
+        """ 使用缓存类 """
 
     def use_default_project_structure(self):
         """ 使用默认的层次结构 """
@@ -117,6 +119,29 @@ class AnalysisConfig:
             # FileType.domain,  # 领域接口
             # FileType.domainImpl,  # 领域实现
             # FileType.cache,  # 缓存层
+            # FileType.repository,  # 仓库接口
+            # FileType.repositoryImpl,  # 仓库实现
+        ]
+
+    def create_default_all_and_cache(self):
+        """
+        生成默认的全部文件
+        """
+        self.use_cache = True
+        self.create_file = [
+            FileType.entityBase,  # 抽象基础实体
+            FileType.entity,  # 实体
+            FileType.service,  # 业务层接口
+            FileType.serviceImpl,  # 业务层实现
+            FileType.javaBaseMapper,  # mapper层抽象接口
+            FileType.javaMapper,  # mapper接口
+            FileType.xmlBaseMapper,  # mapper抽象接口的xml
+            FileType.xmlMapper,  # mapper接口的xml
+            FileType.controller,  # web控制层
+            # FileType.api,  # rpc对外服务层
+            # FileType.domain,  # 领域接口
+            # FileType.domainImpl,  # 领域实现
+            FileType.cache,  # 缓存层
             # FileType.repository,  # 仓库接口
             # FileType.repositoryImpl,  # 仓库实现
         ]

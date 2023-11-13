@@ -9,7 +9,7 @@ class RepositoryImplJavaCode:
     """
 
     @staticmethod
-    def create(config: CodeConfig, service_attribute: JavaCode.Attribute, service_impl: Template):
+    def create(config: CodeConfig, service_attribute: JavaCode.Attribute, service_impl: Template, next_type):
         code = JavaCode.JavaCode(
             config.module.repositoryImpl.path,
             config.module.repositoryImpl.className,

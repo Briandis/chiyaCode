@@ -5,6 +5,20 @@ from src.xml.MapperTag import BlockTag
 from src.xml.MapperUtil import MapperUtil
 
 
+class AttributeUtil:
+
+    @staticmethod
+    def get_param_name(config: CodeConfig, other_config: CodeConfig):
+        """
+        判别参数名称是否重复
+        :param config: CodeConfig 配置列表
+        :param other_config: CodeConfig  配置列表
+        """
+        if config.module.entity.low_name() == other_config.module.entity.low_name():
+            return f'{config.module.entity.low_name()}1'
+        return None
+
+
 class XmlBaseMapperCode:
     """
     创建整个文件内容，主要是文件流程的组装
@@ -436,8 +450,8 @@ class DeleteBlock:
         sql_tag.add_data(f"DELETE FROM {MapperUtil.get_table_name(code_config)}")
         sql_tag.add_tag(
             MapperTag.Where()
-                .add_data(f'{code_config.baseInfo.key.field} = #{{{code_config.baseInfo.key.attr}}}')
-                .add_tag(BlockTag.if_var_block(code_config, is_field=True, is_attr=True, start="AND ", end=""))
+            .add_data(f'{code_config.baseInfo.key.field} = #{{{code_config.baseInfo.key.attr}}}')
+            .add_tag(BlockTag.if_var_block(code_config, is_field=True, is_attr=True, start="AND ", end=""))
         )
         return sql_tag
 
@@ -711,7 +725,7 @@ class SelectOneToOneBlock:
         # 一对一中，对方的外键就指向我方的字段
         where_tag.add_data(f'{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} = {other_config.baseInfo.tableName}.{code_config.baseInfo.key.field}')
         where_tag.add_tag(BlockTag.if_select_block(code_config, alias=code_config.baseInfo.get_table_alias()))
-        where_tag.add_tag(BlockTag.if_select_block(other_config, alias=other_config.baseInfo.get_table_alias()))
+        where_tag.add_tag(BlockTag.if_select_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), alias=other_config.baseInfo.get_table_alias()))
 
         BlockTag.fuzzy_search(code_config, where_tag, code_config.baseInfo.get_table_alias())
         BlockTag.fuzzy_search(other_config, where_tag, other_config.baseInfo.get_table_alias(), "1")
@@ -739,7 +753,7 @@ class SelectOneToOneBlock:
         # 一对一中，对方的外键就指向我方的字段
         where_tag.add_data(f'{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} = {other_config.baseInfo.tableName}.{code_config.baseInfo.key.field}')
         where_tag.add_tag(BlockTag.if_select_block(code_config, alias=code_config.baseInfo.get_table_alias()))
-        where_tag.add_tag(BlockTag.if_select_block(other_config, alias=other_config.baseInfo.get_table_alias()))
+        where_tag.add_tag(BlockTag.if_select_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), alias=other_config.baseInfo.get_table_alias()))
 
         BlockTag.fuzzy_search(code_config, where_tag, code_config.baseInfo.get_table_alias())
         BlockTag.fuzzy_search(other_config, where_tag, other_config.baseInfo.get_table_alias(), "1")
@@ -775,7 +789,7 @@ class SelectOneToOneBlock:
             sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
         else:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
-        sql_tag.add_tag(BlockTag.where_if_block(other_config, need_var=True))
+        sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("page1")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
@@ -811,7 +825,7 @@ class SelectOneToOneBlock:
             sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
         else:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
-        sql_tag.add_tag(BlockTag.where_if_block(other_config, need_var=True))
+        sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("page1")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
@@ -839,7 +853,7 @@ class SelectOneToOneBlock:
         # 一对一中，对方的外键就指向我方的字段
         where_tag.add_data(f'{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} = {other_config.baseInfo.tableName}.{code_config.baseInfo.key.field}')
         where_tag.add_tag(BlockTag.if_select_block(code_config, alias=code_config.baseInfo.tableName))
-        where_tag.add_tag(BlockTag.if_select_block(other_config, alias=other_config.baseInfo.tableName))
+        where_tag.add_tag(BlockTag.if_select_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), alias=other_config.baseInfo.tableName))
 
         BlockTag.fuzzy_search(code_config, where_tag, code_config.baseInfo.get_table_alias())
         BlockTag.fuzzy_search(other_config, where_tag, other_config.baseInfo.get_table_alias(), "1")
@@ -890,7 +904,7 @@ class SelectOneToManyBlock:
             sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
         else:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
-        sql_tag.add_tag(BlockTag.where_if_block(other_config, need_var=True))
+        sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("manyPage")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
@@ -927,7 +941,7 @@ class SelectOneToManyBlock:
             sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
         else:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
-        sql_tag.add_tag(BlockTag.where_if_block(other_config, need_var=True))
+        sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("manyPage")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
@@ -965,7 +979,7 @@ class SelectOneToManyBlock:
             sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
         else:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
-        sql_tag.add_tag(BlockTag.where_if_block(other_config, need_var=True))
+        sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("ManyPage")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
@@ -1001,7 +1015,7 @@ class SelectOneToManyBlock:
             sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
         else:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
-        sql_tag.add_tag(BlockTag.where_if_block(other_config, need_var=True))
+        sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("manyPage")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
@@ -1028,7 +1042,7 @@ class SelectOneToManyBlock:
         # 一对一中，对方的外键就指向我方的字段
         where_tag.add_data(f'{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = {other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
         where_tag.add_tag(BlockTag.if_select_block(code_config, alias=code_config.baseInfo.tableName))
-        where_tag.add_tag(BlockTag.if_select_block(other_config, alias=other_config.baseInfo.tableName))
+        where_tag.add_tag(BlockTag.if_select_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), alias=other_config.baseInfo.tableName))
 
         BlockTag.fuzzy_search(code_config, where_tag, code_config.baseInfo.get_table_alias())
         BlockTag.fuzzy_search(other_config, where_tag, other_config.baseInfo.get_table_alias(), "1")
@@ -1145,6 +1159,10 @@ class SelectInForeignKey:
                         break
                 if field is None or field.field in create_name:
                     continue
+                # 如果是关联到了自身表的外键，则跳过，防止重复生成
+                if code_config.baseInfo.tableName == one_to_one.baseInfo.tableName:
+                    continue
+
                 create_name.add(field.field)
                 sql_tag = MapperTag.Select(MapperApi.SelectForeignKey.select_in_and_where(code_config, field))
                 BlockTag.set_result(sql_tag, code_config)

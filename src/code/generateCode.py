@@ -59,21 +59,21 @@ class CodeTemplate:
 
         if template_type == "service":
             if next_type == "domain":
-                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_domain(code_config), BaseApi.BaseAPIImpl)
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_domain(code_config), BaseApi.BaseAPIImpl,"domain")
             if next_type == "repository":
-                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl)
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl, "repository")
             if next_type == "mapper":
-                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository)
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository,"mapper")
 
         if template_type == "domain":
             if next_type == "repository":
-                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl)
+                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl, "repository")
             if next_type == "mapper":
-                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository)
+                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository,"mapper")
 
         if template_type == "repository":
             if next_type == "mapper":
-                return RepositoryImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository)
+                return RepositoryImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository,"mapper")
 
 
 class Generate:

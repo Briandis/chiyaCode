@@ -8,7 +8,7 @@ init_config.project_name = "chiya.test"
 init_config.database_name = "chiya_test"
 init_config.database_port = 3307
 init_config.use_default_flow()
-init_config.create_default_all_file()
+init_config.create_default_all_and_cache()
 
 # 生成配置
 ParserConfig.create(init_config)

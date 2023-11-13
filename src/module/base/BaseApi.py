@@ -707,7 +707,7 @@ class RepositoryConfig:
         :return: None|方法参数字符串
         """
         if config.createConfig.fuzzySearch.enable:
-            if config.createConfig.fuzzySearch.value and len(config.createConfig.fuzzySearch.value) != 0:
+            if config.createConfig.fuzzySearch.data:
                 return ", null"
         return ""
 

@@ -72,6 +72,8 @@ class ParserConfig:
             code_config.createConfig.codeTemplateFlow.value = config.code_flow
             # toString方法设置
             code_config.createConfig.toJsonString.isFastJson = config.fast_json_to_string
+            # 是否使用缓存
+            code_config.createConfig.repositoryUseCache.enable = config.use_cache
 
             javabean[table.table_name] = code_config
         return javabean

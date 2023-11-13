@@ -9,7 +9,7 @@ class DomainImplJavaCode:
     """
 
     @staticmethod
-    def create(config: CodeConfig, service_attribute: JavaCode.Attribute, service_impl: Template):
+    def create(config: CodeConfig, service_attribute: JavaCode.Attribute, service_impl: Template, next_type):
         code = JavaCode.JavaCode(
             config.module.domainImpl.path,
             config.module.domainImpl.className,
