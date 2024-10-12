@@ -100,7 +100,9 @@ class ParserConfig:
             # 生成的表和不生成的表
             if (table.baseInfo.tableName in config.analysis_table or not config.analysis_table) and table.baseInfo.tableName not in config.analysis_not_create_table:
                 config_json = JsonUtil.to_json(table)
-                open(f"config\\{table.baseInfo.tableName}.json", "w", encoding="utf-8").write(config_json)
+                f=open(f"config/{table.baseInfo.tableName}.json", "w", encoding="utf-8")
+                f.write(config_json)
+                f.close()
 
         return list_table
 
