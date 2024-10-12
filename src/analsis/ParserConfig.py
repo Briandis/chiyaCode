@@ -74,6 +74,8 @@ class ParserConfig:
             code_config.createConfig.toJsonString.isFastJson = config.fast_json_to_string
             # 是否使用缓存
             code_config.createConfig.repositoryUseCache.enable = config.use_cache
+            # 是否使用权限
+            code_config.createConfig.chiyaSecurity.enable = config.use_security
 
             javabean[table.table_name] = code_config
         return javabean

@@ -1,5 +1,8 @@
+from src.project import Application
 from src.project.common import bootstrap, cache, converter, exception, threadSession, security, securityTask, bodyReaderFilter
 from src.project.config import globalCorsConfig, redisConfig, webConfig, beanConfig, databaseInitConfig, serverInfo
+from src.project.module import systemController
+from src.project.resources import ApplicationProperties, ApplicationPropertiesDev
 from src.util.chiyaUtil import OSUtil
 
 
@@ -66,6 +69,10 @@ class ProjectInit:
         bodyReaderFilter.create_file(root)
         databaseInitConfig.create_file(root)
         serverInfo.create_file(root)
+        systemController.create_file(root)
+        Application.create_file(root)
+        ApplicationProperties.create_file(root)
+        ApplicationPropertiesDev.create_file(root)
 
     @staticmethod
     def init(root: str):

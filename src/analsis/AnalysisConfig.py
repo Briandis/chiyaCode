@@ -70,6 +70,8 @@ class AnalysisConfig:
         """ 使用fastJSON进行序列化 """
         self.use_cache = False
         """ 使用缓存类 """
+        self.use_security = False
+        """ 在控制层中加入权限使用 """
 
     def use_default_project_structure(self):
         """ 使用默认的层次结构 """
