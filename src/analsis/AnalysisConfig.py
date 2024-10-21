@@ -169,3 +169,23 @@ class AnalysisConfig:
             FileType.repository,  # 仓库接口
             FileType.repositoryImpl,  # 仓库实现
         ]
+
+    def create_update_file(self):
+        """ 仅仅生成自动生成的几个文件 """
+        self.create_file = [
+            FileType.entityBase,  # 抽象基础实体
+            # FileType.entity,  # 实体
+            # FileType.service,  # 业务层接口
+            # FileType.serviceImpl,  # 业务层实现
+            FileType.javaBaseMapper,  # mapper层抽象接口
+            # FileType.javaMapper,  # mapper接口
+            FileType.xmlBaseMapper,  # mapper抽象接口的xml
+            # FileType.xmlMapper,  # mapper接口的xml
+            # FileType.controller,  # web控制层
+            # FileType.api,  # rpc对外服务层
+            # FileType.domain,  # 领域接口
+            # FileType.domainImpl,  # 领域实现
+            # FileType.cache,  # 缓存层
+            # FileType.repository,  # 仓库接口
+            # FileType.repositoryImpl,  # 仓库实现
+        ]
