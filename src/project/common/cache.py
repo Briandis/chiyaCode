@@ -11,12 +11,17 @@ def create_file(root: str):
     template += """
 import org.springframework.stereotype.Component;
 
+import chiya.security.certificate.ChiyaCertificate;
+
 /**
  * 全局本地缓存
  */
 @Component
 public class GlobalStore {
 
+	/** 数字签名 */
+	public static final ChiyaCertificate chiyaCertificate = new ChiyaCertificate("atuo-system", 1000 * 60 * 60 * 24 * 30, false);
+	
 }
 """
     OSUtil.save_file_java(path, "GlobalStore", template)

@@ -21,11 +21,12 @@ import chiya.core.base.count.InterfacePerformance;
 import chiya.core.base.string.StringUtil;
 import chiya.core.base.number.NumberUtil;
 import chiya.security.Method;
+import chiya.security.certificate.CertificateInfo;
 import chiya.web.security.SecurityCertification;
-import chiya.web.token.TokenUtil;
 import chiya.log.ChiyaLog;
 
 import """ + root + """.common.util.ThreadSession;
+import """ + root + """.common.module.cache.GlobalStore;
 
 /**
  * 拦截器，用于权限控制，token基础数据处理
@@ -55,20 +56,20 @@ public class Security implements HandlerInterceptor {
 		// 获取token
 		String token = request.getHeader("token");
 		// 用户标识
-		String user = null;
+		CertificateInfo certificateInfo = null;
 		if (token != null) {
 			if (token.startsWith("user")) {
 				token = token.substring("user".length());
-				user = TokenUtil.getData(token);
-				if (user != null) {
+				certificateInfo = GlobalStore.chiyaCertificate.getData(token);
+				if (certificateInfo != null) {
 					ThreadSession.setToken(token);
-					ThreadSession.setUserId(NumberUtil.parseIntOrNull(user));
+					ThreadSession.setUserId(NumberUtil.parseIntOrNull(certificateInfo.getContext()));
 				}
 			}
 		}
 		// 先检查游客模式
 		isRelease = SecurityCertification.checkTourists(url, Method.getByte(method));
-		if (!isRelease && user != null) {
+		if (!isRelease && certificateInfo != null) {
 			// 用户模式
 			isRelease = SecurityCertification.check(url, Method.getByte(method), null);
 		}
@@ -77,7 +78,7 @@ public class Security implements HandlerInterceptor {
 		
 		// 计数统计
 		interfaceCount.increment(isRelease);
-        ChiyaLog.info(StringUtil.spliceStringJoiner("\\t", "用户", user, "请求方式", method, "请求地址", url, "IP", ip, interfaceCount.getCountMsg(), "业务执行状态", isRelease));
+        ChiyaLog.info(StringUtil.spliceStringJoiner("\t", "用户", certificateInfo.getContext(), "请求方式", method, "请求地址", url, "IP", ip, interfaceCount.getCountMsg(), "业务执行状态", isRelease));
 		logParameter(request);
 		if (!isRelease) { response.setStatus(403); }
 		return isRelease;
