@@ -78,7 +78,22 @@ public class Security implements HandlerInterceptor {
 		
 		// 计数统计
 		interfaceCount.increment(isRelease);
-        ChiyaLog.info(StringUtil.spliceStringJoiner("\t", "用户", certificateInfo.getContext(), "请求方式", method, "请求地址", url, "IP", ip, interfaceCount.getCountMsg(), "业务执行状态", isRelease));
+        ChiyaLog.info(
+			StringUtil.spliceStringJoiner(
+				"	",
+				"用户",
+				certificateInfo != null ? certificateInfo.getContext() : null,
+				"请求方式",
+				method,
+				"请求地址",
+				url,
+				"IP",
+				ip,
+				interfaceCount.getCountMsg(),
+				"业务执行状态",
+				isRelease
+			)
+		);
 		logParameter(request);
 		if (!isRelease) { response.setStatus(403); }
 		return isRelease;

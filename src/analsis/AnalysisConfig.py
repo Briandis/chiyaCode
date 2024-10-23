@@ -180,7 +180,7 @@ class AnalysisConfig:
             FileType.javaBaseMapper,  # mapper层抽象接口
             # FileType.javaMapper,  # mapper接口
             FileType.xmlBaseMapper,  # mapper抽象接口的xml
-            # FileType.xmlMapper,  # mapper接口的xml
+            FileType.xmlMapper,  # mapper接口的xml
             # FileType.controller,  # web控制层
             # FileType.api,  # rpc对外服务层
             # FileType.domain,  # 领域接口

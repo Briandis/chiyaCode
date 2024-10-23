@@ -42,7 +42,7 @@ class ResultMapBlock:
             return
         generated_result.add(name)
         result_map = MapperTag.ResultMap(name, code_config.module.entity.get_package())
-        result_map.set_extends(f'{code_config.module.mapperXml.get_package()}.{name}')
+        result_map.set_extends(f'{code_config.module.baseMapperXml.get_package()}.{name}')
         if many_to_many:
             xml_mapper.add_tag(MapperTag.LineNote(f'{code_config.module.entity.remark}多对多{collection.module.entity.remark}的ResultMap'))
         else:
@@ -64,7 +64,7 @@ class ResultMapBlock:
         generated_result.add(name)
 
         result_map = MapperTag.ResultMap(name, code_config.module.entity.get_package())
-        result_map.set_extends(f'{code_config.module.mapperXml.get_package()}.{name}')
+        result_map.set_extends(f'{code_config.module.baseMapperXml.get_package()}.{name}')
         xml_mapper.add_tag(MapperTag.LineNote(f'{code_config.module.entity.remark}一对一{association.module.entity.remark}的ResultMap'))
         xml_mapper.add_tag(result_map)
 
@@ -81,7 +81,7 @@ class ResultMapBlock:
             return
 
         result_map = MapperTag.ResultMap(name, code_config.module.entity.get_package())
-        result_map.set_extends(f'{code_config.module.mapperXml.get_package()}.{name}')
+        result_map.set_extends(f'{code_config.module.baseMapperXml.get_package()}.{name}')
         xml_mapper.add_tag(MapperTag.LineNote(f'{code_config.module.entity.remark}的ResultMap'))
         xml_mapper.add_tag(result_map)
 
