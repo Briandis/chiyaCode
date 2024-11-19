@@ -1,7 +1,7 @@
 from src.java.CodeConfig import CodeConfig, Field
 from src.module.base.BaseApi import MapperApi, MapperApiNote
 from src.xml import MapperTag
-from src.xml.MapperTag import BlockTag
+from src.xml.MapperTag import BlockTag, If
 from src.xml.MapperUtil import MapperUtil
 
 
@@ -680,6 +680,84 @@ class SelectBlock:
         return sql_tag
 
     @staticmethod
+    def __select_pack(code_config: CodeConfig):
+        """
+        根据条件查询
+        :param code_config:配置
+        :return: Select标签
+        """
+        sql_tag = MapperTag.Select(MapperApi.Select.select_pack(code_config))
+        BlockTag.set_result(sql_tag, code_config)
+        sql_tag.add_data(f'SELECT * FROM {MapperUtil.get_table_name(code_config)}')
+
+        select_pack = "selectPack"
+
+        where_tag = MapperTag.Where()
+        if_tag = If(f"{select_pack}!=null")
+        where_tag.add_tag(if_tag)
+        sql_tag.add_tag(where_tag)
+        # 大于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greater", select_pack, "&gt;"))
+        # 小于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "less", select_pack, "&lt;"))
+        # 大于等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greaterEqual", select_pack, "&gt;="))
+        # 小于等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "lessEqual", select_pack, "&lt;="))
+        # 等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "equal", select_pack, "="))
+        # in
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "fieldIn", select_pack, "IN", True))
+        # like
+        search_tag = BlockTag.if_select_pack_block_fuzzy_search(code_config, select_pack, "like")
+        if search_tag:
+            if_tag.add_tag(search_tag)
+
+        if_tag2 = If(f"{select_pack}!=null")
+        if_tag2.add_tag(If(f'{select_pack}.splicingSQL!=null', f'${{{select_pack}.splicingSQL}}'))
+        order_by_tag = If(f"{select_pack}.orderBy!=null")
+        order_by_tag.add_tag(MapperTag.Foreach(f"{select_pack}.orderBy", opens="ORDER BY", close=" ").add_data("${obj.fieldName} ${obj.type}"))
+        if_tag2.add_tag(order_by_tag)
+
+        if_tag2.add_tag(If(f"{select_pack}.page!=null", f"LIMIT #{{{select_pack}.page.count}} OFFSET #{{{select_pack}.page.start}}"))
+        sql_tag.add_tag(if_tag2)
+        return sql_tag
+
+    @staticmethod
+    def __count_pack(code_config: CodeConfig):
+        """
+        查询计数
+        :param code_config:配置
+        :return: Select标签
+        """
+        sql_tag = MapperTag.Select(MapperApi.Select.count_pack(code_config))
+        sql_tag.set_result_type("int")
+        sql_tag.add_data(f'SELECT COUNT(*) FROM {MapperUtil.get_table_name(code_config)}')
+        select_pack = "selectPack"
+        where_tag = MapperTag.Where()
+        if_tag = If(f"{select_pack}!=null")
+        where_tag.add_tag(if_tag)
+        sql_tag.add_tag(where_tag)
+        # 大于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greater", select_pack, "&gt;"))
+        # 小于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "less", select_pack, "&lt;"))
+        # 大于等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greaterEqual", select_pack, "&gt;="))
+        # 小于等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "lessEqual", select_pack, "&lt;="))
+        # 等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "equal", select_pack, "="))
+        # in
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "fieldIn", select_pack, "IN", True))
+        # like
+        search_tag = BlockTag.if_select_pack_block_fuzzy_search(code_config, select_pack, "like")
+        if search_tag:
+            if_tag.add_tag(search_tag)
+
+        return sql_tag
+
+    @staticmethod
     def create(code_config: CodeConfig, xml_mapper: MapperTag.Mapper):
         if code_config.baseInfo.key is not None:
             # 根据ID查询
@@ -700,6 +778,12 @@ class SelectBlock:
         # 普通查询计数
         xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.Select.count(code_config)))
         xml_mapper.add_tag(SelectBlock.__count(code_config)).add_blank_line()
+        # 查询对象查询
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.Select.select_pack(code_config)))
+        xml_mapper.add_tag(SelectBlock.__select_pack(code_config)).add_blank_line()
+        # 查询对象计数
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.Select.count_pack(code_config)))
+        xml_mapper.add_tag(SelectBlock.__count_pack(code_config)).add_blank_line()
 
 
 class SelectOneToOneBlock:

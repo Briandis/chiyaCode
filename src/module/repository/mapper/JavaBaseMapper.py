@@ -59,6 +59,20 @@ class ThisObject:
             f'{config.module.entity.remark}对象'
         )
 
+    @staticmethod
+    def pack_attribute(config: CodeConfig):
+        """
+        方法参数 @Param("User") User user,
+        :param config: 配置
+        :return: None|方法参数字符串
+        """
+
+        return JavaCode.Attribute(
+            f'@Param("selectPack") SelectPack<{config.module.entity.className}>',
+            f'selectPack',
+            f'查询{config.module.entity.remark}包装对象'
+        )
+
 
 class ThisKey:
     """
@@ -203,6 +217,7 @@ class BaseMapperJavaCode:
         code.add_import(config.module.entity.get_package())
         code.add_import(f'java.util.List')
         code.add_import(f'chiya.core.base.page.Page')
+        code.add_import(f'chiya.core.base.pack.SelectPack')
 
         Insert.create(code, config)
         Delete.create(code, config)
@@ -529,6 +544,8 @@ class Select:
         code.add_function(Select.select_one(config))
         code.add_function(Select.select(config))
         code.add_function(Select.count(config))
+        code.add_function(Select.select_pack(config))
+        code.add_function(Select.count_pack(config))
 
     @staticmethod
     def select_by_id(config: CodeConfig):
@@ -598,6 +615,18 @@ class Select:
         return function
 
     @staticmethod
+    def select_pack(config: CodeConfig):
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(config),
+            MapperApi.Select.select_pack(config),
+            MapperApiNote.Select.select_pack(config),
+            ThisObject.pack_attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
     def count(config: CodeConfig):
         function = JavaCode.Function(
             "",
@@ -606,6 +635,18 @@ class Select:
             MapperApiNote.Select.count(config),
             ThisObject.attribute(config),
             FuzzySearch.attribute(config),
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_pack(config: CodeConfig):
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute("Integer", "i", "查询到的记录数"),
+            MapperApi.Select.count_pack(config),
+            MapperApiNote.Select.count_pack(config),
+            ThisObject.pack_attribute(config),
         )
         function.is_interface = True
         return function

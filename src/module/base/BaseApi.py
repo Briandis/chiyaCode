@@ -640,6 +640,14 @@ class MapperApi:
         def count(config: CodeConfig) -> str:
             return f'count{config.module.entity.className}'
 
+        @staticmethod
+        def select_pack(config: CodeConfig) -> str:
+            return f'selectPack{config.module.entity.className}'
+
+        @staticmethod
+        def count_pack(config: CodeConfig) -> str:
+            return f'countPack{config.module.entity.className}'
+
     class SelectOneToOne:
         @staticmethod
         def find_one_to_one(config: CodeConfig, another: CodeConfig) -> str:
@@ -995,6 +1003,14 @@ class MapperApiNote:
         @staticmethod
         def count(config: CodeConfig) -> str:
             return f'统计{config.module.entity.remark}记录数'
+
+        @staticmethod
+        def select_pack(config: CodeConfig) -> str:
+            return f'包装对象查询多个{config.module.entity.remark}'
+
+        @staticmethod
+        def count_pack(config: CodeConfig) -> str:
+            return f'包装对象统计{config.module.entity.remark}记录数'
 
     class SelectOneToOne:
         @staticmethod

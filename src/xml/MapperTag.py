@@ -417,7 +417,7 @@ class BlockTag:
     """
 
     @staticmethod
-    def field_if(field: Field, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_date=False) -> If:
+    def field_if(field: Field, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_date=False, connector="=", is_in=False) -> If:
         """
         根据字段生成IF块
         :param field:字段
@@ -428,10 +428,14 @@ class BlockTag:
         :param alias:别名
         :param end:内容结尾字符
         :param need_date:需要对日期处理
+        :param connector:连接符
+        :param is_in: 是in操作
         :return: IF标签块
         """
         test = f'{field.attr}!=null'
         data = ""
+        in_obj = None
+
         if var_name is not None:
             var_name += "."
             test = var_name + test
@@ -445,11 +449,19 @@ class BlockTag:
             data = f'{start}#{{{var_name}{field.attr}}}{end}'
         if is_field and is_attr:
             # <if test="x!=null">field = #{attr},</if>
-            data = f'{start}{alias}{field.field} = #{{{var_name}{field.attr}}}{end}'
+            data = f'{start}{alias}{field.field} {connector} #{{{var_name}{field.attr}}}{end}'
             if need_date and field.type == "Date":
-                data = f'{start}DATE({alias}{field.field}) = DATE(#{{{var_name}{field.attr}}}{end})'
+                data = f'{start}DATE({alias}{field.field}) {connector} DATE(#{{{var_name}{field.attr}}}{end})'
+            if is_in:
+                data = f'{start}{alias}{field.field} {connector} {end}'
+                in_obj = Foreach(f"selectPack.fieldIn.{field.attr}", opens="(", close=")").add_data("#{obj}")
 
-        return If(test, data)
+        if_obj = If(test, data)
+        if in_obj:
+            if_obj.indent_increase()
+            if_obj.add_tag(in_obj)
+            if_obj.indent_decrease()
+        return if_obj
 
     @staticmethod
     def field_if_tag(tag: Tag, code_config: CodeConfig, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_key=True):
@@ -476,7 +488,7 @@ class BlockTag:
             now_tag.add_tag(BlockTag.field_if(field, var_name, is_field, is_attr, start, alias, end))
 
     @staticmethod
-    def if_var_block(code_config: CodeConfig, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_key=True, need_date=False) -> If:
+    def if_var_block(code_config: CodeConfig, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_key=True, need_date=False, connector="=", is_in=False) -> If:
         """
         构建一个IF标签，并且加入IF判断空，当IF标签判断字段的时候
         <if test="attr!=null"> field, </if>
@@ -489,15 +501,17 @@ class BlockTag:
         :param end:内容结尾字符
         :param need_key: 需要主键
         :param need_date:需要进行日期处理
+        :param connector:连接符
+        :param is_in: 是否是in操作
         :return:IF块
         """
         if var_name is None:
             var_name = code_config.module.entity.low_name()
         now_tag = If(f'{var_name}!=null', None)
         if code_config.baseInfo.key is not None and need_key:
-            now_tag.add_tag(BlockTag.field_if(code_config.baseInfo.key, var_name, is_field, is_attr, start, alias, end, need_date))
+            now_tag.add_tag(BlockTag.field_if(code_config.baseInfo.key, var_name, is_field, is_attr, start, alias, end, need_date, connector, is_in))
         for field in code_config.baseInfo.attr:
-            now_tag.add_tag(BlockTag.field_if(field, var_name, is_field, is_attr, start, alias, end, need_date))
+            now_tag.add_tag(BlockTag.field_if(field, var_name, is_field, is_attr, start, alias, end, need_date, connector, is_in))
         return now_tag
 
     @staticmethod
@@ -645,10 +659,10 @@ class BlockTag:
         return If(f'{page}!=null', f'LIMIT #{{{page}.count}} OFFSET #{{{page}.start}}')
 
     @staticmethod
-    def set_result(sql_Tag: Select, code_config: CodeConfig, other_config: CodeConfig = None, one_to_one=False, one_to_many=False, many_to_many=False):
+    def set_result(sql_tag: Select, code_config: CodeConfig, other_config: CodeConfig = None, one_to_one=False, one_to_many=False, many_to_many=False):
         """
         设置返回类型
-        :param sql_Tag:标签
+        :param sql_tag:标签
         :param code_config:基础配置
         :param other_config: 其他配置
         :param one_to_one: 是否一对一
@@ -656,9 +670,9 @@ class BlockTag:
         :param many_to_many: 是否多对多
         """
         if code_config.createConfig.resultMap.enable:
-            sql_Tag.set_result_map(MapperUtil.result_map_name(code_config, other_config, one_to_one, one_to_many, many_to_many))
+            sql_tag.set_result_map(MapperUtil.result_map_name(code_config, other_config, one_to_one, one_to_many, many_to_many))
         else:
-            sql_Tag.set_result_type(code_config.module.entity.get_package())
+            sql_tag.set_result_type(code_config.module.entity.get_package())
 
     @staticmethod
     def add_include_tag(sql_tag: Tag, code_config: CodeConfig, other_config: CodeConfig = None):
@@ -681,3 +695,43 @@ class BlockTag:
                 sql_tag.add_tag(Include(MapperUtil.sql_tag_name(other_config)))
             else:
                 sql_tag.add_data("*")
+
+    @staticmethod
+    def if_select_pack_block(code_config: CodeConfig, block_type: None | str, select_pack="selectPack", connector="=", is_in=False):
+        """
+        查询对象专用的IF块
+        :param code_config:配置
+        :param block_type:  区块类型
+        :param select_pack:查询包装对象名称
+        :param connector:连接符
+        :param is_in: 是否是in
+        :return: if标签块
+        """
+        var_name = f"{select_pack}.{block_type}"
+        return BlockTag.if_var_block(code_config, var_name, True, True, f"AND ", "", "", True, True, connector, is_in)
+
+    @staticmethod
+    def if_select_pack_block_fuzzy_search(code_config: CodeConfig, select_pack="selectPack", block_type="like"):
+        """
+        查询对象所使用的模糊搜索
+        :param code_config:配置
+        :param select_pack:查询包装对象名称
+        :param block_type:类型名称
+        :return: if标签块
+        """
+
+        if_tag = If(f"{select_pack}.{block_type}!=null")
+        flag = False
+        # 主键的
+        if code_config.baseInfo.key.type == "String":
+            if_tag.add_tag(If(f'{select_pack}.{block_type}.{code_config.baseInfo.key.attr}!=null',
+                              f'AND {code_config.baseInfo.key.field} LIKE #{{{select_pack}.{block_type}.{code_config.baseInfo.key.attr}}}'))
+            flag = True
+        # 普通字段的
+        for field in code_config.baseInfo.attr:
+            if field.type == "String":
+                if_tag.add_tag(If(f'{select_pack}.{block_type}.{field.attr}!=null', f'AND {field.field} LIKE #{{{select_pack}.{block_type}.{field.attr}}}'))
+                flag = True
+        if flag:
+            return if_tag
+        return None
