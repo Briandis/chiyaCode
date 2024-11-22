@@ -72,6 +72,8 @@ class AnalysisConfig:
         """ 使用缓存类 """
         self.use_security = False
         """ 在控制层中加入权限使用 """
+        self.need_test_case = False
+        """ 需要生成测试用例 """
 
     def use_default_project_structure(self):
         """ 使用默认的层次结构 """

@@ -417,7 +417,7 @@ class BlockTag:
     """
 
     @staticmethod
-    def field_if(field: Field, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_date=False, connector="=", is_in=False) -> If:
+    def field_if(field: Field, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_date=False, connector="=", is_in=False, select_pack="selectPack") -> If:
         """
         根据字段生成IF块
         :param field:字段
@@ -430,6 +430,7 @@ class BlockTag:
         :param need_date:需要对日期处理
         :param connector:连接符
         :param is_in: 是in操作
+        :param select_pack: 查询包装块名称
         :return: IF标签块
         """
         test = f'{field.attr}!=null'
@@ -454,7 +455,7 @@ class BlockTag:
                 data = f'{start}DATE({alias}{field.field}) {connector} DATE(#{{{var_name}{field.attr}}}{end})'
             if is_in:
                 data = f'{start}{alias}{field.field} {connector} {end}'
-                in_obj = Foreach(f"selectPack.fieldIn.{field.attr}", opens="(", close=")").add_data("#{obj}")
+                in_obj = Foreach(f"{select_pack}.fieldIn.{field.attr}", opens="(", close=")").add_data("#{obj}")
 
         if_obj = If(test, data)
         if in_obj:
@@ -488,7 +489,8 @@ class BlockTag:
             now_tag.add_tag(BlockTag.field_if(field, var_name, is_field, is_attr, start, alias, end))
 
     @staticmethod
-    def if_var_block(code_config: CodeConfig, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_key=True, need_date=False, connector="=", is_in=False) -> If:
+    def if_var_block(code_config: CodeConfig, var_name=None, is_field=False, is_attr=True, start="", alias="", end=",", need_key=True, need_date=False, connector="=", is_in=False,
+                     select_pack="selectPack") -> If:
         """
         构建一个IF标签，并且加入IF判断空，当IF标签判断字段的时候
         <if test="attr!=null"> field, </if>
@@ -503,15 +505,16 @@ class BlockTag:
         :param need_date:需要进行日期处理
         :param connector:连接符
         :param is_in: 是否是in操作
+        :param select_pack: 查询包装块名称
         :return:IF块
         """
         if var_name is None:
             var_name = code_config.module.entity.low_name()
         now_tag = If(f'{var_name}!=null', None)
         if code_config.baseInfo.key is not None and need_key:
-            now_tag.add_tag(BlockTag.field_if(code_config.baseInfo.key, var_name, is_field, is_attr, start, alias, end, need_date, connector, is_in))
+            now_tag.add_tag(BlockTag.field_if(code_config.baseInfo.key, var_name, is_field, is_attr, start, alias, end, need_date, connector, is_in, select_pack))
         for field in code_config.baseInfo.attr:
-            now_tag.add_tag(BlockTag.field_if(field, var_name, is_field, is_attr, start, alias, end, need_date, connector, is_in))
+            now_tag.add_tag(BlockTag.field_if(field, var_name, is_field, is_attr, start, alias, end, need_date, connector, is_in, select_pack))
         return now_tag
 
     @staticmethod
@@ -552,7 +555,7 @@ class BlockTag:
         return set_tag
 
     @staticmethod
-    def foreach_block(code_config: CodeConfig, param="list", index="index", item="obj", separator=",", need_key=True) -> Foreach:
+    def foreach_block(code_config: CodeConfig, param="list", index="index", item="obj", separator=",", need_key=True, last_separator=False) -> Foreach:
         """
         生成迭代块
         :param code_config:配置
@@ -561,14 +564,24 @@ class BlockTag:
         :param item: 迭代对象名称
         :param separator: 拼接符
         :param need_key:需要主键
+        :param last_separator:
         :return: 迭代标签
         """
         foreach = Foreach(param, index, item, separator=separator)
         foreach.add_data("(")
         if code_config.baseInfo.key is not None and need_key:
             foreach.add_data(f'\t#{{{item}.{code_config.baseInfo.key.attr}}},')
+        count = 0
         for field in code_config.baseInfo.attr:
-            foreach.add_data(f'\t#{{{item}.{field.attr}}},')
+            if last_separator:
+                if count == len(code_config.baseInfo.attr) - 1:
+                    foreach.add_data(f'\t#{{{item}.{field.attr}}}')
+                else:
+                    foreach.add_data(f'\t#{{{item}.{field.attr}}},')
+                count += 1
+            else:
+                foreach.add_data(f'\t#{{{item}.{field.attr}}},')
+
         foreach.add_data(")")
         return foreach
 
@@ -675,12 +688,13 @@ class BlockTag:
             sql_tag.set_result_type(code_config.module.entity.get_package())
 
     @staticmethod
-    def add_include_tag(sql_tag: Tag, code_config: CodeConfig, other_config: CodeConfig = None):
+    def add_include_tag(sql_tag: Tag, code_config: CodeConfig, other_config: CodeConfig = None, code_is_temp=""):
         """
         添加多表查询中的参数
         :param sql_tag: 要添加的tag
         :param code_config: 本表配置
         :param other_config: 其他表配置
+        :param code_is_temp: 临时名称
         """
         # 如果只引入一方的情况下
         if other_config is None:
@@ -691,13 +705,13 @@ class BlockTag:
         else:
             # 需要同时引入双方
             if other_config.baseInfo.need_sql_block():
-                sql_tag.add_data(f'{code_config.baseInfo.tableName}.*,')
+                sql_tag.add_data(f'{code_is_temp}{code_config.baseInfo.tableName}.*,')
                 sql_tag.add_tag(Include(MapperUtil.sql_tag_name(other_config)))
             else:
                 sql_tag.add_data("*")
 
     @staticmethod
-    def if_select_pack_block(code_config: CodeConfig, block_type: None | str, select_pack="selectPack", connector="=", is_in=False):
+    def if_select_pack_block(code_config: CodeConfig, block_type: None | str, select_pack="selectPack", connector="=", is_in=False, table_alias=""):
         """
         查询对象专用的IF块
         :param code_config:配置
@@ -705,18 +719,20 @@ class BlockTag:
         :param select_pack:查询包装对象名称
         :param connector:连接符
         :param is_in: 是否是in
+        :param table_alias: 表别名
         :return: if标签块
         """
         var_name = f"{select_pack}.{block_type}"
-        return BlockTag.if_var_block(code_config, var_name, True, True, f"AND ", "", "", True, True, connector, is_in)
+        return BlockTag.if_var_block(code_config, var_name, True, True, f"AND ", table_alias, "", True, True, connector, is_in, select_pack)
 
     @staticmethod
-    def if_select_pack_block_fuzzy_search(code_config: CodeConfig, select_pack="selectPack", block_type="like"):
+    def if_select_pack_block_fuzzy_search(code_config: CodeConfig, select_pack="selectPack", block_type="like", table_alias=""):
         """
         查询对象所使用的模糊搜索
         :param code_config:配置
         :param select_pack:查询包装对象名称
         :param block_type:类型名称
+        :param table_alias:表别名
         :return: if标签块
         """
 
@@ -725,13 +741,58 @@ class BlockTag:
         # 主键的
         if code_config.baseInfo.key.type == "String":
             if_tag.add_tag(If(f'{select_pack}.{block_type}.{code_config.baseInfo.key.attr}!=null',
-                              f'AND {code_config.baseInfo.key.field} LIKE #{{{select_pack}.{block_type}.{code_config.baseInfo.key.attr}}}'))
+                              f'AND {table_alias}{code_config.baseInfo.key.field} LIKE #{{{select_pack}.{block_type}.{code_config.baseInfo.key.attr}}}'))
             flag = True
         # 普通字段的
         for field in code_config.baseInfo.attr:
             if field.type == "String":
-                if_tag.add_tag(If(f'{select_pack}.{block_type}.{field.attr}!=null', f'AND {field.field} LIKE #{{{select_pack}.{block_type}.{field.attr}}}'))
+                if_tag.add_tag(If(f'{select_pack}.{block_type}.{field.attr}!=null', f'AND {table_alias}{field.field} LIKE #{{{select_pack}.{block_type}.{field.attr}}}'))
                 flag = True
         if flag:
             return if_tag
         return None
+
+    @staticmethod
+    def select_pack_block(code_config: CodeConfig, select_pack="selectPack", table_alias=""):
+        """
+        查询对象块
+        @param code_config: 查询对象
+        @param select_pack: 查询对象名称
+        @param table_alias: 表别名
+        @return if标签
+        """
+        if StringUtil.is_not_null(table_alias):
+            table_alias += "."
+        if_tag = If(f"{select_pack}!=null")
+        # 大于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greater", select_pack, "&gt;", False, table_alias))
+        # 小于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "less", select_pack, "&lt;", False, table_alias))
+        # 大于等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greaterEqual", select_pack, "&gt;=", False, table_alias))
+        # 小于等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "lessEqual", select_pack, "&lt;=", False, table_alias))
+        # 等于
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "equal", select_pack, "=", False, table_alias))
+        # in
+        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "fieldIn", select_pack, "IN", True, table_alias))
+        # like
+        search_tag = BlockTag.if_select_pack_block_fuzzy_search(code_config, select_pack, "like", table_alias)
+        if search_tag:
+            if_tag.add_tag(search_tag)
+        return if_tag
+
+    @staticmethod
+    def select_pack_other_block(select_pack="selectPack"):
+        """
+        查询对象其他块
+        @param select_pack: 查询对象名称
+        @return if标签
+        """
+        if_tag = If(f"{select_pack}!=null")
+        if_tag.add_tag(If(f'{select_pack}.splicingSQL!=null', f'${{{select_pack}.splicingSQL}}'))
+        order_by_tag = If(f"{select_pack}.orderBy!=null")
+        order_by_tag.add_tag(Foreach(f"{select_pack}.orderBy", opens="ORDER BY", close=" ").add_data("${obj.fieldName} ${obj.type}"))
+        if_tag.add_tag(order_by_tag)
+        if_tag.add_tag(If(f"{select_pack}.page!=null", f"LIMIT #{{{select_pack}.page.count}} OFFSET #{{{select_pack}.page.start}}"))
+        return if_tag

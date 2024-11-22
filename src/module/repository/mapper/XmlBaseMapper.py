@@ -1,7 +1,7 @@
 from src.java.CodeConfig import CodeConfig, Field
 from src.module.base.BaseApi import MapperApi, MapperApiNote
 from src.xml import MapperTag
-from src.xml.MapperTag import BlockTag, If
+from src.xml.MapperTag import BlockTag
 from src.xml.MapperUtil import MapperUtil
 
 
@@ -17,6 +17,17 @@ class AttributeUtil:
         if config.module.entity.low_name() == other_config.module.entity.low_name():
             return f'{config.module.entity.low_name()}1'
         return None
+
+    @staticmethod
+    def get_other_param_name(config: CodeConfig, other_config: CodeConfig):
+        """
+        判别参数名称是否重复
+        :param config: CodeConfig 配置列表
+        :param other_config: CodeConfig  配置列表
+        """
+        if config.module.entity.low_name() == other_config.module.entity.low_name():
+            return f'{config.module.entity.low_name()}1'
+        return other_config.module.entity.low_name()
 
 
 class XmlBaseMapperCode:
@@ -53,6 +64,11 @@ class XmlBaseMapperCode:
         # 外键查询
         SelectInForeignKey.create(config, mapper)
         mapper.add_blank_line()
+        # 新版
+        # 一对一查询块
+        SelectPackOneToOneBlock.create(config, mapper)
+        SelectPackOneToManyBlock.create(config, mapper)
+
         return MapperTag.XmlMapper(mapper).create()
 
 
@@ -281,7 +297,7 @@ class InsertBlock:
         insert.add_data(f"INSERT INTO {MapperUtil.get_table_name(code_config)} (").indent_increase()
         insert.add_data(MapperUtil.join_all_field(code_config)).indent_decrease()
         insert.add_data(") VALUES ")
-        insert.add_tag(BlockTag.foreach_block(code_config))
+        insert.add_tag(BlockTag.foreach_block(code_config, last_separator=True))
         return insert
 
     @staticmethod
@@ -314,7 +330,7 @@ class InsertBlock:
         """
         insert = MapperTag.Insert(MapperApi.Insert.insert_or_update_by_where(code_config))
 
-        select_key = MapperTag.SelectKey(code_config.get_class_name(condition=True), code_config.baseInfo.key.field, code_config.baseInfo.key.type)
+        select_key = MapperTag.SelectKey(f'{code_config.get_class_name(condition=True)}.{code_config.baseInfo.key.attr}', code_config.baseInfo.key.field, code_config.baseInfo.key.type)
         select_key.add_data("SELECT IFNULL ((").indent_increase()
         select_key.add_data(f'SELECT {code_config.baseInfo.key.field} FROM {MapperUtil.get_table_name(code_config)}')
 
@@ -351,7 +367,7 @@ class InsertBlock:
         if code_config.baseInfo.key is not None:
             insert.set_use_generated_keys("true")
             insert.set_key_column(code_config.baseInfo.key.field)
-            insert.set_key_property(code_config.baseInfo.key.attr)
+            insert.set_key_property(f'{code_config.get_class_name(save=True)}.{code_config.baseInfo.key.attr}')
 
         insert.add_data(f"INSERT INTO {MapperUtil.get_table_name(code_config)} (").indent_increase()
         insert.add_tag(BlockTag.trim_if_block(code_config, var_name=code_config.get_class_name(save=True), is_field=True, is_attr=False)).indent_decrease()
@@ -377,7 +393,7 @@ class InsertBlock:
         if code_config.baseInfo.key is not None:
             insert.set_use_generated_keys("true")
             insert.set_key_column(code_config.baseInfo.key.field)
-            insert.set_key_property(code_config.baseInfo.key.attr)
+            insert.set_key_property(f'{code_config.get_class_name(save=True)}.{code_config.baseInfo.key.attr}')
 
         insert.add_data(f"INSERT INTO {MapperUtil.get_table_name(code_config)} (").indent_increase()
         insert.add_tag(BlockTag.trim_if_block(code_config, var_name=code_config.get_class_name(save=True), is_field=True, is_attr=False)).indent_decrease()
@@ -508,11 +524,11 @@ class UpdateBlock:
         """
         sql_tag = MapperTag.Update(MapperApi.Update.update(code_config))
         sql_tag.add_data(f"UPDATE {MapperUtil.get_table_name(code_config)}")
-        sql_tag.add_tag(BlockTag.set_if_block(code_config))
+        sql_tag.add_tag(BlockTag.set_if_block(code_config, code_config.get_class_name(save=True)))
         where = MapperTag.Where()
         sql_tag.add_tag(where)
         where.add_tag(BlockTag.field_if(code_config.baseInfo.key, code_config.get_class_name(save=True), is_field=True, is_attr=True, start="AND ", end=""))
-        where.add_tag(BlockTag.if_var_block(code_config, var_name=code_config.get_class_name(condition=True), is_field=True, is_attr=True))
+        where.add_tag(BlockTag.if_var_block(code_config, var_name=code_config.get_class_name(condition=True), is_field=True, is_attr=True, start="AND ", end=""))
 
         return sql_tag
 
@@ -527,7 +543,7 @@ class UpdateBlock:
         sql_tag.add_data(f"UPDATE {MapperUtil.get_table_name(code_config)}")
         sql_tag.add_tag(BlockTag.set_if_block(code_config, code_config.get_class_name(save=True)))
         if code_config.baseInfo.key is not None:
-            sql_tag.add_data(f'WHERE {code_config.baseInfo.key.field} = #{{{code_config.baseInfo.key.attr}}}')
+            sql_tag.add_data(f'WHERE {code_config.baseInfo.key.field} = #{{{code_config.get_class_name(save=True)}.{code_config.baseInfo.key.attr}}}')
         else:
             sql_tag.add_data(f'WHERE')
         temp_str = ""
@@ -693,34 +709,9 @@ class SelectBlock:
         select_pack = "selectPack"
 
         where_tag = MapperTag.Where()
-        if_tag = If(f"{select_pack}!=null")
-        where_tag.add_tag(if_tag)
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, select_pack))
         sql_tag.add_tag(where_tag)
-        # 大于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greater", select_pack, "&gt;"))
-        # 小于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "less", select_pack, "&lt;"))
-        # 大于等于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greaterEqual", select_pack, "&gt;="))
-        # 小于等于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "lessEqual", select_pack, "&lt;="))
-        # 等于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "equal", select_pack, "="))
-        # in
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "fieldIn", select_pack, "IN", True))
-        # like
-        search_tag = BlockTag.if_select_pack_block_fuzzy_search(code_config, select_pack, "like")
-        if search_tag:
-            if_tag.add_tag(search_tag)
-
-        if_tag2 = If(f"{select_pack}!=null")
-        if_tag2.add_tag(If(f'{select_pack}.splicingSQL!=null', f'${{{select_pack}.splicingSQL}}'))
-        order_by_tag = If(f"{select_pack}.orderBy!=null")
-        order_by_tag.add_tag(MapperTag.Foreach(f"{select_pack}.orderBy", opens="ORDER BY", close=" ").add_data("${obj.fieldName} ${obj.type}"))
-        if_tag2.add_tag(order_by_tag)
-
-        if_tag2.add_tag(If(f"{select_pack}.page!=null", f"LIMIT #{{{select_pack}.page.count}} OFFSET #{{{select_pack}.page.start}}"))
-        sql_tag.add_tag(if_tag2)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(select_pack))
         return sql_tag
 
     @staticmethod
@@ -735,25 +726,8 @@ class SelectBlock:
         sql_tag.add_data(f'SELECT COUNT(*) FROM {MapperUtil.get_table_name(code_config)}')
         select_pack = "selectPack"
         where_tag = MapperTag.Where()
-        if_tag = If(f"{select_pack}!=null")
-        where_tag.add_tag(if_tag)
         sql_tag.add_tag(where_tag)
-        # 大于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greater", select_pack, "&gt;"))
-        # 小于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "less", select_pack, "&lt;"))
-        # 大于等于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "greaterEqual", select_pack, "&gt;="))
-        # 小于等于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "lessEqual", select_pack, "&lt;="))
-        # 等于
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "equal", select_pack, "="))
-        # in
-        if_tag.add_tag(BlockTag.if_select_pack_block(code_config, "fieldIn", select_pack, "IN", True))
-        # like
-        search_tag = BlockTag.if_select_pack_block_fuzzy_search(code_config, select_pack, "like")
-        if search_tag:
-            if_tag.add_tag(search_tag)
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, select_pack))
 
         return sql_tag
 
@@ -877,7 +851,10 @@ class SelectOneToOneBlock:
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("page1")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
-        sql_tag.add_data(f'ON temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
+        sql_tag.add_data(
+            f'ON temp_{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} =' +
+            f' temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.key.get_field(other_config.baseInfo.need_sql_block())}'
+        )
         BlockTag.splicing_sql(code_config, sql_tag)
 
         xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectOneToOne.query_one_to_one(other_config)))
@@ -913,7 +890,10 @@ class SelectOneToOneBlock:
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
         sql_tag.add_tag(BlockTag.page_block("page1")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
-        sql_tag.add_data(f'ON temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
+        sql_tag.add_data(
+            f'ON temp_{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} =' +
+            f' temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.key.get_field(other_config.baseInfo.need_sql_block())}'
+        )
 
         xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectOneToOne.count_query_one_to_one(other_config)))
         xml_mapper.add_tag(sql_tag).add_blank_line()
@@ -1065,7 +1045,7 @@ class SelectOneToManyBlock:
             sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
         sql_tag.add_tag(BlockTag.where_if_block(other_config, var_name=AttributeUtil.get_param_name(other_config, code_config), need_var=True))
         BlockTag.fuzzy_search(other_config, sql_tag, other_config.baseInfo.get_table_alias(), "1")
-        sql_tag.add_tag(BlockTag.page_block("ManyPage")).indent_decrease()
+        sql_tag.add_tag(BlockTag.page_block("manyPage")).indent_decrease()
         sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
         sql_tag.add_data(f'ON temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
         xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectOneToMany.query_one_to_many(other_config)))
@@ -1163,7 +1143,9 @@ class SelectManyToManyBlock:
         BlockTag.set_result(sql_tag, code_config, many_config, many_to_many=True)
         sql_tag.add_data(f'SELECT')
         if many_config.baseInfo.need_sql_block():
-            BlockTag.add_include_tag(sql_tag, code_config, many_config)
+            sql_tag.indent_increase()
+            BlockTag.add_include_tag(sql_tag, code_config, many_config, "temp_")
+            sql_tag.indent_decrease()
         else:
             sql_tag.indent_increase().add_data("*").indent_decrease()
         sql_tag.add_data(f'FROM (').indent_increase()
@@ -1198,7 +1180,9 @@ class SelectManyToManyBlock:
         BlockTag.set_result(sql_tag, code_config, many_config, many_to_many=True)
         sql_tag.add_data(f'SELECT')
         if many_config.baseInfo.need_sql_block():
-            BlockTag.add_include_tag(sql_tag, code_config, many_config)
+            sql_tag.indent_increase()
+            BlockTag.add_include_tag(sql_tag, code_config, many_config, 'temp_')
+            sql_tag.indent_decrease()
         else:
             sql_tag.indent_increase().add_data("*").indent_decrease()
         sql_tag.add_data(f'FROM (').indent_increase()
@@ -1212,7 +1196,7 @@ class SelectManyToManyBlock:
         # 其他表
         sql_tag.add_data(f") AS temp_{code_config.baseInfo.tableName} LEFT JOIN {middle_config.baseInfo.tableName}").indent_increase()
         sql_tag.add_data(f"ON temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = {middle_config.baseInfo.tableName}.{middle_config.baseInfo.foreignKey}").indent_decrease()
-        sql_tag.add_data(f"{middle_config.baseInfo.tableName} LEFT JOIN {many_config.baseInfo.tableName}").indent_increase()
+        sql_tag.add_data(f"LEFT JOIN {many_config.baseInfo.tableName}").indent_increase()
         sql_tag.add_data(f'ON {middle_config.baseInfo.tableName}.{many_config.baseInfo.foreignKey} = {many_config.baseInfo.tableName}.{many_config.baseInfo.key.field}').indent_decrease()
 
         BlockTag.splicing_sql(code_config, sql_tag)
@@ -1260,3 +1244,406 @@ class SelectInForeignKey:
 
                 xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectForeignKey.select_in_and_where(code_config, field)))
                 xml_mapper.add_tag(sql_tag).add_blank_line()
+
+
+class SelectPackOneToOneBlock:
+
+    @staticmethod
+    def __find_pack_select(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        内联一对一查询
+        :param xml_mapper: xml块
+        :param code_config:配置
+        :param other_config: 另一方配置
+        :return:
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToOne.find_pack_one_to_one(code_config, other_config))
+        BlockTag.set_result(sql_tag, code_config, other_config, one_to_one=True)
+        sql_tag.add_data(f'SELECT').indent_increase()
+        BlockTag.add_include_tag(sql_tag, code_config, other_config)
+        sql_tag.add_data(f'FROM {MapperUtil.get_table_name(code_config)}, {MapperUtil.get_table_name(other_config)}').indent_decrease()
+
+        where_tag = MapperTag.Where()
+        sql_tag.add_tag(where_tag)
+        # 关联条件
+        # 一对一中，对方的外键就指向我方的字段
+        where_tag.add_data(f'{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} = {other_config.baseInfo.tableName}.{code_config.baseInfo.key.field}')
+
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name(), code_config.baseInfo.get_table_alias()))
+
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config), other_config.baseInfo.get_table_alias()))
+
+        BlockTag.splicing_sql(code_config, sql_tag)
+        sql_tag.add_tag(BlockTag.page_block())
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToOne.find_pack_one_to_one(other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __find_pack_count(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一内联计数
+        :param xml_mapper: 标签
+        :param code_config: 配置
+        :param other_config: 另一方配置
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToOne.count_find_pack_one_to_one(code_config, other_config))
+        sql_tag.set_result_type("int")
+        sql_tag.add_data(f'SELECT COUNT(*) FROM {MapperUtil.get_table_name(code_config)}, {MapperUtil.get_table_name(other_config)}')
+
+        where_tag = MapperTag.Where()
+        sql_tag.add_tag(where_tag)
+        # 关联条件
+        # 一对一中，对方的外键就指向我方的字段
+        where_tag.add_data(f'{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} = {other_config.baseInfo.tableName}.{code_config.baseInfo.key.field}')
+
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name(), code_config.baseInfo.get_table_alias()))
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config), other_config.baseInfo.get_table_alias()))
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToOne.count_find_pack_one_to_one(code_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __query_pack_select(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一外联
+        :param xml_mapper:标签
+        :param code_config: 配置
+        :param other_config: 其他配置
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToOne.query_pack_one_to_one(code_config, other_config))
+        BlockTag.set_result(sql_tag, code_config, other_config, one_to_one=True)
+
+        sql_tag.add_data(f'SELECT * FROM (').indent_increase()
+        # 左临时表查询
+        sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(code_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name()))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(code_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+        sql_tag.add_data(f') AS temp_{code_config.baseInfo.tableName} LEFT JOIN (').indent_increase()
+        # 右临时表查询
+        if other_config.baseInfo.need_sql_block():
+            sql_tag.add_data(f"SELECT").indent_increase()
+            BlockTag.add_include_tag(sql_tag, other_config)
+            sql_tag.indent_decrease()
+            sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
+        else:
+            sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config)))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(other_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
+        sql_tag.add_data(
+            f'ON temp_{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} =' +
+            f' temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.key.get_field(other_config.baseInfo.need_sql_block())}'
+        )
+        BlockTag.splicing_sql(code_config, sql_tag)
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectOneToOne.query_one_to_one(other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __query_pack_count(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一外联计数
+        :param xml_mapper:标签
+        :param code_config: 配置
+        :param other_config: 其他配置
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToOne.count_query_pack_one_to_one(code_config, other_config))
+        sql_tag.set_result_type("int")
+        sql_tag.add_data(f'SELECT COUNT(DISTINCT temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field}) FROM (').indent_increase()
+        # 左临时表查询
+        sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(code_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name()))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(code_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f') AS temp_{code_config.baseInfo.tableName} LEFT JOIN (').indent_increase()
+        # 右临时表查询
+        if other_config.baseInfo.need_sql_block():
+            sql_tag.add_data(f"SELECT").indent_increase()
+            BlockTag.add_include_tag(sql_tag, other_config)
+            sql_tag.indent_decrease()
+            sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
+        else:
+            sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config)))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(other_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
+        sql_tag.add_data(
+            f'ON temp_{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} =' +
+            f' temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.key.get_field(other_config.baseInfo.need_sql_block())}'
+        )
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectOneToOne.count_query_one_to_one(other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __link_pack_select(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一内联，只查另一方
+        :param xml_mapper: xml块
+        :param code_config:配置
+        :param other_config: 另一方配置
+        :return:
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToOne.link_pack_one_to_one(other_config))
+        BlockTag.set_result(sql_tag, other_config)
+        sql_tag.add_data(f'SELECT {other_config.baseInfo.tableName}.* FROM {MapperUtil.get_table_name(code_config)}, {MapperUtil.get_table_name(other_config)}')
+
+        where_tag = MapperTag.Where()
+        sql_tag.add_tag(where_tag)
+        # 关联条件
+        # 一对一中，对方的外键就指向我方的字段
+        where_tag.add_data(f'{code_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey} = {other_config.baseInfo.tableName}.{code_config.baseInfo.key.field}')
+
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name(), code_config.baseInfo.get_table_alias()))
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config), other_config.baseInfo.get_table_alias()))
+
+        BlockTag.splicing_sql(code_config, sql_tag)
+        sql_tag.add_tag(BlockTag.page_block())
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectOneToOne.link_one_to_one(code_config, other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def create(code_config: CodeConfig, xml_mapper: MapperTag.Mapper):
+        if code_config.baseInfo.key is not None:
+            for one_to_one in code_config.baseInfo.oneToOne:
+                xml_mapper.add_tag(MapperTag.LineNote("一对一查询块，使用的查询对象"))
+                SelectPackOneToOneBlock.__find_pack_select(xml_mapper, code_config, one_to_one)
+                SelectPackOneToOneBlock.__find_pack_count(xml_mapper, code_config, one_to_one)
+                SelectPackOneToOneBlock.__query_pack_select(xml_mapper, code_config, one_to_one)
+                SelectPackOneToOneBlock.__query_pack_count(xml_mapper, code_config, one_to_one)
+                SelectPackOneToOneBlock.__link_pack_select(xml_mapper, code_config, one_to_one)
+
+
+class SelectPackOneToManyBlock:
+    @staticmethod
+    def __find_select_pack(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        内联一对一查询
+        :param xml_mapper: xml块
+        :param code_config:配置
+        :param other_config: 另一方配置
+        :return:
+        """
+
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToMany.find_pack_one_to_many(code_config, other_config))
+        BlockTag.set_result(sql_tag, code_config, other_config, one_to_many=True)
+
+        sql_tag.add_data(f'SELECT * FROM (').indent_increase()
+        # 左临时表查询
+        sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(code_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name()))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(code_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f') AS temp_{code_config.baseInfo.tableName}, (').indent_increase()
+        if other_config.baseInfo.need_sql_block():
+            sql_tag.add_data(f"SELECT").indent_increase()
+            BlockTag.add_include_tag(sql_tag, other_config)
+            sql_tag.indent_decrease()
+            sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
+        else:
+            sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config)))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(other_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
+        sql_tag.add_data("WHERE").indent_increase()
+        sql_tag.add_data(f'temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}').indent_decrease()
+        BlockTag.splicing_sql(code_config, sql_tag)
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToMany.find_pack_one_to_many(other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __find_count_pack(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一内联计数
+        :param xml_mapper: 标签
+        :param code_config: 配置
+        :param other_config: 另一方配置
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToMany.count_find_pack_one_to_many(code_config, other_config))
+        sql_tag.set_result_type("int")
+
+        sql_tag.add_data(f'SELECT count(*) FROM (').indent_increase()
+        # 左临时表查询
+        sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(code_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name()))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(code_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f') AS temp_{code_config.baseInfo.tableName}, (').indent_increase()
+        if other_config.baseInfo.need_sql_block():
+            sql_tag.add_data(f"SELECT").indent_increase()
+            BlockTag.add_include_tag(sql_tag, other_config)
+            sql_tag.indent_decrease()
+            sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
+        else:
+            sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config)))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(other_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
+        sql_tag.add_data("WHERE").indent_increase()
+        sql_tag.add_data(f'temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}').indent_decrease()
+        BlockTag.splicing_sql(code_config, sql_tag)
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToMany.count_find_pack_one_to_many(code_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __query_select_pack(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一外联
+        :param xml_mapper:标签
+        :param code_config: 配置
+        :param other_config: 其他配置
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToMany.query_pack_one_to_many(code_config, other_config))
+        BlockTag.set_result(sql_tag, code_config, other_config, one_to_many=True)
+
+        sql_tag.add_data(f'SELECT * FROM (').indent_increase()
+        # 左临时表查询
+        sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(code_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name()))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(code_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f') AS temp_{code_config.baseInfo.tableName} LEFT JOIN (').indent_increase()
+        # 右临时表查询
+        if other_config.baseInfo.need_sql_block():
+            sql_tag.add_data(f"SELECT").indent_increase()
+            BlockTag.add_include_tag(sql_tag, other_config)
+            sql_tag.indent_decrease()
+            sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
+        else:
+            sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config)))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(other_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
+        sql_tag.add_data(f'ON temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToMany.query_pack_one_to_many(other_config)))
+        BlockTag.splicing_sql(code_config, sql_tag)
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __query_count_pack(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一外联计数
+        :param xml_mapper:标签
+        :param code_config: 配置
+        :param other_config: 其他配置
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToMany.count_query_pack_one_to_many(code_config, other_config))
+        sql_tag.set_result_type("int")
+        sql_tag.add_data(f'SELECT COUNT(DISTINCT temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field}) FROM (').indent_increase()
+        # 左临时表查询
+        sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(code_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name()))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(code_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f') AS temp_{code_config.baseInfo.tableName} LEFT JOIN (').indent_increase()
+        # 右临时表查询
+        if other_config.baseInfo.need_sql_block():
+            sql_tag.add_data(f"SELECT").indent_increase()
+            BlockTag.add_include_tag(sql_tag, other_config)
+            sql_tag.indent_decrease()
+            sql_tag.add_data(f'FROM {MapperUtil.get_table_name(other_config)}')
+        else:
+            sql_tag.add_data(f"SELECT * FROM {MapperUtil.get_table_name(other_config)}")
+
+        where_tag = MapperTag.Where()
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config)))
+        sql_tag.add_tag(where_tag)
+        sql_tag.add_tag(BlockTag.select_pack_other_block(other_config.module.entity.low_name()))
+        sql_tag.indent_decrease()
+
+        sql_tag.add_data(f") AS temp_{other_config.baseInfo.tableName}")
+        sql_tag.add_data(f'ON temp_{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = temp_{other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToMany.count_query_pack_one_to_many(other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def __link_select_pack(xml_mapper: MapperTag.Mapper, code_config: CodeConfig, other_config: CodeConfig):
+        """
+        一对一内联只查另一方
+        :param xml_mapper: xml块
+        :param code_config:配置
+        :param other_config: 另一方配置
+        :return:
+        """
+        sql_tag = MapperTag.Select(MapperApi.SelectPackOneToMany.link_pack_one_to_many(other_config))
+        BlockTag.set_result(sql_tag, other_config)
+        sql_tag.add_data(f'SELECT {other_config.baseInfo.tableName}.* FROM {MapperUtil.get_table_name(code_config)}, {MapperUtil.get_table_name(other_config)}')
+
+        where_tag = MapperTag.Where()
+        sql_tag.add_tag(where_tag)
+        # 关联条件
+        # 一对一中，对方的外键就指向我方的字段
+        where_tag.add_data(f'{code_config.baseInfo.tableName}.{code_config.baseInfo.key.field} = {other_config.baseInfo.tableName}.{other_config.baseInfo.foreignKey}')
+
+        where_tag.add_tag(BlockTag.select_pack_block(code_config, code_config.module.entity.low_name(), code_config.baseInfo.get_table_alias()))
+        where_tag.add_tag(BlockTag.select_pack_block(other_config, AttributeUtil.get_other_param_name(code_config, other_config), other_config.baseInfo.get_table_alias()))
+
+        BlockTag.splicing_sql(code_config, sql_tag)
+        sql_tag.add_tag(BlockTag.page_block())
+
+        xml_mapper.add_tag(MapperTag.LineNote(MapperApiNote.SelectPackOneToMany.link_pack_one_to_many(code_config, other_config)))
+        xml_mapper.add_tag(sql_tag).add_blank_line()
+
+    @staticmethod
+    def create(code_config: CodeConfig, xml_mapper: MapperTag.Mapper):
+        if code_config.baseInfo.key is not None:
+            for one_to_many in code_config.baseInfo.oneToMany:
+                xml_mapper.add_tag(MapperTag.LineNote("一对多查询块，使用的查询对象"))
+                SelectPackOneToManyBlock.__find_select_pack(xml_mapper, code_config, one_to_many)
+                SelectPackOneToManyBlock.__find_count_pack(xml_mapper, code_config, one_to_many)
+                SelectPackOneToManyBlock.__query_select_pack(xml_mapper, code_config, one_to_many)
+                SelectPackOneToManyBlock.__query_count_pack(xml_mapper, code_config, one_to_many)
+                SelectPackOneToManyBlock.__link_select_pack(xml_mapper, code_config, one_to_many)

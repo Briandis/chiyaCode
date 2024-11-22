@@ -76,6 +76,8 @@ class ParserConfig:
             code_config.createConfig.repositoryUseCache.enable = config.use_cache
             # 是否使用权限
             code_config.createConfig.chiyaSecurity.enable = config.use_security
+            # 是否生成测试用例
+            code_config.createConfig.needTestCase.enable = config.need_test_case
 
             javabean[table.table_name] = code_config
         return javabean
@@ -100,7 +102,7 @@ class ParserConfig:
             # 生成的表和不生成的表
             if (table.baseInfo.tableName in config.analysis_table or not config.analysis_table) and table.baseInfo.tableName not in config.analysis_not_create_table:
                 config_json = JsonUtil.to_json(table)
-                f=open(f"config/{table.baseInfo.tableName}.json", "w", encoding="utf-8")
+                f = open(f"config/{table.baseInfo.tableName}.json", "w", encoding="utf-8")
                 f.write(config_json)
                 f.close()
 

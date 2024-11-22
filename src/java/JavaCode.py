@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from typing import List, Set
 
 from src.java.CodeConfig import CodeConfig
 from src.util.chiyaUtil import StringUtil
@@ -179,28 +180,30 @@ class Attribute:
         :param final: 常量修饰
         :param volatile: 线程可见
         """
-        # 作用域
         self.scope = scope
-        # 类型
+        """ 作用域 """
         self.type = attribute_type
-        # 名称
+        """ 类型 """
         self.name = name
-        # 字段注释
+        """ 名称 """
         self.annotation = annotation
-        # 是否是静态类
+        """ 字段注释 """
         self.static = static
-        # 是否常量
+        """ 是否是静态类 """
         self.final = final
-        # 线程变量可见
+        """ 是否常量 """
         self.volatile = volatile
-        # 类型所需要导入的包
+        """ 线程变量可见 """
         self.import_set = set()
+        """ 类型所需要导入的包 """
         # 如果导入的包存在，则自动装配
         if not StringUtil.is_null(package):
             self.import_set.add(package)
         self._check_default_import(attribute_type)
-        # 注解所引用的包
-        self.mate_value = []
+        self.mate_value: List[str] = []
+        """ 注解所引用的包 """
+        self.line_mate_value: List[str] = []
+        """ 行内注解 """
 
     # 添加类注解
     def add_mate(self, value: str, package: str = None):
@@ -211,6 +214,19 @@ class Attribute:
         :return: 对象自身
         """
         self.mate_value.append(value)
+        if package is not None:
+            self.import_set.add(package)
+        self._check_default_import(value)
+        return self
+
+    def add_line_mate(self, value: str, package: str = None):
+        """
+        添加方法中使用的行内注解
+        :param value: 注解的内容
+        :param package: 注解所在的包
+        :return: 对象自身
+        """
+        self.line_mate_value.append(value)
         if package is not None:
             self.import_set.add(package)
         self._check_default_import(value)
@@ -254,8 +270,35 @@ class Attribute:
         for i in self.mate_value:
             data += f'{indent}{i}\n'
 
-        data += f'{indent}{scope}{volatile}{static}{final}{self.type} {self.name};\n'
+        # 处理行内注解
+        temp_data = ""
+        for line_mate in self.line_mate_value:
+            temp_data += f'{line_mate} '
+
+        data += f'{indent}{scope}{volatile}{static}{final}{temp_data}{self.type} {self.name};\n'
         return data
+
+    def create_function_param(self):
+        """
+        处理行内注释
+        :return 行内注释
+        """
+        # 处理行内注解
+        temp_data = ""
+        for line_mate in self.line_mate_value:
+            temp_data += f'{line_mate} '
+        data = f'{temp_data}{self.type} {self.name}'
+        return data
+
+    def add_line_param_mate(self, value):
+        """
+        添加@param("xxx")的形式的行内注解
+        :param value: 注解值
+        :return : 自身
+        """
+        self.line_mate_value.append(DefaultMate.Param(value))
+        self.import_set.add("org.apache.ibatis.annotations.Param")
+        return self
 
 
 class DefaultAttribute:
@@ -466,7 +509,9 @@ class Function:
             result: Attribute,
             name: str,
             annotation: str = None,
-            *parameter: Attribute
+            *parameter: Attribute,
+            is_static=False,
+            is_final=False
     ):
         """
         :param scope:方法作用域，如为None，则默认无
@@ -475,27 +520,32 @@ class Function:
         :param annotation 方法注释
         :param parameter: 方法参数
         """
-        # 作用域
         self.scope = scope
-        #
+        """ 作用域 """
         self.result = result
-        # 名称
+        """ 返回值 """
         self.name = name
-        # 字段注释
+        """ 名称 """
         self.annotation = annotation
-        # 方法体内容
+        """ 字段注释 """
         self.functionBody = None
-        # 类型所需要导入的包
-        self.import_set = set()
-        # 注解所引用的包
+        """ 方法体内容 """
+        self.import_set: Set[str | None] = set()
+        """ 类型所需要导入的包 """
         self.mate_value = []
-        # 提交的参数
-        self.parameter = []
+        """ 注解所引用的包 """
+        self.parameter: List[Attribute] = []
+        """ 提交的参数 """
+        self.is_static = is_static
+        """ 是否是静态方法 """
+        self.is_final = is_final
+        """ 是否是最终方法 """
+
         for i in parameter:
             if i is not None:
                 self.parameter.append(i)
-        # 是否是接口
         self.is_interface = False
+        """ 是否是接口 """
         # 其他类型，则将类型信息装入对象中
         if self.result is not None:
             for i in self.result.import_set:
@@ -579,12 +629,20 @@ class Function:
         if self.result is not None:
             result = self.result.type + " "
 
-        data += f'{indent}{scope}{result}{self.name}('
+        temp_str = ""
+        if self.is_static:
+            temp_str += "static "
+        if self.is_final:
+            temp_str += "final "
+
+        data += f'{indent}{scope}{temp_str}{result}{self.name}('
+
         if self.parameter is not None:
             lists = []
             for param in self.parameter:
-                lists.append(f'{param.type} {param.name}')
+                lists.append(param.create_function_param())
             data += StringUtil.string_join(", ", *lists)
+
         data += f') {{\n'
         if self.functionBody is not None:
             self.functionBody.indentation = indentation + 1
@@ -611,7 +669,7 @@ class Function:
             lists = []
             count_len = 0
             for param in self.parameter:
-                param_str = f'{param.type} {param.name}'
+                param_str = param.create_function_param()
                 lists.append(param_str)
                 count_len += len(param_str)
             # 如果字符串大于85，则需要换行展示
@@ -726,13 +784,13 @@ class JavaCode:
         # 是否是抽象类
         self.is_abstract = False
         # 属性列表
-        self.attribute: [Attribute] = []
+        self.attribute: List[Attribute] = []
         # 方法列表
-        self.function: [Function] = []
+        self.function: List[Function] = []
         # 继承的类型
-        self.extends: [Attribute] = []
+        self.extends: List[Attribute] = []
         # 实现的类
-        self.implements: [Attribute] = []
+        self.implements: List[Attribute] = []
 
     # 添加类的继承关系
     def add_extend(self, attr: Attribute):
@@ -839,7 +897,12 @@ class JavaCode:
         构建导包
         :return:字符串
         """
-        lists = list(self.import_set)
+        temp_set = set(self.import_set)
+        for attr in self.attribute:
+            temp_set.update(attr.import_set)
+        for func in self.function:
+            temp_set.update(func.import_set)
+        lists = list(temp_set)
         lists.sort()
         data = "\n"
         for i in lists:
@@ -927,13 +990,16 @@ class JavaCode:
         构建文件内容
         :return: 文件中的代码
         """
-        data = ""
-        data += self._create_packet()
-        data += self._create_import()
-        data += self._create_annotation()
-        data += self._create_mate()
-        data += self._create_class()
-        data += self._create_attribute()
-        data += self._create_function()
-        data += self._create_class_end()
-        return data
+
+        data2 = ""
+        data2 += self._create_annotation()
+        data2 += self._create_mate()
+        data2 += self._create_class()
+        data2 += self._create_attribute()
+        data2 += self._create_function()
+        data2 += self._create_class_end()
+        # 需要先生成方法体，从而继承里面所有的导入信息，最后在生成导入
+        data1 = ""
+        data1 += self._create_packet()
+        data1 += self._create_import()
+        return data1 + data2

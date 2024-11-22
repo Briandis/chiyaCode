@@ -311,6 +311,15 @@ class CodeTemplateFlow(BaseConfig):
         """ 默认的模板流，基于DDD """
 
 
+class NeedTestCase(BaseConfig):
+    """
+    需要测试用例
+    """
+
+    def __init__(self):
+        super().__init__(False)
+
+
 class CreateConfig:
     """
     构建的配置文件
@@ -351,3 +360,5 @@ class CreateConfig:
         """ 在xml中所有的表操作加入数据库名 """
         self.codeTemplateFlow = CodeTemplateFlow()
         """ 代码模板流 """
+        self.needTestCase = NeedTestCase()
+        """ 需要生成测试用例 """

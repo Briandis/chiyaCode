@@ -18,6 +18,7 @@ from src.module.repository.mapper.XmlBaseMapper import XmlBaseMapperCode
 from src.module.repository.mapper.XmlMapper import XmlMapperCode
 from src.module.service import Service
 from src.module.service.ServiceImpl import ServiceImplJavaCode
+from src.module.test.TestCase import TestCaseJavaCode
 from src.util.chiyaUtil import OSUtil
 
 
@@ -59,21 +60,21 @@ class CodeTemplate:
 
         if template_type == "service":
             if next_type == "domain":
-                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_domain(code_config), BaseApi.BaseAPIImpl,"domain")
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_domain(code_config), BaseApi.BaseAPIImpl, "domain")
             if next_type == "repository":
                 return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl, "repository")
             if next_type == "mapper":
-                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository,"mapper")
+                return ServiceImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository, "mapper")
 
         if template_type == "domain":
             if next_type == "repository":
                 return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_repository(code_config), BaseApi.BaseAPIImpl, "repository")
             if next_type == "mapper":
-                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository,"mapper")
+                return DomainImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository, "mapper")
 
         if template_type == "repository":
             if next_type == "mapper":
-                return RepositoryImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository,"mapper")
+                return RepositoryImplJavaCode.create(code_config, JavaCode.DefaultAttribute.get_mapper(code_config), BaseApi.BaseRepository, "mapper")
 
 
 class Generate:
@@ -191,6 +192,11 @@ class Generate:
         if self.check_create(FileType.xmlBaseMapper, code_config):
             string = XmlBaseMapperCode.create(code_config)
             OSUtil.save_file(code_config.module.baseMapperXml.path, code_config.module.baseMapperXml.className, "xml", string)
+
+        # 生成测试用例
+        if code_config.createConfig.needTestCase.enable:
+            string = TestCaseJavaCode.create(code_config)
+            OSUtil.save_file("auto.test", code_config.module.entity.className + "MapperCase", "java", string)
 
     @staticmethod
     def check_create(create_type: str, config: CodeConfig):

@@ -48,11 +48,14 @@ class Field:
         """
         return StringUtil.first_char_upper_case(self.attr)
 
-    def get_field(self):
+    def get_field(self, need_alias=False):
         """
         获取字段，如果别名存在，则使用别名
+        :param need_alias: 是否是临时变量
         :return: field或alias
         """
+        if not need_alias:
+            return self.field
         if self.alias is None:
             return self.field
         return self.alias

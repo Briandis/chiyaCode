@@ -704,6 +704,53 @@ class MapperApi:
         def select_in_and_where(config: CodeConfig, attr: Field) -> str:
             return f'select{config.module.entity.className}In{attr.upper_name()}AndWhere'
 
+    class SelectPackOneToOne:
+        @staticmethod
+        def find_pack_one_to_one(config: CodeConfig, another: CodeConfig) -> str:
+            return f'findPack{config.module.entity.className}OneToOne{another.module.entity.className}'
+
+        @staticmethod
+        def count_find_pack_one_to_one(config: CodeConfig, another: CodeConfig) -> str:
+            return f'countFindPack{config.module.entity.className}OneToOne{another.module.entity.className}'
+
+        @staticmethod
+        def link_pack_one_to_one(another: CodeConfig) -> str:
+            return f'linkPackOneToOne{another.module.entity.className}'
+
+        @staticmethod
+        def query_pack_one_to_one(config: CodeConfig, another: CodeConfig) -> str:
+            return f'queryPack{config.module.entity.className}OneToOne{another.module.entity.className}'
+
+        @staticmethod
+        def count_query_pack_one_to_one(config: CodeConfig, another: CodeConfig) -> str:
+            return f'countQueryPack{config.module.entity.className}OneToOne{another.module.entity.className}'
+
+    class SelectPackOneToMany:
+        @staticmethod
+        def find_pack_one_to_many(config: CodeConfig, another: CodeConfig) -> str:
+            return f'findPack{config.module.entity.className}OneToMany{another.module.entity.className}'
+
+        @staticmethod
+        def count_find_pack_one_to_many(config: CodeConfig, another: CodeConfig) -> str:
+            return f'countFindPack{config.module.entity.className}OneToMany{another.module.entity.className}'
+
+        @staticmethod
+        def link_pack_one_to_many(another: CodeConfig) -> str:
+            return f'linkOneToManyPack{another.module.entity.className}'
+
+        @staticmethod
+        def query_pack_one_to_many(config: CodeConfig, another: CodeConfig) -> str:
+            return f'queryPack{config.module.entity.className}OneToMany{another.module.entity.className}'
+
+        @staticmethod
+        def count_query_pack_one_to_many(config: CodeConfig, another: CodeConfig) -> str:
+            return f'countQueryPack{config.module.entity.className}OneToMany{another.module.entity.className}'
+
+    class SelectPackForeignKey:
+        @staticmethod
+        def select_in_and_where(config: CodeConfig, attr: Field) -> str:
+            return f'select{config.module.entity.className}In{attr.upper_name()}AndWhere'
+
 
 class RepositoryConfig:
 
@@ -1067,3 +1114,45 @@ class MapperApiNote:
         @staticmethod
         def select_in_and_where(config: CodeConfig, attr: Field) -> str:
             return f'根据{attr.remark}列表和其他条件查询{config.module.entity.remark}'
+
+    class SelectPackOneToOne:
+        @staticmethod
+        def find_pack_one_to_one(another: CodeConfig) -> str:
+            return f'内联一对一查询{another.module.entity.remark}'
+
+        @staticmethod
+        def count_find_pack_one_to_one(config: CodeConfig) -> str:
+            return f'内联一对一统计{config.module.entity.remark}'
+
+        @staticmethod
+        def link_pack_one_to_one(config: CodeConfig, another: CodeConfig) -> str:
+            return f'内联一对一查询{config.module.entity.remark}，只返回{another.module.entity.remark}'
+
+        @staticmethod
+        def query_pack_one_to_one(another: CodeConfig) -> str:
+            return f'外联一对一查询{another.module.entity.remark}'
+
+        @staticmethod
+        def count_query_pack_one_to_one(another: CodeConfig) -> str:
+            return f'外联一对一统计{another.module.entity.remark}'
+
+    class SelectPackOneToMany:
+        @staticmethod
+        def find_pack_one_to_many(another: CodeConfig) -> str:
+            return f'内联一对多查询{another.module.entity.remark}，双方均可分页'
+
+        @staticmethod
+        def count_find_pack_one_to_many(config: CodeConfig) -> str:
+            return f'内联一对多统计{config.module.entity.remark}，双方均可分页'
+
+        @staticmethod
+        def link_pack_one_to_many(config: CodeConfig, another: CodeConfig) -> str:
+            return f'内联一对多查询{config.module.entity.remark}，只返回{another.module.entity.remark}'
+
+        @staticmethod
+        def query_pack_one_to_many(another: CodeConfig) -> str:
+            return f'外联一对多查询{another.module.entity.remark}'
+
+        @staticmethod
+        def count_query_pack_one_to_many(another: CodeConfig) -> str:
+            return f'外联一对多统计{another.module.entity.remark}，双方均可分页'

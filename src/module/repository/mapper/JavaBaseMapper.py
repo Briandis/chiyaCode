@@ -17,7 +17,7 @@ class Page:
         :return: None|方法参数字符串
         """
 
-        return JavaCode.Attribute(f'@Param("page{index}") Page', f'page{index}', f"{msg}分页对象")
+        return JavaCode.Attribute(f'Page', f'page{index}', f"{msg}分页对象").add_line_param_mate(f'page{index}')
 
     @staticmethod
     def param(name, msg=""):
@@ -28,7 +28,7 @@ class Page:
         :return: None|方法参数字符串
         """
 
-        return JavaCode.Attribute(f'@Param("{name}") Page', f'{name}', f"{msg}分页对象")
+        return JavaCode.Attribute(f'Page', f'{name}', f"{msg}分页对象").add_line_param_mate(name)
 
 
 class ThisObject:
@@ -50,28 +50,33 @@ class ThisObject:
             # 同名模块，需要添加下标区分
             suffix = "1"
 
-        attr_type = f'@Param("{config.module.entity.low_name()}{suffix}") {config.module.entity.className}'
-        if not_param:
-            attr_type = config.module.entity.className
-        return JavaCode.Attribute(
-            attr_type,
+        attr = JavaCode.Attribute(
+            config.module.entity.className,
             f'{config.module.entity.low_name()}{suffix}',
             f'{config.module.entity.remark}对象'
         )
+        if not not_param:
+            attr.add_line_param_mate(f'{config.module.entity.low_name()}{suffix}')
+        return attr
 
     @staticmethod
-    def pack_attribute(config: CodeConfig):
+    def pack_attribute(config: CodeConfig, select_pack="selectPack", other_config: CodeConfig = None):
         """
         方法参数 @Param("User") User user,
         :param config: 配置
+        :param select_pack:查询对象
+        :param other_config: 另一方配置，用于校验是否要生成另一个名字
         :return: None|方法参数字符串
         """
-
+        suffix = ""
+        if other_config and other_config.module.entity.low_name() == config.module.entity.low_name():
+            # 同名模块，需要添加下标区分
+            suffix = "1"
         return JavaCode.Attribute(
-            f'@Param("selectPack") SelectPack<{config.module.entity.className}>',
-            f'selectPack',
+            f'SelectPack<{config.module.entity.className}>',
+            f'{select_pack}{suffix}',
             f'查询{config.module.entity.remark}包装对象'
-        )
+        ).add_line_param_mate(f'{select_pack}{suffix}')
 
 
 class ThisKey:
@@ -87,15 +92,14 @@ class ThisKey:
         :param not_param :不需要@Param
         :return: None|方法参数字符串
         """
-        attr_type = f'@Param("{config.baseInfo.key.attr}") {config.baseInfo.key.type}'
-        if not_param:
-            attr_type = config.baseInfo.key.type
-
-        return JavaCode.Attribute(
-            attr_type,
+        attr = JavaCode.Attribute(
+            config.baseInfo.key.type,
             config.baseInfo.key.attr,
             f'{config.module.entity.remark}的{config.baseInfo.key.remark}'
         )
+        if not not_param:
+            attr.add_line_param_mate(config.baseInfo.key.attr)
+        return attr
 
 
 class InKey:
@@ -111,10 +115,10 @@ class InKey:
         :return: None|方法参数字符串
         """
         return JavaCode.Attribute(
-            f'@Param("list") List<{config.baseInfo.key.type}>',
+            f'List<{config.baseInfo.key.type}>',
             'list',
             f'{config.module.entity.remark}的{config.baseInfo.key.remark}列表'
-        )
+        ).add_line_param_mate("list")
 
 
 class SaveObject:
@@ -130,10 +134,10 @@ class SaveObject:
         :return: None|方法参数字符串
         """
         return JavaCode.Attribute(
-            f'@Param("save{config.module.entity.className}") {config.module.entity.className}',
+            config.module.entity.className,
             f'save{config.module.entity.className}',
             f'要保存的{config.module.entity.remark}对象'
-        )
+        ).add_line_param_mate(f'save{config.module.entity.className}')
 
 
 class ConditionObject:
@@ -149,10 +153,10 @@ class ConditionObject:
         :return: None|方法参数字符串
         """
         return JavaCode.Attribute(
-            f'@Param("{config.get_class_name(condition=True)}") {config.module.entity.className}',
+            config.module.entity.className,
             f'{config.get_class_name(condition=True)}',
             f'查询的{config.module.entity.remark}条件对象'
-        )
+        ).add_line_param_mate(config.get_class_name(condition=True))
 
 
 class FuzzySearch:
@@ -171,10 +175,10 @@ class FuzzySearch:
         if config.createConfig.fuzzySearch.enable:
             if config.createConfig.fuzzySearch.data is not None and len(config.createConfig.fuzzySearch.data) != 0:
                 return JavaCode.Attribute(
-                    f'@Param("{config.createConfig.fuzzySearch.get_value()}{index}") String',
+                    f'String',
                     f'{config.createConfig.fuzzySearch.get_value()}{index}',
                     f'模糊搜索内容'
-                )
+                ).add_line_param_mate(f'{config.createConfig.fuzzySearch.get_value()}{index}')
         return None
 
 
@@ -192,10 +196,10 @@ class SplicingSQL:
         """
         if config.createConfig.splicingSQL.enable:
             return JavaCode.Attribute(
-                f'@Param("{config.createConfig.splicingSQL.get_value()}") String',
+                f'String',
                 f'{config.createConfig.splicingSQL.get_value()}',
                 f'拼接的SQL语句'
-            )
+            ).add_line_param_mate(config.createConfig.splicingSQL.get_value())
         return None
 
 
@@ -205,7 +209,18 @@ class BaseMapperJavaCode:
     """
 
     @staticmethod
-    def create(config: CodeConfig):
+    def create(config: CodeConfig) -> str:
+        """
+        创建文本
+        """
+        code = BaseMapperJavaCode.create_code_object(config)
+        return code.create()
+
+    @staticmethod
+    def create_code_object(config: CodeConfig) -> JavaCode.JavaCode:
+        """
+        构建code对象
+        """
         code = JavaCode.JavaCode(
             config.module.baseMapperInterface.path,
             config.module.baseMapperInterface.className,
@@ -227,7 +242,10 @@ class BaseMapperJavaCode:
         SelectOneToMany.create(code, config)
         SelectManyToMany.create(code, config)
         SelectForeignKey.create(code, config)
-        return code.create()
+        # 实验性质
+        SelectPackOneToOne.create(code, config)
+        SelectPackOneToMany.create(code, config)
+        return code
 
 
 # 添加方法接口
@@ -279,7 +297,7 @@ class Insert:
             JavaCode.DefaultAttribute.MapperInteger,
             MapperApi.Insert.insert_list(config),
             MapperApiNote.Insert.insert_list(config),
-            JavaCode.Attribute(f'@Param("list") List<{config.module.entity.className}>', 'list', f'{config.module.entity.remark}列表'),
+            JavaCode.Attribute(f'List<{config.module.entity.className}>', 'list', f'{config.module.entity.remark}列表').add_line_param_mate("list"),
         )
         function.is_interface = True
         return function
@@ -593,7 +611,7 @@ class Select:
             MapperApi.Select.select_one(config),
             MapperApiNote.Select.select_one(config),
             ThisObject.attribute(config),
-            JavaCode.Attribute(f'@Param("index") Integer', f'index', "获取的下标值"),
+            JavaCode.Attribute(f'Integer', f'index', "获取的下标值").add_line_param_mate("index"),
             FuzzySearch.attribute(config)
         )
         function.is_interface = True
@@ -714,7 +732,7 @@ class SelectOneToOne:
         # 一对一获取对方
         function = JavaCode.Function(
             "",
-            JavaCode.DefaultAttribute.self_class(another),
+            JavaCode.DefaultAttribute.self_list_class(another),
             MapperApi.SelectOneToOne.link_one_to_one(another),
             MapperApiNote.SelectOneToOne.link_one_to_one(config, another),
             ThisObject.attribute(config),
@@ -821,6 +839,7 @@ class SelectOneToMany:
             Page.param("manyPage", another.module.entity.remark),
             FuzzySearch.attribute(config),
             FuzzySearch.attribute(another, "1"),
+            SplicingSQL.attribute(config)
         )
         function.is_interface = True
         return function
@@ -835,8 +854,7 @@ class SelectOneToMany:
             MapperApiNote.SelectOneToMany.link_one_to_many(config, another),
             ThisObject.attribute(config),
             ThisObject.attribute(another, other_config=config),
-            Page.param("onePage", config.module.entity.remark),
-            Page.param("manyPage", another.module.entity.remark),
+            Page.attribute(),
             FuzzySearch.attribute(config),
             FuzzySearch.attribute(another, "1"),
             SplicingSQL.attribute(config)
@@ -972,9 +990,208 @@ class SelectForeignKey:
             JavaCode.DefaultAttribute.self_list_class(config),
             MapperApi.SelectForeignKey.select_in_and_where(config, attr),
             MapperApiNote.SelectForeignKey.select_in_and_where(config, attr),
-            JavaCode.Attribute(f'@Param("list") List<{attr.type}>', "list", f'{config.module.entity.remark}的{attr.remark}列表'),
+            JavaCode.Attribute(f'List<{attr.type}>', "list", f'{config.module.entity.remark}的{attr.remark}列表').add_line_param_mate("list"),
             ThisObject.attribute(config),
             FuzzySearch.attribute(config),
+        )
+        function.is_interface = True
+        return function
+
+
+class SelectPackOneToOne:
+    """
+    单表查接口
+    """
+
+    @staticmethod
+    def create(code: JavaCode.JavaCode, config: CodeConfig):
+        """
+        构建方法对象
+        :param code:源码
+        :param config: 配置
+        """
+        if len(config.baseInfo.oneToOne) == 0:
+            return
+        for one_to_one in config.baseInfo.oneToOne:
+            code.add_import(one_to_one.module.entity.get_package())
+            code.add_function(SelectPackOneToOne.find_pack_one_to_one(config, one_to_one))
+            code.add_function(SelectPackOneToOne.count_pack_find_one_to_one(config, one_to_one))
+            code.add_function(SelectPackOneToOne.link_pack_one_to_one(config, one_to_one))
+            code.add_function(SelectPackOneToOne.query_pack_one_to_one(config, one_to_one))
+            code.add_function(SelectPackOneToOne.count_pack_query_one_to_one(config, one_to_one))
+
+    @staticmethod
+    def find_pack_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一内联
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(config),
+            MapperApi.SelectPackOneToOne.find_pack_one_to_one(config, another),
+            MapperApiNote.SelectPackOneToOne.find_pack_one_to_one(config),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            Page.attribute(),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_pack_find_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一内联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            MapperApi.SelectPackOneToOne.count_find_pack_one_to_one(config, another),
+            MapperApiNote.SelectPackOneToOne.count_find_pack_one_to_one(config),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def link_pack_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一获取对方
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(another),
+            MapperApi.SelectPackOneToOne.link_pack_one_to_one(another),
+            MapperApiNote.SelectPackOneToOne.link_pack_one_to_one(config, another),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            Page.attribute(),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def query_pack_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一外联
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(config),
+            MapperApi.SelectPackOneToOne.query_pack_one_to_one(config, another),
+            MapperApiNote.SelectPackOneToOne.query_pack_one_to_one(config),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_pack_query_one_to_one(config: CodeConfig, another: CodeConfig):
+        # 一对一外联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            MapperApi.SelectPackOneToOne.count_query_pack_one_to_one(config, another),
+            MapperApiNote.SelectPackOneToOne.count_query_pack_one_to_one(config),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+        )
+        function.is_interface = True
+        return function
+
+
+# 一对多接口
+class SelectPackOneToMany:
+    """
+    一对多接口
+    """
+
+    @staticmethod
+    def create(code: JavaCode.JavaCode, config: CodeConfig):
+        """
+        构建方法对象
+        :param code:源码
+        :param config: 配置
+        """
+        if len(config.baseInfo.oneToMany) == 0:
+            return
+        for one_to_many in config.baseInfo.oneToMany:
+            code.add_import(one_to_many.module.entity.get_package())
+            code.add_function(SelectPackOneToMany.find_pack_one_to_many(config, one_to_many))
+            code.add_function(SelectPackOneToMany.count_find_pack_one_to_many(config, one_to_many))
+            code.add_function(SelectPackOneToMany.link_pack_one_to_many(config, one_to_many))
+            code.add_function(SelectPackOneToMany.query_pack_one_to_many(config, one_to_many))
+            code.add_function(SelectPackOneToMany.count_query_pack_one_to_many(config, one_to_many))
+
+    @staticmethod
+    def find_pack_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一内联
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(config),
+            MapperApi.SelectPackOneToMany.find_pack_one_to_many(config, another),
+            MapperApiNote.SelectPackOneToMany.find_pack_one_to_many(another),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_find_pack_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一内联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            MapperApi.SelectPackOneToMany.count_find_pack_one_to_many(config, another),
+            MapperApiNote.SelectPackOneToMany.count_find_pack_one_to_many(config),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def link_pack_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一获取对方
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(another),
+            MapperApi.SelectPackOneToMany.link_pack_one_to_many(another),
+            MapperApiNote.SelectPackOneToMany.link_pack_one_to_many(config, another),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            Page.attribute(),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def query_pack_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一外联
+        function = JavaCode.Function(
+            "",
+            JavaCode.DefaultAttribute.self_list_class(config),
+            MapperApi.SelectPackOneToMany.query_pack_one_to_many(config, another),
+            MapperApiNote.SelectPackOneToMany.query_pack_one_to_many(another),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            SplicingSQL.attribute(config)
+        )
+        function.is_interface = True
+        return function
+
+    @staticmethod
+    def count_query_pack_one_to_many(config: CodeConfig, another: CodeConfig):
+        # 一对一外联计数
+        function = JavaCode.Function(
+            "",
+            JavaCode.Attribute(f'Integer', "i", f'查询到的记录数'),
+            MapperApi.SelectPackOneToMany.count_query_pack_one_to_many(config, another),
+            MapperApiNote.SelectPackOneToMany.count_query_pack_one_to_many(another),
+            ThisObject.pack_attribute(config, config.module.entity.low_name()),
+            ThisObject.pack_attribute(another, another.module.entity.low_name(), config),
+            SplicingSQL.attribute(config)
         )
         function.is_interface = True
         return function
