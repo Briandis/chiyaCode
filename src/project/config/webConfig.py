@@ -9,11 +9,14 @@ def create_file(root: str):
     path = f'{root}.config'
     template = f'package {path};\n'
     template += """
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -23,6 +26,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter;
 import """+root+""".common.converter.DateConverter;
 import """+root+""".common.module.security.Security;
+import chiya.web.request.jakarta.ChiyaParamResolver;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -64,6 +68,11 @@ public class WebConfig implements WebMvcConfigurer {
 		return new HttpMessageConverters(fastJsonConverter);
 	}
 
+	@Override
+	public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+		resolvers.add(new ChiyaParamResolver());
+	}
+	
 }
 """
     OSUtil.save_file_java(path, "WebConfig", template)
